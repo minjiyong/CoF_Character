@@ -107,10 +107,18 @@ protected:
 	void ComboWindowClose();
 
 	UFUNCTION(BlueprintCallable, Category = "Combat|Combo")
-	void ComboAttackSave();   // SaveAttack notify에서 호출
+	void SaveAttack();   // SaveAttack notify에서 호출
 
 	UFUNCTION(BlueprintCallable, Category = "Combat|Combo")
 	void ResetCombo();        // ResetCombo notify에서 호출
+
+	// 공격이 실제로 닿는 순간
+	UFUNCTION(BlueprintCallable, Category = "Combat|Hit")
+	void HitStart();
+
+	// 기본공격은 단발 공격이라 사용X 일단 만들어둠
+	UFUNCTION(BlueprintCallable, Category = "Combat|Hit")
+	void HitEnd();
 
 
 

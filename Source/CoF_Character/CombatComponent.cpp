@@ -36,6 +36,25 @@ void UCombatComponent::TryAttack_Local()
 	}
 }
 
+void UCombatComponent::BeginHitWindow_OneShot()
+{
+	bHitWindowOpen = true;
+	bHitAppliedThisSwing = false;
+
+	// "한 번만 맞게" -> HitStart에서 즉시 1회 실행
+	if (!bHitAppliedThisSwing)
+	{
+		TryAttack_Local();
+		bHitAppliedThisSwing = true;
+	}
+}
+
+void UCombatComponent::EndHitWindow()
+{
+	bHitWindowOpen = false;
+}
+
+
 bool UCombatComponent::DoLineTrace(FHitResult& OutHit) const
 {
 	AActor* Owner = GetOwner();

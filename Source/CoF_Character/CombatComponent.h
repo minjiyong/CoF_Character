@@ -24,8 +24,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat")
 	bool bDrawDebug = true;
 
+	bool bHitWindowOpen = false;
+	bool bHitAppliedThisSwing = false;
+
+
 	// 로컬 공격(서버 없는 버전)
 	void TryAttack_Local();
+
+	void BeginHitWindow_OneShot();
+	void EndHitWindow();
 
 protected:
 	bool DoLineTrace(FHitResult& OutHit) const;

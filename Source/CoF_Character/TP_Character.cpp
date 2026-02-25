@@ -287,7 +287,7 @@ void ATP_Character::ComboWindowClose()
 
 
 // 이 타이밍에 입력이 들어왔으면 다음타 예약
-void ATP_Character::ComboAttackSave()
+void ATP_Character::SaveAttack()
 {
 	if (!bAttackPressed) return;
 
@@ -314,4 +314,21 @@ void ATP_Character::ResetCombo()
 	}
 	bComboQueued = false;
 	bAttackPressed = false;
+}
+
+void ATP_Character::HitStart()
+{
+	// 이번 타 시작: 1회 히트 가능 상태로 초기화
+	if (CombatComp)
+	{
+		CombatComp->BeginHitWindow_OneShot();
+	}
+}
+
+void ATP_Character::HitEnd()
+{
+	if (CombatComp)
+	{
+		CombatComp->EndHitWindow();
+	}
 }
