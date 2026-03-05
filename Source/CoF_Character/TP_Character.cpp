@@ -25,6 +25,17 @@
 #include "Animation/AnimMontage.h"
 
 
+
+//312312312 
+static void ScreenDbg(const FString& Msg, float Sec = 1.5f, FColor Color = FColor::Cyan)
+{
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, Sec, Color, Msg);
+	}
+}
+
+
 ATP_Character::ATP_Character()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -167,14 +178,13 @@ void ATP_Character::Input_JumpCompleted(const FInputActionValue& Value)
 
 void ATP_Character::Input_AttackStarted(const FInputActionValue& Value)
 {
-	bAttackPressed = true;
-
 	// 콤보가 아예 안 돌고 있으면 첫타 시작
 	if (!PrimaryComboMontage) return;
 
 	UAnimInstance* Anim = GetMesh() ? GetMesh()->GetAnimInstance() : nullptr;
 	if (!Anim) return;
 
+	// 애니메이션이 아예 안 돌고 있다면
 	if (!Anim->Montage_IsPlaying(PrimaryComboMontage))
 	{
 		ComboIndex = 0;
@@ -182,6 +192,79 @@ void ATP_Character::Input_AttackStarted(const FInputActionValue& Value)
 
 		PlayAnimMontage(PrimaryComboMontage, 1.f, FName(TEXT("A")));
 		bAttackPressed = false; // 첫타는 지금 소비
+		return;
+	}
+
+	// 애니메이션이 도는 중 IA를 받음 -> 콤보 영역이라면
+	if (bComboWindowOpen) {
+		bAttackPressed = true;
+		bComboQueued = true;			// 예약됨 표시용,, 지금은 크게 안 중요함.
+		ScreenDbg(TEXT("Notify: attack queued"), 1.5f, FColor::Yellow);
+	}
+}
+
+
+
+// 콤보 받는 범위 - 이 타이밍에 입력이 들어왔으면 다음타 예약
+void ATP_Character::ComboWindowOpen()
+{
+	bComboWindowOpen = true;
+	ScreenDbg(TEXT("Notify: ComboWindowOpen"), 1.5f, FColor::Green);
+}
+
+void ATP_Character::ComboWindowClose()
+{
+	bComboWindowOpen = false;
+	ScreenDbg(TEXT("Notify: ComboWindowClose"), 1.5f, FColor::Red);
+}
+
+// -------기본 공격(콤보) Notify-------
+void ATP_Character::SaveAttack()
+{
+	if (!bAttackPressed) return;
+
+	bAttackPressed = false;
+	bComboQueued = false;			// 예약됨 표시용,, 지금은 크게 안 중요함.
+	
+	// A->B
+	if (PrimaryComboMontage && ComboIndex == 0)
+	{
+		if (UAnimInstance* Anim = GetMesh() ? GetMesh()->GetAnimInstance() : nullptr)
+		{
+			Anim->Montage_SetNextSection(FName(TEXT("A")), FName(TEXT("B")), PrimaryComboMontage);
+			ComboIndex = 1;
+		}
+	}
+
+}
+
+// 끝
+void ATP_Character::ResetCombo()
+{
+	// 예약이 없으면 콤보 끊기
+	if (!bComboQueued)
+	{
+		ComboIndex = 0;
+	}
+	bComboQueued = false;
+	bAttackPressed = false;
+}
+
+// Hit 판정할 영역
+void ATP_Character::HitStart()
+{
+	// 이번 타 시작: 1회 히트 가능 상태로 초기화
+	if (CombatComp)
+	{
+		CombatComp->BeginHitWindow_OneShot();
+	}
+}
+
+void ATP_Character::HitEnd()
+{
+	if (CombatComp)
+	{
+		CombatComp->EndHitWindow();
 	}
 }
 
@@ -249,86 +332,3 @@ void ATP_Character::SelectSlot3() { SelectCharacterSlot(2); }
 void ATP_Character::SelectSlot4() { SelectCharacterSlot(3); }
 void ATP_Character::SelectSlot5() { SelectCharacterSlot(4); }
 
-
-
-// 콤보 동작 - 다음으로 넘기기
-void ATP_Character::ComboWindowOpen()
-{
-	bComboWindowOpen = true;
-}
-
-void ATP_Character::ComboWindowClose()
-{
-	bComboWindowOpen = false;
-
-	// 예약된 입력이 있으면 A->B로 넘어가게 세팅
-	if (!bComboQueued || !PrimaryComboMontage)
-	{
-		bComboQueued = false;
-		return;
-	}
-
-	UAnimInstance* Anim = GetMesh() ? GetMesh()->GetAnimInstance() : nullptr;
-	if (!Anim)
-	{
-		bComboQueued = false;
-		return;
-	}
-
-	// A(0) -> B(1)
-	if (ComboIndex == 0)
-	{
-		Anim->Montage_SetNextSection(FName(TEXT("A")), FName(TEXT("B")), PrimaryComboMontage);
-		ComboIndex = 1;
-	}
-
-	bComboQueued = false;
-}
-
-
-// 이 타이밍에 입력이 들어왔으면 다음타 예약
-void ATP_Character::SaveAttack()
-{
-	if (!bAttackPressed) return;
-
-	bAttackPressed = false;
-	bComboQueued = true;
-
-	// A->B
-	if (PrimaryComboMontage && ComboIndex == 0)
-	{
-		if (UAnimInstance* Anim = GetMesh() ? GetMesh()->GetAnimInstance() : nullptr)
-		{
-			Anim->Montage_SetNextSection(FName(TEXT("A")), FName(TEXT("B")), PrimaryComboMontage);
-			ComboIndex = 1;
-		}
-	}
-}
-
-void ATP_Character::ResetCombo()
-{
-	// 예약이 없으면 콤보 끊기
-	if (!bComboQueued)
-	{
-		ComboIndex = 0;
-	}
-	bComboQueued = false;
-	bAttackPressed = false;
-}
-
-void ATP_Character::HitStart()
-{
-	// 이번 타 시작: 1회 히트 가능 상태로 초기화
-	if (CombatComp)
-	{
-		CombatComp->BeginHitWindow_OneShot();
-	}
-}
-
-void ATP_Character::HitEnd()
-{
-	if (CombatComp)
-	{
-		CombatComp->EndHitWindow();
-	}
-}
