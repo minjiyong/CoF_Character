@@ -142,6 +142,12 @@ void ATP_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 		EIC->BindAction(BlockAction, ETriggerEvent::Completed, this, &ATP_Character::Input_BlockCompleted);
 	}
 
+	// 스킬1
+	if (Skill1Action)
+	{
+		EIC->BindAction(Skill1Action, ETriggerEvent::Started, this, &ATP_Character::Input_Skill1Started);
+	}
+
 	// 1~5 키로 캐릭터 교체
 	PlayerInputComponent->BindKey(EKeys::One, IE_Pressed, this, &ATP_Character::SelectSlot1);
 	PlayerInputComponent->BindKey(EKeys::Two, IE_Pressed, this, &ATP_Character::SelectSlot2);
@@ -264,6 +270,7 @@ void ATP_Character::HitStart()
 	// 이번 타 시작: 1회 히트 가능 상태로 초기화
 	if (CombatComp)
 	{
+		CombatComp->ConfigureTraceHit(CombatComp->Damage);
 		CombatComp->BeginHitWindow_OneShot();
 	}
 }
@@ -277,6 +284,7 @@ void ATP_Character::HitEnd()
 }
 
 
+// --------- 우클릭 방패 들기 ---------
 void ATP_Character::Input_BlockStarted(const FInputActionValue&)
 {
 	if (bBlocking) return;
@@ -308,6 +316,66 @@ void ATP_Character::Input_BlockCompleted(const FInputActionValue&)
 
 	// 이동속도 다시 복구
 	GetCharacterMovement()->MaxWalkSpeed = DefaultCharacterData->MaxWalkSpeed;
+}
+
+
+// -------- 스킬 1 ---------
+// input
+void ATP_Character::Input_Skill1Started(const FInputActionValue&)
+{
+	if (Skill1Selected == ESkillVariant::None)
+		return;
+
+	// 쿨다운
+	const double Now = GetWorld()->GetTimeSeconds();
+	if (Now < Skill1NextAvailableTime) {
+		ScreenDbg(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
+		return;
+	}
+
+	UAnimMontage* Montage = nullptr;
+	if (Skill1Selected == ESkillVariant::A) Montage = Skill1MontageA;
+	else if (Skill1Selected == ESkillVariant::B) Montage = Skill1MontageB;
+
+	if (!Montage) return;
+
+	PlayAnimMontage(Montage);
+
+	Skill1NextAvailableTime = Now + Skill1Cooldown;
+}
+
+// 적용 AOE
+void ATP_Character::Skill1_ApplyAOE()
+{
+	// 판정 1회
+	const FVector Center = GetActorLocation();
+	const float Radius = Skill1Radius;
+
+	TArray<FOverlapResult> Hits;
+	FCollisionQueryParams Params(SCENE_QUERY_STAT(Skill1AOE), false, this);
+
+	const bool bAny = GetWorld()->OverlapMultiByChannel(
+		Hits,
+		Center,
+		FQuat::Identity,
+		ECC_Pawn, // 더미가 Pawn/캐릭터가 아니면 맞는 채널로 바꿔야 함
+		FCollisionShape::MakeSphere(Radius),
+		Params
+	);
+
+	if (!bAny) return;
+
+	for (const FOverlapResult& R : Hits)
+	{
+		AActor* Target = R.GetActor();
+		if (!Target || Target == this) continue;
+
+		// 기존 HitReact 인터페이스 호출(데미지 전달)
+		if (Target->GetClass()->ImplementsInterface(UHitReactInterface::StaticClass()))
+		{
+			IHitReactInterface::Execute_OnHitReact(Target, Skill1Damage, Center, FVector::UpVector);
+		}
+	}
 }
 
 
@@ -351,6 +419,15 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 
 	// Blocking Animation Montage
 	BlockHoldMontage = Data->BlockHoldMontage;
+
+	// 스킬1
+	Skill1Selected = Data->Skill1Selected;
+	Skill1MontageA = Data->Skill1_Montage_A;
+	Skill1MontageB = Data->Skill1_Montage_B;
+	Skill1Damage = Data->Skill1_Damage;
+	Skill1Radius = Data->Skill1_Radius;
+	Skill1Cooldown = Data->Skill1_Cooldown;
+	Skill1NextAvailableTime = 0.0;
 }
 
 

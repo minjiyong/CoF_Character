@@ -11,47 +11,98 @@ UCombatComponent::UCombatComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 }
 
-void UCombatComponent::TryAttack_Local()
+void UCombatComponent::ConfigureTraceHit(float InDamage)
 {
-	FHitResult Hit;
-	const bool bHit = DoLineTrace(Hit);
-
-	if (bHit && Hit.GetActor())
-	{
-		AActor* HitActor = Hit.GetActor();
-
-		if (HitActor->GetClass()->ImplementsInterface(UHitReactInterface::StaticClass()))
-		{
-			IHitReactInterface::Execute_OnHitReact(HitActor, Damage, Hit.ImpactPoint, Hit.ImpactNormal);
-		}
-
-		UE_LOG(LogTemp, Warning, TEXT("[Attack] Hit=%s Loc=%s Normal=%s"),
-			*Hit.GetActor()->GetName(),
-			*Hit.ImpactPoint.ToString(),
-			*Hit.ImpactNormal.ToString());
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[Attack] Miss"));
-	}
+	HitQueryType = EHitQueryType::TraceForward;
+	PendingDamage = InDamage;
 }
+
+void UCombatComponent::ConfigureAOEHit(float InDamage, float InRadius)
+{
+	HitQueryType = EHitQueryType::AOESphere;
+	PendingDamage = InDamage;
+	PendingRadius = InRadius;
+}
+
 
 void UCombatComponent::BeginHitWindow_OneShot()
 {
 	bHitWindowOpen = true;
 	bHitAppliedThisSwing = false;
 
-	// "한 번만 맞게" -> HitStart에서 즉시 1회 실행
-	if (!bHitAppliedThisSwing)
-	{
-		TryAttack_Local();
-		bHitAppliedThisSwing = true;
-	}
+	ExecuteHitOnce();
 }
 
 void UCombatComponent::EndHitWindow()
 {
 	bHitWindowOpen = false;
+}
+
+void UCombatComponent::ExecuteHitOnce()
+{
+	if (!bHitWindowOpen) return;
+	if (bHitAppliedThisSwing) return;
+
+	AActor* Owner = GetOwner();
+	UWorld* World = Owner ? Owner->GetWorld() : nullptr;
+	if (!World) return;
+
+	if (HitQueryType == EHitQueryType::TraceForward)
+	{
+		FHitResult Hit;
+		if (DoLineTrace(Hit) && Hit.GetActor())
+		{
+			ApplyHitToActor(Hit.GetActor(), PendingDamage, Hit.ImpactPoint, Hit.ImpactNormal);
+		}
+	}
+	else if (HitQueryType == EHitQueryType::AOESphere)
+	{
+		const FVector Center = Owner->GetActorLocation();
+		const float Radius = PendingRadius;
+
+		TArray<FOverlapResult> Hits;
+		FCollisionQueryParams Params(SCENE_QUERY_STAT(SkillAOEHit), false, Owner);
+
+		// Pawn만 맞추고 싶으면 ECC_Pawn / 더미가 다른 채널이면 바꿔야 함
+		const bool bAny = World->OverlapMultiByChannel(
+			Hits,
+			Center,
+			FQuat::Identity,
+			ECC_Pawn,
+			FCollisionShape::MakeSphere(Radius),
+			Params
+		);
+
+		if (bDrawDebug)
+		{
+			DrawDebugSphere(World, Center, Radius, 24, bAny ? FColor::Red : FColor::Green, false, 1.0f, 0, 2.f);
+		}
+
+		if (bAny)
+		{
+			for (const FOverlapResult& R : Hits)
+			{
+				AActor* Target = R.GetActor();
+				if (!Target || Target == Owner) continue;
+
+				// AOE는 노멀을 임의로 UpVector로
+				ApplyHitToActor(Target, PendingDamage, Center, FVector::UpVector);
+			}
+		}
+	}
+
+	bHitAppliedThisSwing = true;
+}
+
+void UCombatComponent::ApplyHitToActor(AActor* Target, float InDamage, const FVector& HitPoint, const FVector& HitNormal)
+{
+	if (!Target) return;
+
+	// 기존 콤보에서 쓰던 방식대로 HitReact 인터페이스로 데미지 전달
+	if (Target->GetClass()->ImplementsInterface(UHitReactInterface::StaticClass()))
+	{
+		IHitReactInterface::Execute_OnHitReact(Target, InDamage, HitPoint, HitNormal);
+	}
 }
 
 

@@ -2,6 +2,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+
+#include "SkillTypes.h"
+
 #include "TP_Character.generated.h"
 
 class UCameraComponent;
@@ -64,6 +67,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
 	UInputAction* BlockAction;			// 우클릭 방패 들기
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+	UInputAction* Skill1Action;			// 스킬1
+
 
 	// ===== Character Data =====
 	UFUNCTION(BlueprintCallable, Category = "Character")
@@ -83,6 +89,8 @@ protected:
 
 	void Input_BlockStarted(const FInputActionValue& Value);		// 우클릭 방패 들기
 	void Input_BlockCompleted(const FInputActionValue& Value);
+
+	void Input_Skill1Started(const FInputActionValue& Value);		// 스킬1
 
 
 	// ===== Animation =====
@@ -128,6 +136,18 @@ protected:
 	// 우클릭 방패 들기
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat|Defense")
 	bool bBlocking = false;
+
+	// 스킬1
+	UFUNCTION(BlueprintCallable, Category = "Skills|Skill1")
+	void Skill1_ApplyAOE();
+
+	ESkillVariant Skill1Selected = ESkillVariant::None;
+	TObjectPtr<UAnimMontage> Skill1MontageA = nullptr;
+	TObjectPtr<UAnimMontage> Skill1MontageB = nullptr;
+	float Skill1Damage = 0.f;
+	float Skill1Radius = 0.f;
+	float Skill1Cooldown = 0.f;
+	double Skill1NextAvailableTime = 0.0;
 
 
 	// ===== 캐릭터 선택(런타임 교체) =====
