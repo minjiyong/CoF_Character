@@ -141,7 +141,8 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Skills|Skill1")
 	void Skill1_ApplyAOE();
 
-	ESkillVariant Skill1Selected = ESkillVariant::None;
+	ESkillVariant Skill1Selected = ESkillVariant::None;			// A/B 중 스킬1 뭘 선택했는지
+
 	TObjectPtr<UAnimMontage> Skill1MontageA = nullptr;
 	TObjectPtr<UAnimMontage> Skill1MontageB = nullptr;
 	float Skill1Damage = 0.f;

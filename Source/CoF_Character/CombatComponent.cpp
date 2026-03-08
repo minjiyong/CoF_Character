@@ -4,7 +4,13 @@
 #include "GameFramework/Character.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/PlayerController.h"
+
+#include "Engine/World.h"
+#include "Engine/OverlapResult.h"
+#include "CollisionShape.h"
+
 #include "HitReactInterface.h"
+
 
 UCombatComponent::UCombatComponent()
 {
@@ -64,6 +70,7 @@ void UCombatComponent::ExecuteHitOnce()
 		FCollisionQueryParams Params(SCENE_QUERY_STAT(SkillAOEHit), false, Owner);
 
 		// Pawn만 맞추고 싶으면 ECC_Pawn / 더미가 다른 채널이면 바꿔야 함
+		static_assert(sizeof(FOverlapResult) > 0, "FOverlapResult not defined here");
 		const bool bAny = World->OverlapMultiByChannel(
 			Hits,
 			Center,

@@ -347,35 +347,11 @@ void ATP_Character::Input_Skill1Started(const FInputActionValue&)
 // 적용 AOE
 void ATP_Character::Skill1_ApplyAOE()
 {
-	// 판정 1회
-	const FVector Center = GetActorLocation();
-	const float Radius = Skill1Radius;
+	if (!CombatComp) return;
 
-	TArray<FOverlapResult> Hits;
-	FCollisionQueryParams Params(SCENE_QUERY_STAT(Skill1AOE), false, this);
-
-	const bool bAny = GetWorld()->OverlapMultiByChannel(
-		Hits,
-		Center,
-		FQuat::Identity,
-		ECC_Pawn, // 더미가 Pawn/캐릭터가 아니면 맞는 채널로 바꿔야 함
-		FCollisionShape::MakeSphere(Radius),
-		Params
-	);
-
-	if (!bAny) return;
-
-	for (const FOverlapResult& R : Hits)
-	{
-		AActor* Target = R.GetActor();
-		if (!Target || Target == this) continue;
-
-		// 기존 HitReact 인터페이스 호출(데미지 전달)
-		if (Target->GetClass()->ImplementsInterface(UHitReactInterface::StaticClass()))
-		{
-			IHitReactInterface::Execute_OnHitReact(Target, Skill1Damage, Center, FVector::UpVector);
-		}
-	}
+	// 여기서 스킬1 내려찍기(검) 의 광역 판정 1회 실행
+	CombatComp->ConfigureAOEHit(Skill1Damage, Skill1Radius);
+	CombatComp->BeginHitWindow_OneShot();
 }
 
 
@@ -421,7 +397,8 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	BlockHoldMontage = Data->BlockHoldMontage;
 
 	// 스킬1
-	Skill1Selected = Data->Skill1Selected;
+	Skill1Selected = Data->Skill1Selected;		// 인게임 선택 기본값(DA에 넣은 기본값으로 시작)
+
 	Skill1MontageA = Data->Skill1_Montage_A;
 	Skill1MontageB = Data->Skill1_Montage_B;
 	Skill1Damage = Data->Skill1_Damage;
