@@ -129,9 +129,17 @@ void ATP_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 		EIC->BindAction(JumpAction, ETriggerEvent::Completed, this, &ATP_Character::Input_JumpCompleted);
 	}
 
+	// 좌클릭 콤보 공격
 	if (AttackAction)
 	{
 		EIC->BindAction(AttackAction, ETriggerEvent::Started, this, &ATP_Character::Input_AttackStarted);
+	}
+
+	// 우클릭 방패 들기
+	if (BlockAction)
+	{
+		EIC->BindAction(BlockAction, ETriggerEvent::Started, this, &ATP_Character::Input_BlockStarted);
+		EIC->BindAction(BlockAction, ETriggerEvent::Completed, this, &ATP_Character::Input_BlockCompleted);
 	}
 
 	// 1~5 키로 캐릭터 교체
@@ -269,6 +277,40 @@ void ATP_Character::HitEnd()
 }
 
 
+void ATP_Character::Input_BlockStarted(const FInputActionValue&)
+{
+	if (bBlocking) return;
+	bBlocking = true;
+
+	// 데미지 감소 적용
+	//if (HealthComp)
+	//	HealthComp->SetDamageMultiplier(BlockDamageMultiplier);
+
+	// 상체 방패 몽타주 재생
+	if (BlockHoldMontage)
+		PlayAnimMontage(BlockHoldMontage);
+
+	// 이동속도 살짝 낮추기
+	GetCharacterMovement()->MaxWalkSpeed *= 0.65f;
+}
+
+void ATP_Character::Input_BlockCompleted(const FInputActionValue&)
+{
+	if (!bBlocking) return;
+	bBlocking = false;
+
+	//if (HealthComp)
+	//	HealthComp->SetDamageMultiplier(1.0f);
+
+	// 몽타주 중단(블렌드아웃)
+	if (BlockHoldMontage)
+		StopAnimMontage(BlockHoldMontage);
+
+	// 이동속도 다시 복구
+	GetCharacterMovement()->MaxWalkSpeed = DefaultCharacterData->MaxWalkSpeed;
+}
+
+
 // Character Settings 
 void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 {
@@ -306,6 +348,9 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 
 	// Combo Animation Montage
 	PrimaryComboMontage = Data->PrimaryComboMontage;
+
+	// Blocking Animation Montage
+	BlockHoldMontage = Data->BlockHoldMontage;
 }
 
 

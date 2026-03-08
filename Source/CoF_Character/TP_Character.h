@@ -45,7 +45,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UCombatComponent* CombatComp;
 
-	// ===== Enhanced Input Assets (BP에서 꽂을 것) =====
+	// ===== Enhanced Input Assets =====
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
 	UInputMappingContext* DefaultMappingContext;
 
@@ -59,7 +59,11 @@ protected:
 	UInputAction* JumpAction;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
-	UInputAction* AttackAction;
+	UInputAction* AttackAction;			// 기본 공격(좌클릭)
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+	UInputAction* BlockAction;			// 우클릭 방패 들기
+
 
 	// ===== Character Data =====
 	UFUNCTION(BlueprintCallable, Category = "Character")
@@ -75,19 +79,19 @@ protected:
 	void Input_JumpStarted(const FInputActionValue& Value);
 	void Input_JumpCompleted(const FInputActionValue& Value);
 
-	void Input_AttackStarted(const FInputActionValue& Value);
+	void Input_AttackStarted(const FInputActionValue& Value);		// 기본 공격(좌클릭)
 
+	void Input_BlockStarted(const FInputActionValue& Value);		// 우클릭 방패 들기
+	void Input_BlockCompleted(const FInputActionValue& Value);
 
-	// ===== 캐릭터 선택(런타임 교체) =====
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character|Switch")
-	TArray<TObjectPtr<UCharacterData>> CharacterSlots; // 0~4 => 1~5키
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character|Switch")
-	int32 CurrentSlotIndex = -1;
 
 	// ===== Animation =====
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat|Anim")
-	TObjectPtr<UAnimMontage> PrimaryComboMontage = nullptr;			// 기본 콤보 공격
+	TObjectPtr<UAnimMontage> PrimaryComboMontage = nullptr;			// 기본 좌클릭 콤보 공격
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Anim")
+	TObjectPtr<UAnimMontage> BlockHoldMontage = nullptr;			// 우클릭 방패 들기
+
 
 	// 콤보 상태
 	bool bComboWindowOpen = false;
@@ -95,7 +99,7 @@ protected:
 
 	bool bAttackPressed = false;		// 콤보를 받는 타이밍(SaveAttack 이후) 에 버튼이 눌렸는가
 
-	// 현재 콤보 단계(0=A, 1=B, 2=C, 3=D)
+	// 현재 콤보 단계(0=A, 1=B)
 	int32 ComboIndex = 0;
 
 	static constexpr const TCHAR* ComboSections[2] = { TEXT("A"), TEXT("B") };
@@ -121,6 +125,17 @@ protected:
 	void HitEnd();
 
 
+	// 우클릭 방패 들기
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat|Defense")
+	bool bBlocking = false;
+
+
+	// ===== 캐릭터 선택(런타임 교체) =====
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character|Switch")
+	TArray<TObjectPtr<UCharacterData>> CharacterSlots; // 0~4 => 1~5키
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character|Switch")
+	int32 CurrentSlotIndex = -1;
 
 	void SelectCharacterSlot(int32 Index);
 

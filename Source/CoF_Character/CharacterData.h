@@ -38,4 +38,9 @@ public:
 	// Combat Animation - 기본 콤보 공격
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Anim")
 	TObjectPtr<UAnimMontage> PrimaryComboMontage;
+
+	// Blocking Animation 방패 들기 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Anim")
+	TObjectPtr<UAnimMontage> BlockHoldMontage = nullptr;
+
 };
