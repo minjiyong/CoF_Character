@@ -326,11 +326,19 @@ void ATP_Character::Input_Skill1Started(const FInputActionValue&)
 	if (Skill1Selected == ESkillVariant::None)
 		return;
 
-	// 쿨다운
+	// 쿨다운 디버깅 메세지
 	const double Now = GetWorld()->GetTimeSeconds();
-	if (Now < Skill1NextAvailableTime) {
-		ScreenDbg(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
-		return;
+	if (Skill1Selected == ESkillVariant::A) {
+		if (Now < Skill1B_NextAvailableTime) {
+			ScreenDbg(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
+			return;
+		}
+	}
+	else if (Skill1Selected == ESkillVariant::B) {
+		if (Now < Skill1A_NextAvailableTime) {
+			ScreenDbg(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
+			return;
+		}
 	}
 
 	UAnimMontage* Montage = nullptr;
@@ -341,16 +349,45 @@ void ATP_Character::Input_Skill1Started(const FInputActionValue&)
 
 	PlayAnimMontage(Montage);
 
-	Skill1NextAvailableTime = Now + Skill1Cooldown;
+	if (Skill1Selected == ESkillVariant::A) Skill1A_NextAvailableTime = Now + Skill1A_Cooldown;
+	else if (Skill1Selected == ESkillVariant::B) Skill1B_NextAvailableTime = Now + Skill1B_Cooldown;
 }
 
-// 적용 AOE(광역 공격)
-void ATP_Character::Skill1_ApplyAOE()
+
+// Skill1_A 돌진
+void ATP_Character::Skill1A_DashStart()
+{
+	// 1) 실제 이동: LaunchCharacter로 전방 돌진
+	const FVector Dir = GetActorForwardVector();
+	const float Speed = (Skill1A_DashDuration > 0.f) ? (Skill1A_DashDistance / Skill1A_DashDuration) : 0.f;
+
+	// 돌진용 속도 부여 (Z는 0)
+	LaunchCharacter(Dir * Speed, true, false);
+
+	// 2) 히트 판정 시작: "연속 라인트레이스" 모드로 CombatComponent에 세팅
+	// 여기서 CombatComp가 "돌진 중엔 매 틱 라인트레이스"하도록 켜줘야 함
+	if (CombatComp)
+	{
+		CombatComp->BeginDashTraceWindow(Skill1A_Damage, Skill1A_TraceRange, Skill1A_DashDuration);
+	}
+}
+
+void ATP_Character::Skill1A_DashEnd()
+{
+	if (CombatComp)
+	{
+		CombatComp->EndDashTraceWindow();
+	}
+}
+
+
+// skill1_B 적용 AOE(광역 공격)
+void ATP_Character::Skill1B_ApplyAOE()
 {
 	if (!CombatComp) return;
 
 	// 여기서 스킬1 내려찍기(검) 의 광역 판정 1회 실행
-	CombatComp->ConfigureAOEHit(Skill1Damage, Skill1Radius);
+	CombatComp->ConfigureAOEHit(Skill1B_Damage, Skill1B_Radius);
 	CombatComp->BeginHitWindow_OneShot();
 }
 
@@ -401,10 +438,18 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 
 	Skill1MontageA = Data->Skill1_Montage_A;
 	Skill1MontageB = Data->Skill1_Montage_B;
-	Skill1Damage = Data->Skill1_Damage;
-	Skill1Radius = Data->Skill1_Radius;
-	Skill1Cooldown = Data->Skill1_Cooldown;
-	Skill1NextAvailableTime = 0.0;
+
+	Skill1A_Damage = Data->Skill1A_Damage;
+	Skill1A_DashDistance = Data->Skill1A_DashDistance;
+	Skill1A_DashDuration = Data->Skill1A_DashDuration;
+	Skill1A_TraceRange = Data->Skill1A_TraceRange;
+	Skill1A_Cooldown = Data->Skill1A_Cooldown;
+	Skill1A_NextAvailableTime = 0.0;
+
+	Skill1B_Damage = Data->Skill1B_Damage;
+	Skill1B_Radius = Data->Skill1B_Radius;
+	Skill1B_Cooldown = Data->Skill1B_Cooldown;
+	Skill1B_NextAvailableTime = 0.0;
 }
 
 

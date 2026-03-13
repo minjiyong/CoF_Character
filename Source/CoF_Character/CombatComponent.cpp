@@ -14,13 +14,49 @@
 
 UCombatComponent::UCombatComponent()
 {
-	PrimaryComponentTick.bCanEverTick = false;
+	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bStartWithTickEnabled = true;
 }
 
-void UCombatComponent::ConfigureTraceHit(float InDamage)
+void UCombatComponent::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
+void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	if (!bHitWindowOpen) return;
+	if (HitQueryType != EHitQueryType::DashTrace) return;
+
+	ExecuteHitOnce(); // Dash인 경우만 반복할 수 있도록
+}
+
+
+void UCombatComponent::ConfigureTraceHit(float InDamage, float InRange);
 {
 	HitQueryType = EHitQueryType::TraceForward;
 	PendingDamage = InDamage;
+	PendingRange = InRange;
+}
+
+void UCombatComponent::ConfigureDashHit(float InDamage, float InRange, float InDuration)
+{
+	HitQueryType = EHitQueryType::DashTrace;
+	PendingDamage = InDamage;
+	PendingRange = InRange;
+
+	if (UWorld* W = GetWorld())
+	{
+		DashEndTime = W->GetTimeSeconds() + InDuration;
+	}
+	else
+	{
+		DashEndTime = 0.0;
+	}
+
+	DashHitActors.Reset();
 }
 
 void UCombatComponent::ConfigureAOEHit(float InDamage, float InRadius)
@@ -99,6 +135,33 @@ void UCombatComponent::ExecuteHitOnce()
 		}
 	}
 
+	else if (HitQueryType == EHitQueryType::DashTrace)
+	{
+		// 기간 종료 처리
+		if (DashEndTime > 0.0 && World->GetTimeSeconds() >= DashEndTime)
+		{
+			EndHitWindow();
+			return;
+		}
+
+		FHitResult Hit;
+		if (!DoLineTraceWithRange(Hit, PendingRange)) return;
+
+		AActor* Target = Hit.GetActor();
+		if (!Target || Target == Owner) return;
+
+		if (DashHitActors.Contains(Target)) return; // 동일 대상 1회
+		DashHitActors.Add(Target);
+
+		ApplyHitToActor(Target, PendingDamage, Hit.ImpactPoint, Hit.ImpactNormal);
+
+		if (bDrawDebug)
+		{
+			DrawDebugLine(World, Hit.TraceStart, Hit.TraceEnd, FColor::Yellow, false, 0.05f, 0, 1.5f);
+		}
+		return;
+	}
+
 	bHitAppliedThisSwing = true;
 }
 
@@ -116,6 +179,11 @@ void UCombatComponent::ApplyHitToActor(AActor* Target, float InDamage, const FVe
 
 bool UCombatComponent::DoLineTrace(FHitResult& OutHit) const
 {
+	return DoLineTraceWithRange(OutHit, TraceRange);
+}
+
+bool UCombatComponent::DoLineTraceWithRange(FHitResult& OutHit, float InRange) const
+{
 	AActor* Owner = GetOwner();
 	if (!Owner) return false;
 
@@ -123,13 +191,13 @@ bool UCombatComponent::DoLineTrace(FHitResult& OutHit) const
 	APlayerController* PC = Char ? Cast<APlayerController>(Char->GetController()) : nullptr;
 	if (!PC) return false;
 
-	// 카메라 기반 트레이스: 화면 중앙 기준 조준 느낌을 얻기 좋음
+	// 카메라 기반 트레이스: 화면 중앙 기준
 	FVector CamLoc;
 	FRotator CamRot;
 	PC->GetPlayerViewPoint(CamLoc, CamRot);
 
 	const FVector Start = CamLoc;
-	const FVector End = Start + CamRot.Vector() * TraceRange;
+	const FVector End = Start + CamRot.Vector() * InRange;
 
 	FCollisionQueryParams Params(SCENE_QUERY_STAT(LocalAttackTrace), false, Owner);
 	const bool bHit = Owner->GetWorld()->LineTraceSingleByChannel(

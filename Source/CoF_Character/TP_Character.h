@@ -137,18 +137,34 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat|Defense")
 	bool bBlocking = false;
 
-	// 스킬1
-	UFUNCTION(BlueprintCallable, Category = "Skills|Skill1")
-	void Skill1_ApplyAOE();
 
-	ESkillVariant Skill1Selected = ESkillVariant::None;			// A/B 중 스킬1 뭘 선택했는지
+	// A/B 중 스킬1 뭘 선택했는지
+	ESkillVariant Skill1Selected = ESkillVariant::None;		
+
+	// 스킬1_A 돌진
+	UFUNCTION(BlueprintCallable, Category = "Skills|Skill1|A")
+	void Skill1A_DashStart();
+
+	UFUNCTION(BlueprintCallable, Category = "Skills|Skill1|A")
+	void Skill1A_DashEnd();
 
 	TObjectPtr<UAnimMontage> Skill1MontageA = nullptr;
+	float Skill1A_Damage = 0.f;
+	float Skill1A_DashDistance = 0.f;
+	float Skill1A_DashDuration = 0.f;			// 몇 초 동안 밀고 갈지
+	float Skill1A_TraceRange = 0.f;				// 라인트레이스 길이(돌진 판정)
+	float Skill1A_Cooldown = 0.f;
+	double Skill1A_NextAvailableTime = 0.0;
+
+	// 스킬1_B 도끼찍기
+	UFUNCTION(BlueprintCallable, Category = "Skills|Skill1")
+	void Skill1B_ApplyAOE();
+
 	TObjectPtr<UAnimMontage> Skill1MontageB = nullptr;
-	float Skill1Damage = 0.f;
-	float Skill1Radius = 0.f;
-	float Skill1Cooldown = 0.f;
-	double Skill1NextAvailableTime = 0.0;
+	float Skill1B_Damage = 0.f;
+	float Skill1B_Radius = 0.f;
+	float Skill1B_Cooldown = 0.f;
+	double Skill1B_NextAvailableTime = 0.0;
 
 
 	// ===== 캐릭터 선택(런타임 교체) =====

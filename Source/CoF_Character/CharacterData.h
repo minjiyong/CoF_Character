@@ -61,13 +61,30 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1")
 	TObjectPtr<UAnimMontage> Skill1_Montage_B = nullptr;
 
-	// 파라미터: 지금은 광역기라 radius/damage만 있으면 됨
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1")
-	float Skill1_Damage = 30.f;
+
+	// 1-A(돌진) 파라미터
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|A")
+	float Skill1A_Damage = 20.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|A")
+	float Skill1A_DashDistance = 800.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|A")
+	float Skill1A_DashDuration = 0.25f;   // 몇 초 동안 밀고 갈지
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|A")
+	float Skill1A_TraceRange = 150.f;     // 라인트레이스 길이(돌진 판정)
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1")
-	float Skill1_Radius = 350.f;
+	float Skill1A_Cooldown = 5.f;
+	
+	// 1-B(도끼찍기) 파라미터: 지금은 광역기라 radius/damage만 있으면 됨
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1")
+	float Skill1B_Damage = 30.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1")
-	float Skill1_Cooldown = 5.f;
+	float Skill1B_Radius = 350.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1")
+	float Skill1B_Cooldown = 5.f;
 };
