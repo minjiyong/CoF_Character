@@ -61,6 +61,7 @@ void UCombatComponent::ExecuteHitOnce()
 			ApplyHitToActor(Hit.GetActor(), PendingDamage, Hit.ImpactPoint, Hit.ImpactNormal);
 		}
 	}
+
 	else if (HitQueryType == EHitQueryType::AOESphere)
 	{
 		const FVector Center = Owner->GetActorLocation();

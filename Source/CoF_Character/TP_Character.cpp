@@ -344,7 +344,7 @@ void ATP_Character::Input_Skill1Started(const FInputActionValue&)
 	Skill1NextAvailableTime = Now + Skill1Cooldown;
 }
 
-// 적용 AOE
+// 적용 AOE(광역 공격)
 void ATP_Character::Skill1_ApplyAOE()
 {
 	if (!CombatComp) return;
