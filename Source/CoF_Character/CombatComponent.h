@@ -53,7 +53,7 @@ protected:
 	bool DoLineTraceWithRange(FHitResult& OutHit, float InRange) const;
 
 	// HitWindow에서 실제로 1회 실행되는 판정 본체, 기본공격용
-	void ExecuteHitOnce();
+	void ProcessHitQuery();
 
 	// HitReact 호출 유틸
 	void ApplyHitToActor(AActor* Target, float InDamage, const FVector& HitPoint, const FVector& HitNormal);

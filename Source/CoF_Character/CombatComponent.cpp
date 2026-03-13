@@ -30,11 +30,11 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	if (!bHitWindowOpen) return;
 	if (HitQueryType != EHitQueryType::DashTrace) return;
 
-	ExecuteHitOnce(); // Dash인 경우만 반복할 수 있도록
+	ProcessHitQuery(); // Dash인 경우만 반복할 수 있도록
 }
 
 
-void UCombatComponent::ConfigureTraceHit(float InDamage, float InRange);
+void UCombatComponent::ConfigureTraceHit(float InDamage, float InRange)
 {
 	HitQueryType = EHitQueryType::TraceForward;
 	PendingDamage = InDamage;
@@ -72,7 +72,7 @@ void UCombatComponent::BeginHitWindow_OneShot()
 	bHitWindowOpen = true;
 	bHitAppliedThisSwing = false;
 
-	ExecuteHitOnce();
+	ProcessHitQuery();
 }
 
 void UCombatComponent::EndHitWindow()
@@ -80,7 +80,7 @@ void UCombatComponent::EndHitWindow()
 	bHitWindowOpen = false;
 }
 
-void UCombatComponent::ExecuteHitOnce()
+void UCombatComponent::ProcessHitQuery()
 {
 	if (!bHitWindowOpen) return;
 	if (bHitAppliedThisSwing) return;

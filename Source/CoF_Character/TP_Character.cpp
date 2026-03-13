@@ -270,7 +270,7 @@ void ATP_Character::HitStart()
 	// 이번 타 시작: 1회 히트 가능 상태로 초기화
 	if (CombatComp)
 	{
-		CombatComp->ConfigureTraceHit(CombatComp->Damage);
+		CombatComp->ConfigureTraceHit(CombatComp->Damage, CombatComp->TraceRange);
 		CombatComp->BeginHitWindow_OneShot();
 	}
 }
@@ -357,18 +357,16 @@ void ATP_Character::Input_Skill1Started(const FInputActionValue&)
 // Skill1_A 돌진
 void ATP_Character::Skill1A_DashStart()
 {
-	// 1) 실제 이동: LaunchCharacter로 전방 돌진
+	// 1) 이동(돌진)
 	const FVector Dir = GetActorForwardVector();
 	const float Speed = (Skill1A_DashDuration > 0.f) ? (Skill1A_DashDistance / Skill1A_DashDuration) : 0.f;
-
-	// 돌진용 속도 부여 (Z는 0)
 	LaunchCharacter(Dir * Speed, true, false);
 
-	// 2) 히트 판정 시작: "연속 라인트레이스" 모드로 CombatComponent에 세팅
-	// 여기서 CombatComp가 "돌진 중엔 매 틱 라인트레이스"하도록 켜줘야 함
+	// 2) 판정 시작: DashTrace로 설정 후 HitWindow 오픈
 	if (CombatComp)
 	{
-		CombatComp->BeginDashTraceWindow(Skill1A_Damage, Skill1A_TraceRange, Skill1A_DashDuration);
+		CombatComp->ConfigureDashHit(Skill1A_Damage, Skill1A_TraceRange, Skill1A_DashDuration);
+		CombatComp->BeginHitWindow_OneShot();  // DashTrace면 Tick에서 반복 처리됨
 	}
 }
 
@@ -376,7 +374,7 @@ void ATP_Character::Skill1A_DashEnd()
 {
 	if (CombatComp)
 	{
-		CombatComp->EndDashTraceWindow();
+		CombatComp->EndHitWindow();
 	}
 }
 
