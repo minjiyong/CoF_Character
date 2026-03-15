@@ -419,13 +419,13 @@ void ATP_Character::Input_Skill1Started(const FInputActionValue&)
 	// Äð´Ù¿î µð¹ö±ë ¸Þ¼¼Áö
 	const double Now = GetWorld()->GetTimeSeconds();
 	if (Skill1Selected == ESkillVariant::A) {
-		if (Now < Skill1B_NextAvailableTime) {
+		if (Now < Skill1A_NextAvailableTime) {
 			ScreenDbg(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
 			return;
 		}
 	}
 	else if (Skill1Selected == ESkillVariant::B) {
-		if (Now < Skill1A_NextAvailableTime) {
+		if (Now < Skill1B_NextAvailableTime) {
 			ScreenDbg(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
 			return;
 		}
@@ -524,8 +524,6 @@ void ATP_Character::Skill1A_DashEnd()
 
 	MoveComp->bOrientRotationToMovement = bSavedOrientRotationToMovement;
 	bUseControllerRotationYaw = bSavedUseControllerRotationYaw;
-
-	SetEveryInputEnabled(true);
 }
 
 
