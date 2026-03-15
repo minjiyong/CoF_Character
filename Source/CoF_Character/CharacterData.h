@@ -75,16 +75,16 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|A")
 	float Skill1A_TraceRange = 150.f;     // 라인트레이스 길이(돌진 판정)
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|A")
 	float Skill1A_Cooldown = 5.f;
 	
 	// 1-B(도끼찍기) 파라미터: 지금은 광역기라 radius/damage만 있으면 됨
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B")
 	float Skill1B_Damage = 30.f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B")
 	float Skill1B_Radius = 350.f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B")
 	float Skill1B_Cooldown = 5.f;
 };

@@ -143,10 +143,16 @@ protected:
 
 	// 스킬1_A 돌진
 	UFUNCTION(BlueprintCallable, Category = "Skills|Skill1|A")
-	void Skill1A_DashStart();
+	void Skill1A_DashStart();			// 실제 돌진 시, 상태를 fly로 만듬(바닥 충돌 때문에)
 
 	UFUNCTION(BlueprintCallable, Category = "Skills|Skill1|A")
 	void Skill1A_DashEnd();
+
+	UFUNCTION(BlueprintCallable)
+	void Skill1A_HitStart();			// 실제 히트 호출
+
+	UFUNCTION(BlueprintCallable)
+	void Skill1A_HitEnd();
 
 	TObjectPtr<UAnimMontage> Skill1MontageA = nullptr;
 	float Skill1A_Damage = 0.f;
@@ -155,6 +161,18 @@ protected:
 	float Skill1A_TraceRange = 0.f;				// 라인트레이스 길이(돌진 판정)
 	float Skill1A_Cooldown = 0.f;
 	double Skill1A_NextAvailableTime = 0.0;
+
+	// 대쉬 전후 값 저장 후 원복용
+	bool bSkillDashMoving = false;				// 돌진 중인지. 다른 키입력 방지용
+
+	float SavedGroundFriction = 0.f;
+	float SavedBrakingFrictionFactor = 0.f;
+	float SavedBrakingDecelerationWalking = 0.f;
+	float SavedBrakingDecelerationFlying = 0.f;
+
+	bool bSavedOrientRotationToMovement = false;
+	bool bSavedUseControllerRotationYaw = false;
+
 
 	// 스킬1_B 도끼찍기
 	UFUNCTION(BlueprintCallable, Category = "Skills|Skill1")

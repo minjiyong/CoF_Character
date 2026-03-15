@@ -355,27 +355,76 @@ void ATP_Character::Input_Skill1Started(const FInputActionValue&)
 
 
 // Skill1_A 돌진
+void ATP_Character::Skill1A_HitStart()
+{
+	if (!CombatComp)
+		return;
+
+	CombatComp->ConfigureDashHit(Skill1A_Damage, Skill1A_TraceRange, Skill1A_DashDuration);
+
+	CombatComp->BeginHitWindow_OneShot();
+}
+
+void ATP_Character::Skill1A_HitEnd()		//역시나 당장은 필요없는듯 기존 hitend 돌려쓰는중 나중에 필요하면 바꾸자.
+{
+	if (!CombatComp)
+		return;
+
+	CombatComp->EndHitWindow();
+}
+
 void ATP_Character::Skill1A_DashStart()
 {
-	// 1) 이동(돌진)
-	const FVector Dir = GetActorForwardVector();
-	const float Speed = (Skill1A_DashDuration > 0.f) ? (Skill1A_DashDistance / Skill1A_DashDuration) : 0.f;
-	LaunchCharacter(Dir * Speed, true, false);
+	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
+	if (!MoveComp || bSkillDashMoving)
+		return;
 
-	// 2) 판정 시작: DashTrace로 설정 후 HitWindow 오픈
-	if (CombatComp)
-	{
-		CombatComp->ConfigureDashHit(Skill1A_Damage, Skill1A_TraceRange, Skill1A_DashDuration);
-		CombatComp->BeginHitWindow_OneShot();  // DashTrace면 Tick에서 반복 처리됨
-	}
+	bSkillDashMoving = true;
+
+	SavedGroundFriction = MoveComp->GroundFriction;
+	SavedBrakingFrictionFactor = MoveComp->BrakingFrictionFactor;
+	SavedBrakingDecelerationWalking = MoveComp->BrakingDecelerationWalking;
+	SavedBrakingDecelerationFlying = MoveComp->BrakingDecelerationFlying;
+
+	bSavedOrientRotationToMovement = MoveComp->bOrientRotationToMovement;
+	bSavedUseControllerRotationYaw = bUseControllerRotationYaw;
+
+	MoveComp->GroundFriction = 0.f;
+	MoveComp->BrakingFrictionFactor = 0.f;
+	MoveComp->BrakingDecelerationWalking = 0.f;
+	MoveComp->BrakingDecelerationFlying = 0.f;
+
+	MoveComp->bOrientRotationToMovement = false;
+	bUseControllerRotationYaw = false;
+
+	MoveComp->SetMovementMode(MOVE_Flying);
+
+	const FVector Dir = GetActorForwardVector().GetSafeNormal2D();
+	const float Speed = (Skill1A_DashDuration > 0.f)
+		? (Skill1A_DashDistance / Skill1A_DashDuration)
+		: 0.f;
+
+	MoveComp->Velocity = Dir * Speed;
 }
 
 void ATP_Character::Skill1A_DashEnd()
 {
-	if (CombatComp)
-	{
-		CombatComp->EndHitWindow();
-	}
+	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
+	if (!MoveComp || !bSkillDashMoving)
+		return;
+
+	bSkillDashMoving = false;
+
+	MoveComp->StopMovementImmediately();
+	MoveComp->SetMovementMode(MOVE_Walking);
+
+	MoveComp->GroundFriction = SavedGroundFriction;
+	MoveComp->BrakingFrictionFactor = SavedBrakingFrictionFactor;
+	MoveComp->BrakingDecelerationWalking = SavedBrakingDecelerationWalking;
+	MoveComp->BrakingDecelerationFlying = SavedBrakingDecelerationFlying;
+
+	MoveComp->bOrientRotationToMovement = bSavedOrientRotationToMovement;
+	bUseControllerRotationYaw = bSavedUseControllerRotationYaw;
 }
 
 
