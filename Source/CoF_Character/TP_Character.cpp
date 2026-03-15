@@ -431,6 +431,12 @@ void ATP_Character::Input_Skill1Started(const FInputActionValue&)
 		}
 	}
 
+	if (const UCharacterMovementComponent* Move = GetCharacterMovement())
+	{
+		if (Move->IsFalling())			// 공중 상태일 때 막기를 따로 - 입력을 안받아도 떨어지는 경우 시전 등...
+			return;
+	}
+
 	if (!CanSkillInput())
 		return;
 
