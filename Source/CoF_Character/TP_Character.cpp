@@ -100,6 +100,68 @@ void ATP_Character::BeginPlay()
 	}
 }
 
+// 입력 잠금
+bool ATP_Character::CanMoveInput() const
+{
+	return bCanMoveInput;
+}
+
+bool ATP_Character::CanAttackInput() const
+{
+	return bCanAttackInput;
+}
+
+bool ATP_Character::CanGuardInput() const
+{
+	return bCanGuardInput;
+}
+
+bool ATP_Character::CanSkillInput() const
+{
+	return bCanSkillInput;
+}
+
+bool ATP_Character::CanJumpInput() const
+{
+	return bCanJumpInput;
+}
+
+void ATP_Character::SetMoveInputEnabled(bool bEnable)
+{
+	bCanMoveInput = bEnable;
+}
+
+void ATP_Character::SetAttackInputEnabled(bool bEnable)
+{
+	bCanAttackInput = bEnable;
+}
+
+void ATP_Character::SetGuardInputEnabled(bool bEnable)
+{
+	bCanGuardInput = bEnable;
+}
+
+void ATP_Character::SetSkillInputEnabled(bool bEnable)
+{
+	bCanSkillInput = bEnable;
+}
+
+void ATP_Character::SetJumpInputEnabled(bool bEnable)
+{
+	bCanJumpInput = bEnable;
+}
+
+void ATP_Character::SetEveryInputEnabled(bool bEnable)
+{
+	SetMoveInputEnabled(bEnable);
+	SetAttackInputEnabled(bEnable);
+	SetGuardInputEnabled(bEnable);
+	SetSkillInputEnabled(bEnable);
+	SetJumpInputEnabled(bEnable);
+}
+
+
+// 플레이어 세팅
 void ATP_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -163,6 +225,9 @@ void ATP_Character::Input_Move(const FInputActionValue& Value)
 	const FVector2D Move = Value.Get<FVector2D>();
 	if (!Controller) return;
 
+	if (!CanMoveInput())
+		return;
+
 	const FRotator YawRot(0.f, Controller->GetControlRotation().Yaw, 0.f);
 
 	const FVector Forward = FRotationMatrix(YawRot).GetUnitAxis(EAxis::X);
@@ -182,12 +247,23 @@ void ATP_Character::Input_Look(const FInputActionValue& Value)
 
 void ATP_Character::Input_JumpStarted(const FInputActionValue& Value)
 {
+	if (!CanJumpInput())
+		return;
+
+	SetMoveInputEnabled(true);
+	SetAttackInputEnabled(true);
+	SetGuardInputEnabled(true);
+	SetSkillInputEnabled(false);
+	SetJumpInputEnabled(true);
+
 	Jump();
 }
 
 void ATP_Character::Input_JumpCompleted(const FInputActionValue& Value)
 {
 	StopJumping();
+
+	SetEveryInputEnabled(true);
 }
 
 void ATP_Character::Input_AttackStarted(const FInputActionValue& Value)
@@ -197,6 +273,15 @@ void ATP_Character::Input_AttackStarted(const FInputActionValue& Value)
 
 	UAnimInstance* Anim = GetMesh() ? GetMesh()->GetAnimInstance() : nullptr;
 	if (!Anim) return;
+
+	if (!CanAttackInput())
+		return;
+
+	SetMoveInputEnabled(true);
+	SetAttackInputEnabled(true);
+	SetGuardInputEnabled(false);
+	SetSkillInputEnabled(false);
+	SetJumpInputEnabled(true);
 
 	// 애니메이션이 아예 안 돌고 있다면
 	if (!Anim->Montage_IsPlaying(PrimaryComboMontage))
@@ -238,7 +323,7 @@ void ATP_Character::SaveAttack()
 	if (!bAttackPressed) return;
 
 	bAttackPressed = false;
-	bComboQueued = false;			// 예약됨 표시용,, 지금은 크게 안 중요함.
+	//bComboQueued = false;			// 예약됨 표시용,, 지금은 크게 안 중요함.
 	
 	// A->B
 	if (PrimaryComboMontage && ComboIndex == 0)
@@ -262,6 +347,8 @@ void ATP_Character::ResetCombo()
 	}
 	bComboQueued = false;
 	bAttackPressed = false;
+
+	SetEveryInputEnabled(true);
 }
 
 // Hit 판정할 영역
@@ -287,6 +374,9 @@ void ATP_Character::HitEnd()
 // --------- 우클릭 방패 들기 ---------
 void ATP_Character::Input_BlockStarted(const FInputActionValue&)
 {
+	if (!CanGuardInput())
+		return;
+
 	if (bBlocking) return;
 	bBlocking = true;
 
@@ -340,6 +430,15 @@ void ATP_Character::Input_Skill1Started(const FInputActionValue&)
 			return;
 		}
 	}
+
+	if (!CanSkillInput())
+		return;
+
+	SetMoveInputEnabled(false);
+	SetAttackInputEnabled(false);
+	SetGuardInputEnabled(false);
+	SetSkillInputEnabled(false);
+	SetJumpInputEnabled(false);
 
 	UAnimMontage* Montage = nullptr;
 	if (Skill1Selected == ESkillVariant::A) Montage = Skill1MontageA;
@@ -425,6 +524,8 @@ void ATP_Character::Skill1A_DashEnd()
 
 	MoveComp->bOrientRotationToMovement = bSavedOrientRotationToMovement;
 	bUseControllerRotationYaw = bSavedUseControllerRotationYaw;
+
+	SetEveryInputEnabled(true);
 }
 
 

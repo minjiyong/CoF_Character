@@ -101,6 +101,26 @@ protected:
 	TObjectPtr<UAnimMontage> BlockHoldMontage = nullptr;			// 우클릭 방패 들기
 
 
+	// ======= 입력 잠금 =======
+	bool bCanMoveInput = true;
+	bool bCanAttackInput = true;
+	bool bCanGuardInput = true;
+	bool bCanSkillInput = true;
+	bool bCanJumpInput = true;
+
+	bool CanMoveInput() const;
+	bool CanAttackInput() const;
+	bool CanGuardInput() const;
+	bool CanSkillInput() const;
+	bool CanJumpInput() const;
+
+	void SetMoveInputEnabled(bool bEnable);
+	void SetAttackInputEnabled(bool bEnable);
+	void SetGuardInputEnabled(bool bEnable);
+	void SetSkillInputEnabled(bool bEnable);
+	void SetJumpInputEnabled(bool bEnable);
+	void SetEveryInputEnabled(bool bEnable);
+
 	// 콤보 상태
 	bool bComboWindowOpen = false;
 	bool bComboQueued = false;
