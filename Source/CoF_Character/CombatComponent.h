@@ -12,6 +12,7 @@ enum class EHitQueryType : uint8
 	TraceForward,
 	AOESphere,
 	DashTrace,
+	SpinSweep,
 };
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -39,10 +40,13 @@ public:
 	void ConfigureTraceHit(float InDamage, float InRange);
 
 	// 스킬 1_A 돌진용
-	void ConfigureDashHit(float InDamage, float InRange, float InDuration);			// duration으로 기간 동안 반복 판정
+	void ConfigureDashHit(float InDamage, float InDuration, float InRadius);			// duration으로 기간 동안 반복 판정
 
 	// 스킬1_B AOE용: 구형 광역 판정으로 설정
 	void ConfigureAOEHit(float InDamage, float InRadius);
+	
+	// 스킬 2_B 돌기
+	void ConfigureSpinHit(float InDamagePerTick, float InRadius, float InTickInterval, float InDuration);
 
 
 protected:
@@ -67,11 +71,22 @@ private:
 
 	// 이번 공격 판정 파라미터
 	float PendingDamage = 0.f;
-	// 기본공격은 x
-	float PendingRadius = 0.f;
 	float PendingRange = 0.f;
+	
+	float PendingRadius = 0.f; // 기본공격은 x
 
 	// Dash 전용
 	double DashEndTime = 0.0;
 	TSet<TWeakObjectPtr<AActor>> DashHitActors;
+	float DashRadius = 60.f;         // 플레이어 몸통 크기 정도(튜닝)
+	FVector DashPrevLoc = FVector::ZeroVector;
+
+	// Spin 전용
+	float SpinDamagePerTick = 0.f;
+	float SpinRadius = 0.f;
+	float SpinTickInterval = 0.2f;
+	double SpinEndTime = 0.0;
+
+	FVector SpinPrevLoc = FVector::ZeroVector;
+	TMap<TWeakObjectPtr<AActor>, double> SpinLastHitTime; // 타겟별 틱 간격 관리
 };

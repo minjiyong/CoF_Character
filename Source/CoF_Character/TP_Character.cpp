@@ -210,6 +210,12 @@ void ATP_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 		EIC->BindAction(Skill1Action, ETriggerEvent::Started, this, &ATP_Character::Input_Skill1Started);
 	}
 
+	// 스킬1
+	if (Skill2Action)
+	{
+		EIC->BindAction(Skill2Action, ETriggerEvent::Started, this, &ATP_Character::Input_Skill2Started);
+	}
+
 	// 1~5 키로 캐릭터 교체
 	PlayerInputComponent->BindKey(EKeys::One, IE_Pressed, this, &ATP_Character::SelectSlot1);
 	PlayerInputComponent->BindKey(EKeys::Two, IE_Pressed, this, &ATP_Character::SelectSlot2);
@@ -348,7 +354,7 @@ void ATP_Character::ResetCombo()
 	bComboQueued = false;
 	bAttackPressed = false;
 
-	SetEveryInputEnabled(true);
+	SetEveryInputEnabled(true);		// input 받기
 }
 
 // Hit 판정할 영역
@@ -465,7 +471,7 @@ void ATP_Character::Skill1A_HitStart()
 	if (!CombatComp)
 		return;
 
-	CombatComp->ConfigureDashHit(Skill1A_Damage, Skill1A_TraceRange, Skill1A_DashDuration);
+	CombatComp->ConfigureDashHit(Skill1A_Damage, Skill1A_DashDuration, 80.f);	// 마지막 radius, 나중에 캐릭터데이터에 추가해서 캐싱하기
 
 	CombatComp->BeginHitWindow_OneShot();
 }
@@ -544,6 +550,66 @@ void ATP_Character::Skill1B_ApplyAOE()
 }
 
 
+// -------- 스킬 2 ---------
+// input
+void ATP_Character::Input_Skill2Started(const FInputActionValue&)
+{
+	if (Skill2Selected == ESkillVariant::None)
+		return;
+
+	// 쿨다운 디버깅 메세지
+	const double Now = GetWorld()->GetTimeSeconds();
+	if (Skill2Selected == ESkillVariant::A) {
+		//if (Now < Skill2A_NextAvailableTime) {
+		//	ScreenDbg(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
+		//	return;
+		//}
+	}
+	else if (Skill2Selected == ESkillVariant::B) {
+		if (Now < Skill2B_NextAvailableTime) {
+			ScreenDbg(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
+			return;
+		}
+	}
+
+	if (const UCharacterMovementComponent* Move = GetCharacterMovement())
+	{
+		if (Move->IsFalling())			// 공중 상태일 때 입력 막기를 따로 - 입력을 안받아도 떨어지는 경우 시전 등...
+			return;
+	}
+
+	if (!CanSkillInput())
+		return;
+
+	SetMoveInputEnabled(true);
+	SetAttackInputEnabled(false);
+	SetGuardInputEnabled(false);
+	SetSkillInputEnabled(false);
+	SetJumpInputEnabled(false);
+
+	UAnimMontage* Montage = nullptr;
+	if (Skill2Selected == ESkillVariant::A) Montage = Skill2MontageA;
+	else if (Skill2Selected == ESkillVariant::B) Montage = Skill2MontageB;
+
+	if (!Montage) return;
+
+	PlayAnimMontage(Montage);
+
+	//if (Skill2Selected == ESkillVariant::A) Skill2A_NextAvailableTime = Now + Skill1A_Cooldown;
+	/*else*/ if (Skill2Selected == ESkillVariant::B) Skill2B_NextAvailableTime = Now + Skill1B_Cooldown;
+}
+
+// 스킬2_B 돌기
+void ATP_Character::Skill2B_HitStart()
+{
+	if (!CombatComp) return;
+
+	// Spin 판정 시작
+	CombatComp->ConfigureSpinHit(Skill2B_DamagePerTick, Skill2B_Radius, Skill2B_TickInterval, Skill2B_Duration);
+	CombatComp->BeginHitWindow_OneShot();
+}
+
+
 // Character Settings 
 void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 {
@@ -594,7 +660,6 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	Skill1A_Damage = Data->Skill1A_Damage;
 	Skill1A_DashDistance = Data->Skill1A_DashDistance;
 	Skill1A_DashDuration = Data->Skill1A_DashDuration;
-	Skill1A_TraceRange = Data->Skill1A_TraceRange;
 	Skill1A_Cooldown = Data->Skill1A_Cooldown;
 	Skill1A_NextAvailableTime = 0.0;
 
@@ -602,6 +667,17 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	Skill1B_Radius = Data->Skill1B_Radius;
 	Skill1B_Cooldown = Data->Skill1B_Cooldown;
 	Skill1B_NextAvailableTime = 0.0;
+
+	// 스킬2
+	Skill2Selected = Data->Skill2Selected;
+
+	Skill2MontageB = Data->Skill2_Montage_B;
+
+	Skill2B_DamagePerTick = Data->Skill2B_DamagePerTick;
+	Skill2B_Radius = Data->Skill2B_Radius;
+	Skill2B_TickInterval = Data->Skill2B_TickInterval;
+	Skill2B_Duration = Data->Skill2B_Duration;
+	Skill2B_Cooldown = Data->Skill2B_Cooldown;
 }
 
 

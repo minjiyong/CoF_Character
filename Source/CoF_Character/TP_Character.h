@@ -70,6 +70,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
 	UInputAction* Skill1Action;			// 스킬1
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+	UInputAction* Skill2Action;			// 스킬2
+
 
 	// ===== Character Data =====
 	UFUNCTION(BlueprintCallable, Category = "Character")
@@ -91,6 +94,7 @@ protected:
 	void Input_BlockCompleted(const FInputActionValue& Value);
 
 	void Input_Skill1Started(const FInputActionValue& Value);		// 스킬1
+	void Input_Skill2Started(const FInputActionValue& Value);		// 스킬2
 
 
 	// ===== Animation =====
@@ -158,7 +162,7 @@ protected:
 	bool bBlocking = false;
 
 
-	// A/B 중 스킬1 뭘 선택했는지
+	// 스킬1 뭘 선택했는지
 	ESkillVariant Skill1Selected = ESkillVariant::None;		
 
 	// 스킬1_A 돌진
@@ -178,7 +182,6 @@ protected:
 	float Skill1A_Damage = 0.f;
 	float Skill1A_DashDistance = 0.f;
 	float Skill1A_DashDuration = 0.f;			// 몇 초 동안 밀고 갈지
-	float Skill1A_TraceRange = 0.f;				// 라인트레이스 길이(돌진 판정)
 	float Skill1A_Cooldown = 0.f;
 	double Skill1A_NextAvailableTime = 0.0;
 
@@ -204,6 +207,25 @@ protected:
 	float Skill1B_Cooldown = 0.f;
 	double Skill1B_NextAvailableTime = 0.0;
 
+
+	// 스킬 2
+	ESkillVariant Skill2Selected = ESkillVariant::None;
+
+	// 스킬 2_A
+	TObjectPtr<UAnimMontage> Skill2MontageA = nullptr;
+
+	// 스킬 2_B 돌기
+	UFUNCTION(BlueprintCallable, Category = "Skills|Skill2|B")
+	void Skill2B_HitStart();
+
+	TObjectPtr<UAnimMontage> Skill2MontageB = nullptr;
+	float Skill2B_DamagePerTick = 0.f;
+	float Skill2B_Radius = 0.f;
+	float Skill2B_TickInterval = 0.f;
+	float Skill2B_Duration = 0.f;
+	float Skill2B_Cooldown = 0.f;
+	double Skill2B_NextAvailableTime = 0.0;
+	
 
 	// ===== 캐릭터 선택(런타임 교체) =====
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character|Switch")

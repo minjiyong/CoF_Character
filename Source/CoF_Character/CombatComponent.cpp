@@ -41,11 +41,18 @@ void UCombatComponent::ConfigureTraceHit(float InDamage, float InRange)
 	PendingRange = InRange;
 }
 
-void UCombatComponent::ConfigureDashHit(float InDamage, float InRange, float InDuration)
+void UCombatComponent::ConfigureAOEHit(float InDamage, float InRadius)
+{
+	HitQueryType = EHitQueryType::AOESphere;
+	PendingDamage = InDamage;
+	PendingRadius = InRadius;
+}
+
+void UCombatComponent::ConfigureDashHit(float InDamage, float InDuration, float InRadius)
 {
 	HitQueryType = EHitQueryType::DashTrace;
 	PendingDamage = InDamage;
-	PendingRange = InRange;
+	DashRadius = InRadius;
 
 	if (UWorld* W = GetWorld())
 	{
@@ -57,13 +64,30 @@ void UCombatComponent::ConfigureDashHit(float InDamage, float InRange, float InD
 	}
 
 	DashHitActors.Reset();
+
+	if (AActor* Owner = GetOwner())
+	{
+		DashPrevLoc = Owner->GetActorLocation();
+	}
 }
 
-void UCombatComponent::ConfigureAOEHit(float InDamage, float InRadius)
+void UCombatComponent::ConfigureSpinHit(float InDamagePerTick, float InRadius, float InTickInterval, float InDuration)
 {
-	HitQueryType = EHitQueryType::AOESphere;
-	PendingDamage = InDamage;
-	PendingRadius = InRadius;
+	HitQueryType = EHitQueryType::SpinSweep;
+
+	SpinDamagePerTick = InDamagePerTick;
+	SpinRadius = InRadius;
+	SpinTickInterval = FMath::Max(0.01f, InTickInterval);
+
+	UWorld* World = GetWorld();
+	SpinEndTime = 0.0;
+	if (World && InDuration > 0.f)
+		SpinEndTime = World->GetTimeSeconds() + InDuration;
+
+	SpinLastHitTime.Reset();
+
+	if (AActor* Owner = GetOwner())
+		SpinPrevLoc = Owner->GetActorLocation();
 }
 
 
@@ -78,6 +102,11 @@ void UCombatComponent::BeginHitWindow_OneShot()
 void UCombatComponent::EndHitWindow()
 {
 	bHitWindowOpen = false;
+	bHitAppliedThisSwing = false;
+
+	DashHitActors.Reset();     // 기존 dash
+	SpinLastHitTime.Reset();   // spin
+	SpinPrevLoc = FVector::ZeroVector;
 }
 
 void UCombatComponent::ProcessHitQuery()
@@ -137,32 +166,123 @@ void UCombatComponent::ProcessHitQuery()
 
 	else if (HitQueryType == EHitQueryType::DashTrace)
 	{
-		// 기간 종료 처리
+		// 기간 종료
 		if (DashEndTime > 0.0 && World->GetTimeSeconds() >= DashEndTime)
 		{
 			EndHitWindow();
 			return;
 		}
 
-		FHitResult Hit;
-		if (!DoLineTraceWithRange(Hit, PendingRange)) return;
+		const FVector CurrLoc = Owner->GetActorLocation();
 
-		AActor* Target = Hit.GetActor();
-		if (!Target || Target == Owner) return;
+		// 첫 프레임에 PrevLoc가 0이면 방어
+		if (DashPrevLoc.IsZero())
+		{
+			DashPrevLoc = CurrLoc;
+			return;
+		}
 
-		if (DashHitActors.Contains(Target)) return; // 동일 대상 1회
-		DashHitActors.Add(Target);
+		// Sweep: PrevLoc -> CurrLoc 사이를 “몸통 크기 구”로 쓸기
+		TArray<FHitResult> Hits;
+		FCollisionQueryParams Params(SCENE_QUERY_STAT(DashSweep), false, Owner);
 
-		ApplyHitToActor(Target, PendingDamage, Hit.ImpactPoint, Hit.ImpactNormal);
+		const bool bAny = World->SweepMultiByChannel(
+			Hits,
+			DashPrevLoc,
+			CurrLoc,
+			FQuat::Identity,
+			ECC_Pawn,
+			FCollisionShape::MakeSphere(DashRadius),
+			Params
+		);
 
 		if (bDrawDebug)
 		{
-			DrawDebugLine(World, Hit.TraceStart, Hit.TraceEnd, FColor::Yellow, false, 0.05f, 0, 1.5f);
+			// 이동 경로 표시(선) + 현재 위치 구
+			DrawDebugLine(World, DashPrevLoc, CurrLoc, bAny ? FColor::Red : FColor::Green, false, 0.1f, 0, 2.f);
+			DrawDebugSphere(World, CurrLoc, DashRadius, 16, FColor::Yellow, false, 0.1f, 0, 1.f);
 		}
+
+		if (bAny)
+		{
+			for (const FHitResult& H : Hits)
+			{
+				AActor* Target = H.GetActor();
+				if (!Target || Target == Owner) continue;
+
+				// 동일 대상은 돌진 중 1회만
+				if (DashHitActors.Contains(Target)) continue;
+				DashHitActors.Add(Target);
+
+				ApplyHitToActor(Target, PendingDamage, H.ImpactPoint, H.ImpactNormal);
+			}
+		}
+
+		// 다음 프레임을 위해 갱신
+		DashPrevLoc = CurrLoc;
 		return;
 	}
 
-	bHitAppliedThisSwing = true;
+	else if (HitQueryType == EHitQueryType::SpinSweep)
+	{
+		// 시간 만료시 종료
+		if (SpinEndTime > 0.0 && World->GetTimeSeconds() >= SpinEndTime)
+		{
+			EndHitWindow();
+			return;
+		}
+
+		const FVector CurrLoc = Owner->GetActorLocation();
+
+		if (SpinPrevLoc.IsZero())
+		{
+			SpinPrevLoc = CurrLoc;
+			return;
+		}
+
+		// 이동하면서도 누락 방지: Prev→Curr 구간을 Sphere로 Sweep
+		TArray<FHitResult> Hits;
+		FCollisionQueryParams Params(SCENE_QUERY_STAT(SpinSweep), false, Owner);
+
+		const bool bAny = World->SweepMultiByChannel(
+			Hits,
+			SpinPrevLoc,
+			CurrLoc,
+			FQuat::Identity,
+			ECC_Pawn, 
+			FCollisionShape::MakeSphere(SpinRadius),
+			Params
+		);
+
+		const double Now = World->GetTimeSeconds();
+
+		if (bDrawDebug)
+		{
+			DrawDebugLine(World, SpinPrevLoc, CurrLoc, bAny ? FColor::Red : FColor::Green, false, 0.05f, 0, 2.f);
+			DrawDebugSphere(World, CurrLoc, SpinRadius, 16, FColor::Yellow, false, 0.05f, 0, 1.f);
+		}
+
+		if (bAny)
+		{
+			for (const FHitResult& H : Hits)
+			{
+				AActor* Target = H.GetActor();
+				if (!Target || Target == Owner) continue;
+
+				double* LastTime = SpinLastHitTime.Find(Target);
+				if (LastTime && (Now - *LastTime) < SpinTickInterval)
+					continue;
+
+				SpinLastHitTime.Add(Target, Now);
+
+				ApplyHitToActor(Target, SpinDamagePerTick, H.ImpactPoint, H.ImpactNormal);
+			}
+		}
+
+		SpinPrevLoc = CurrLoc;
+		return;
+	}
+
 }
 
 void UCombatComponent::ApplyHitToActor(AActor* Target, float InDamage, const FVector& HitPoint, const FVector& HitNormal)
