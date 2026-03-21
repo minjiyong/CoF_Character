@@ -5,6 +5,8 @@
 
 #include "SkillTypes.h"
 
+#include "TimerManager.h"
+
 #include "TP_Character.generated.h"
 
 class UCameraComponent;
@@ -112,6 +114,8 @@ protected:
 	bool bCanSkillInput = true;
 	bool bCanJumpInput = true;
 
+	bool bJumpAccepted = false;		// 점프 중인지 판단
+
 	bool CanMoveInput() const;
 	bool CanAttackInput() const;
 	bool CanGuardInput() const;
@@ -211,12 +215,24 @@ protected:
 	// 스킬 2
 	ESkillVariant Skill2Selected = ESkillVariant::None;
 
-	// 스킬 2_A
+	// 스킬 2_A 방패 밀쳐내기 전방 광역 공격
+	UFUNCTION(BlueprintCallable, Category = "Skills|Skill2|A")
+	void Skill2A_HitStart();
+
 	TObjectPtr<UAnimMontage> Skill2MontageA = nullptr;
+	float Skill2A_Damage = 0.f;
+	float Skill2A_Radius = 0.f;
+	float Skill2A_ForwardOffset = 0.f;
+	float Skill2A_HalfAngleDeg = 0.f;
+	float Skill2A_Cooldown = 0.f;
+
+	double Skill2A_NextAvailableTime = 0.0;
 
 	// 스킬 2_B 돌기
 	UFUNCTION(BlueprintCallable, Category = "Skills|Skill2|B")
 	void Skill2B_HitStart();
+	UFUNCTION(BlueprintCallable, Category = "Skills|Skill2|B")
+	void Skill2B_SpinEnd();
 
 	TObjectPtr<UAnimMontage> Skill2MontageB = nullptr;
 	float Skill2B_DamagePerTick = 0.f;
@@ -225,6 +241,10 @@ protected:
 	float Skill2B_Duration = 0.f;
 	float Skill2B_Cooldown = 0.f;
 	double Skill2B_NextAvailableTime = 0.0;
+
+	bool bSkill2BActive = false;
+	FTimerHandle Skill2B_EndTimerHandle;
+	double Skill2B_EndTime = 0.0;		// 스킬 시전한 후 남은 시간
 	
 
 	// ===== 캐릭터 선택(런타임 교체) =====

@@ -13,6 +13,7 @@ enum class EHitQueryType : uint8
 	AOESphere,
 	DashTrace,
 	SpinSweep,
+	AOEForward,
 };
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -42,9 +43,12 @@ public:
 	// 스킬 1_A 돌진용
 	void ConfigureDashHit(float InDamage, float InDuration, float InRadius);			// duration으로 기간 동안 반복 판정
 
-	// 스킬1_B AOE용: 구형 광역 판정으로 설정
+	// 스킬1_B AOE용: 구형 광역 판정으로 설정, 플레이어 몸 주변
 	void ConfigureAOEHit(float InDamage, float InRadius);
 	
+	// 스킬 2_A 전방 광역(원뿔/부채꼴) 설정
+	void ConfigureAOEForwardHit(float InDamage, float InRadius, float InForwardOffset, float InHalfAngleDeg);
+
 	// 스킬 2_B 돌기
 	void ConfigureSpinHit(float InDamagePerTick, float InRadius, float InTickInterval, float InDuration);
 
@@ -89,4 +93,8 @@ private:
 
 	FVector SpinPrevLoc = FVector::ZeroVector;
 	TMap<TWeakObjectPtr<AActor>, double> SpinLastHitTime; // 타겟별 틱 간격 관리
+
+	// 전방 AOE 전용 파라미터
+	float PendingForwardOffset = 0.f;
+	float PendingHalfAngleDeg = 0.f;
 };

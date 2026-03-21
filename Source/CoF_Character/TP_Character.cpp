@@ -260,7 +260,8 @@ void ATP_Character::Input_JumpStarted(const FInputActionValue& Value)
 	SetAttackInputEnabled(true);
 	SetGuardInputEnabled(true);
 	SetSkillInputEnabled(false);
-	SetJumpInputEnabled(true);
+
+	bJumpAccepted = true;
 
 	Jump();
 }
@@ -269,7 +270,9 @@ void ATP_Character::Input_JumpCompleted(const FInputActionValue& Value)
 {
 	StopJumping();
 
-	SetEveryInputEnabled(true);
+	if(bJumpAccepted) SetEveryInputEnabled(true);
+
+	bJumpAccepted = false;
 }
 
 void ATP_Character::Input_AttackStarted(const FInputActionValue& Value)
@@ -353,6 +356,22 @@ void ATP_Character::ResetCombo()
 	}
 	bComboQueued = false;
 	bAttackPressed = false;
+
+	// Skill2B가 활성인 경우에만 종료 정리
+	if (bSkill2BActive)
+	{
+		bSkill2BActive = false;
+
+		// 판정 종료
+		if (CombatComp)
+			CombatComp->EndHitWindow();
+
+		// 타이머 정리
+		if (UWorld* W = GetWorld())
+			W->GetTimerManager().ClearTimer(Skill2B_EndTimerHandle);
+
+		Skill2B_EndTime = 0.0;
+	}
 
 	SetEveryInputEnabled(true);		// input 받기
 }
@@ -442,6 +461,7 @@ void ATP_Character::Input_Skill1Started(const FInputActionValue&)
 		if (Move->IsFalling())			// 공중 상태일 때 막기를 따로 - 입력을 안받아도 떨어지는 경우 시전 등...
 			return;
 	}
+	StopJumping();
 
 	if (!CanSkillInput())
 		return;
@@ -560,10 +580,10 @@ void ATP_Character::Input_Skill2Started(const FInputActionValue&)
 	// 쿨다운 디버깅 메세지
 	const double Now = GetWorld()->GetTimeSeconds();
 	if (Skill2Selected == ESkillVariant::A) {
-		//if (Now < Skill2A_NextAvailableTime) {
-		//	ScreenDbg(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
-		//	return;
-		//}
+		if (Now < Skill2A_NextAvailableTime) {
+			ScreenDbg(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
+			return;
+		}
 	}
 	else if (Skill2Selected == ESkillVariant::B) {
 		if (Now < Skill2B_NextAvailableTime) {
@@ -577,6 +597,7 @@ void ATP_Character::Input_Skill2Started(const FInputActionValue&)
 		if (Move->IsFalling())			// 공중 상태일 때 입력 막기를 따로 - 입력을 안받아도 떨어지는 경우 시전 등...
 			return;
 	}
+	StopJumping();
 
 	if (!CanSkillInput())
 		return;
@@ -595,8 +616,39 @@ void ATP_Character::Input_Skill2Started(const FInputActionValue&)
 
 	PlayAnimMontage(Montage);
 
-	//if (Skill2Selected == ESkillVariant::A) Skill2A_NextAvailableTime = Now + Skill1A_Cooldown;
-	/*else*/ if (Skill2Selected == ESkillVariant::B) Skill2B_NextAvailableTime = Now + Skill1B_Cooldown;
+	if (Skill2Selected == ESkillVariant::A) Skill2A_NextAvailableTime = Now + Skill2A_Cooldown;
+	else if (Skill2Selected == ESkillVariant::B)
+	{
+		bSkill2BActive = true;
+
+		Skill2B_EndTime = Now + Skill2B_Duration;
+
+		GetWorld()->GetTimerManager().SetTimer(
+			Skill2B_EndTimerHandle,
+			this,
+			&ATP_Character::Skill2B_SpinEnd,
+			Skill2B_Duration,
+			false
+		);
+
+		Skill2B_NextAvailableTime = Now + Skill2B_Cooldown;
+	}
+}
+
+// 스킬 2_A 방패 밀쳐내기 전방 광역 공격 
+void ATP_Character::Skill2A_HitStart()
+{
+	if (!CombatComp) return;
+
+	// 전방 광역(부채꼴) 1회 판정
+	CombatComp->ConfigureAOEForwardHit(
+		Skill2A_Damage,
+		Skill2A_Radius,
+		Skill2A_ForwardOffset,
+		Skill2A_HalfAngleDeg
+	);
+
+	CombatComp->BeginHitWindow_OneShot();
 }
 
 // 스킬2_B 돌기
@@ -607,6 +659,19 @@ void ATP_Character::Skill2B_HitStart()
 	// Spin 판정 시작
 	CombatComp->ConfigureSpinHit(Skill2B_DamagePerTick, Skill2B_Radius, Skill2B_TickInterval, Skill2B_Duration);
 	CombatComp->BeginHitWindow_OneShot();
+}
+
+void ATP_Character::Skill2B_SpinEnd()	// 돌기 시간 끝나면 End로
+{
+	// 시전 종료 시간이 아직이면 아무것도 안 함
+	if (GetWorld()->GetTimeSeconds() < Skill2B_EndTime)
+		return;
+
+	UAnimInstance* Anim = GetMesh() ? GetMesh()->GetAnimInstance() : nullptr;
+	if (!Anim || !Skill2MontageB) return;
+
+	// 이미 End로 빠지도록 예약했으면 중복 예약하지 않게
+	Anim->Montage_SetNextSection(FName(TEXT("Loop")), FName(TEXT("End")), Skill2MontageB);
 }
 
 
@@ -671,7 +736,14 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	// 스킬2
 	Skill2Selected = Data->Skill2Selected;
 
+	Skill2MontageA = Data->Skill2_Montage_A;
 	Skill2MontageB = Data->Skill2_Montage_B;
+
+	Skill2A_Damage = Data->Skill2A_Damage;
+	Skill2A_Radius = Data->Skill2A_Radius;
+	Skill2A_ForwardOffset = Data->Skill2A_ForwardOffset;
+	Skill2A_HalfAngleDeg = Data->Skill2A_HalfAngleDeg;
+	Skill2A_Cooldown = Data->Skill2A_Cooldown;
 
 	Skill2B_DamagePerTick = Data->Skill2B_DamagePerTick;
 	Skill2B_Radius = Data->Skill2B_Radius;

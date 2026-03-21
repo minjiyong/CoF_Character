@@ -71,6 +71,16 @@ void UCombatComponent::ConfigureDashHit(float InDamage, float InDuration, float 
 	}
 }
 
+void UCombatComponent::ConfigureAOEForwardHit(float InDamage, float InRadius, float InForwardOffset, float InHalfAngleDeg)
+{
+	HitQueryType = EHitQueryType::AOEForward;
+
+	PendingDamage = InDamage;
+	PendingRadius = InRadius;
+	PendingForwardOffset = InForwardOffset;
+	PendingHalfAngleDeg = InHalfAngleDeg;
+}
+
 void UCombatComponent::ConfigureSpinHit(float InDamagePerTick, float InRadius, float InTickInterval, float InDuration)
 {
 	HitQueryType = EHitQueryType::SpinSweep;
@@ -220,6 +230,85 @@ void UCombatComponent::ProcessHitQuery()
 
 		// 다음 프레임을 위해 갱신
 		DashPrevLoc = CurrLoc;
+		return;
+	}
+
+	else if (HitQueryType == EHitQueryType::AOEForward)
+	{
+		if (bHitAppliedThisSwing) return;
+
+		const FVector OwnerLoc = Owner->GetActorLocation();
+		const FVector Fwd = Owner->GetActorForwardVector();
+
+		// 전방 오프셋된 중심점 (방패가 닿는 앞쪽)
+		const FVector Center = OwnerLoc + Fwd * PendingForwardOffset;
+
+		const float Radius = PendingRadius;
+		const float HalfAngleRad = FMath::DegreesToRadians(PendingHalfAngleDeg);
+		const float CosThreshold = FMath::Cos(HalfAngleRad);
+
+		TArray<FOverlapResult> Hits;
+		FCollisionQueryParams Params(SCENE_QUERY_STAT(ForwardAOEHit), false, Owner);
+
+		// 후보군을 구로 먼저 모으기 (타겟 타입에 맞는 채널 필요)
+		const bool bAny = World->OverlapMultiByChannel(
+			Hits,
+			Center,
+			FQuat::Identity,
+			ECC_Pawn,
+			FCollisionShape::MakeSphere(Radius),
+			Params
+		);
+
+		if (bDrawDebug)
+		{
+			DrawDebugSphere(World, Center, Radius, 24, bAny ? FColor::Red : FColor::Green, false, 1.0f, 0, 2.f);
+			DrawDebugLine(World, OwnerLoc, Center, FColor::Cyan, false, 1.0f, 0, 2.f);
+
+			const int32 Segs = 16; // 더 높이면 더 부드러움
+			const float AngleStep = (PendingHalfAngleDeg * 2.f) / Segs;
+
+			// 호(arc) 시작점
+			FVector Prev = Center + Fwd.RotateAngleAxis(-PendingHalfAngleDeg, FVector::UpVector) * Radius;
+
+			// 부채꼴의 호를 그림
+			for (int32 i = 1; i <= Segs; ++i)
+			{
+				const float A = -PendingHalfAngleDeg + AngleStep * i;
+				const FVector Dir = Fwd.RotateAngleAxis(A, FVector::UpVector);
+				const FVector Curr = Center + Dir * Radius;
+
+				DrawDebugLine(World, Prev, Curr, FColor::Cyan, false, 1.0f, 0, 1.5f);
+				Prev = Curr;
+			}
+
+			// 방사선(왼/오 경계 + 중앙)
+			const FVector DirL = Fwd.RotateAngleAxis(-PendingHalfAngleDeg, FVector::UpVector);
+			const FVector DirR = Fwd.RotateAngleAxis(PendingHalfAngleDeg, FVector::UpVector);
+			DrawDebugLine(World, Center, Center + DirL * Radius, FColor::Cyan, false, 1.0f, 0, 1.5f);
+			DrawDebugLine(World, Center, Center + DirR * Radius, FColor::Cyan, false, 1.0f, 0, 1.5f);
+			DrawDebugLine(World, Center, Center + Fwd * Radius, FColor::Blue, false, 1.0f, 0, 1.5f);
+		}
+
+		if (bAny)
+		{
+			for (const FOverlapResult& R : Hits)
+			{
+				AActor* Target = R.GetActor();
+				if (!Target || Target == Owner) continue;
+
+				// 전방 각도 필터 (부채꼴)
+				const FVector ToTarget = (Target->GetActorLocation() - OwnerLoc).GetSafeNormal();
+				const float Dot = FVector::DotProduct(Fwd, ToTarget);
+
+				if (Dot < CosThreshold)
+					continue;
+
+				ApplyHitToActor(Target, PendingDamage, Center, FVector::UpVector);
+			}
+		}
+
+		bHitAppliedThisSwing = true;
 		return;
 	}
 

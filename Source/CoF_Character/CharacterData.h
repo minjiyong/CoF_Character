@@ -92,16 +92,35 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2")
 	ESkillVariant Skill2Selected = ESkillVariant::None;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2")
+	TObjectPtr<UAnimMontage> Skill2_Montage_A = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2")
 	TObjectPtr<UAnimMontage> Skill2_Montage_B = nullptr;
+
+
+	// 2_A ¹æÆÐ ¹ÐÃÄ³»±â (Àü¹æ°ø°Ý)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A")
+	float Skill2A_Damage = 20.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A")
+	float Skill2A_Radius = 220.f;              // Æø(±¸ ¹Ý°æ)
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A")
+	float Skill2A_ForwardOffset = 150.f;        // Àü¹æ Áß½É ¿ÀÇÁ¼Â
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A")
+	float Skill2A_HalfAngleDeg = 60.f;          // ºÎÃ¤²Ã ¹Ý°¢(ÃÑ 120µµ)
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A")
+	float Skill2A_Cooldown = 6.f;
 
 	// 2_B µ¹±â
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|B")
 	float Skill2B_DamagePerTick = 8.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|B")
-	float Skill2B_Radius = 240.f;          // ¸öÅë+Ä® ¹üÀ§(Æ©´×)
+	float Skill2B_Radius = 230.f;          // ¸öÅë+Ä® ¹üÀ§(Æ©´×)
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|B")
 	float Skill2B_TickInterval = 0.2f;     // °¡·» E ´À³¦ Æ½´ç µ¥¹ÌÁö(0.2~0.25)
