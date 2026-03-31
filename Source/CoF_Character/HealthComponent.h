@@ -23,6 +23,9 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Health")
 	FOnHpChanged OnHpChanged;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Health")
+	float Shield = 0.f;  // 보호막(HP보다 먼저 깎임)
+
 	UFUNCTION(BlueprintCallable, Category = "Health")
 	void ResetHp();
 
@@ -33,7 +36,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Health")
 	bool IsDead() const { return CurrentHp <= 0.f; }
 
-	// 추가 체력(보호막 형태로 변경 할 수 있을지 알아봐야 함)
-	void AddMaxHpBonus(float Bonus, bool bHealAlso);
-	void RemoveMaxHpBonus(float Bonus);
+	// 추가 보호막
+	void AddShield(float Bonus);
+	void RemoveShield(float Bonus);
 };

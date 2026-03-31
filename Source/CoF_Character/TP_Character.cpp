@@ -210,10 +210,16 @@ void ATP_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 		EIC->BindAction(Skill1Action, ETriggerEvent::Started, this, &ATP_Character::Input_Skill1Started);
 	}
 
-	// 스킬1
+	// 스킬2
 	if (Skill2Action)
 	{
 		EIC->BindAction(Skill2Action, ETriggerEvent::Started, this, &ATP_Character::Input_Skill2Started);
+	}
+
+	// 궁극기
+	if (UltAction)
+	{
+		EIC->BindAction(UltAction, ETriggerEvent::Started, this, &ATP_Character::Input_UltStarted);
 	}
 
 	// 1~5 키로 캐릭터 교체
@@ -735,7 +741,7 @@ void ATP_Character::UltB_BuffStart()
 	// 체력 버프: HealthComponent가 max/current를 어떻게 갖고 있는지에 따라 처리 - 추후에 보호막 형태로 변경하고 싶음.
 	if (HealthComp)
 	{
-		HealthComp->AddMaxHpBonus(UltB_MaxHpBonus, /*bHealAlso*/true);
+		HealthComp->AddShield(UltB_Shield);
 	}
 
 	// 버프 종료 타이머
@@ -761,7 +767,7 @@ void ATP_Character::UltB_BuffEnd()
 
 	if (HealthComp)
 	{
-		HealthComp->RemoveMaxHpBonus(UltB_MaxHpBonus);
+		HealthComp->RemoveShield(UltB_Shield);
 	}
 
 	GetWorld()->GetTimerManager().ClearTimer(UltB_EndTimerHandle);
@@ -853,7 +859,7 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 
 	UltB_Duration = Data->UltB_Duration;
 	UltB_Cooldown = Data->UltB_Cooldown;
-	UltB_MaxHpBonus = Data->UltB_MaxHpBonus;
+	UltB_Shield = Data->UltB_Shield;
 	UltB_AttackMultiplier = Data->UltB_AttackMultiplier;
 }
 

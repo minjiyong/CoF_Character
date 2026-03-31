@@ -152,7 +152,7 @@ public:
 	float UltB_Cooldown = 30.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|B")
-	float UltB_MaxHpBonus = 200.f;		// 체력 증가: "최대체력 증가량(절대값)"
+	float UltB_Shield = 200.f;		// 체력 증가: "최대체력 증가량(절대값)"
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|B")
 	float UltB_AttackMultiplier = 1.3f; //공격력 증가: 30% 증가

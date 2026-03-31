@@ -75,6 +75,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
 	UInputAction* Skill2Action;			// ½ºÅ³2
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+	UInputAction* UltAction;			// ±Ã±Ø±â
+
 
 	// ===== Character Data =====
 	UFUNCTION(BlueprintCallable, Category = "Character")
@@ -259,7 +262,7 @@ protected:
 
 	float UltB_Duration = 0.f;
 	float UltB_Cooldown = 0.f;
-	float UltB_MaxHpBonus = 0.f;
+	float UltB_Shield = 0.f;
 	float UltB_AttackMultiplier = 1.f;
 
 	double UltB_NextAvailableTime = 0.0;

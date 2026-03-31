@@ -16,31 +16,39 @@ void UHealthComponent::ApplyDamage_Local(float DamageAmount)
 {
 	if (DamageAmount <= 0.f || IsDead()) return;
 
-	const float Old = CurrentHp;
-	CurrentHp = FMath::Clamp(CurrentHp - DamageAmount, 0.f, MaxHp);
+	// 1) 보호막 먼저 깎기
+	if (Shield > 0.f)
+	{
+		const float Absorb = FMath::Min(Shield, DamageAmount);
+		Shield -= Absorb;
+		DamageAmount -= Absorb;
+	}
 
-	const float Delta = CurrentHp - Old;
-	OnHpChanged.Broadcast(CurrentHp, Delta);
+	// 2) 남은 데미지만 HP에 적용
+	if (DamageAmount > 0.f)
+	{
+		CurrentHp = FMath::Clamp(CurrentHp - DamageAmount, 0.f, MaxHp);
+	}
 
 	if (AActor* Owner = GetOwner())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[HP] %s HP=%.1f (Delta=%.1f)"),
-			*Owner->GetName(), CurrentHp, Delta);
+		UE_LOG(LogTemp, Log, TEXT("[%s] Damage applied: Shield %.1f, HP %.1f"),
+			*Owner->GetName(), Shield, CurrentHp);
 	}
 }
 
 
-void UHealthComponent::AddMaxHpBonus(float Bonus, bool bHealAlso)
+void UHealthComponent::AddShield(float Bonus)
 {
-	MaxHp += Bonus;
-	if (bHealAlso)
-		CurrentHp = FMath::Clamp(CurrentHp + Bonus, 0.f, MaxHp);
-	else
-		CurrentHp = FMath::Clamp(CurrentHp, 0.f, MaxHp);
+	if (Bonus <= 0.f) return;
+
+	Shield = FMath::Max(0.f, Shield + Bonus);
 }
 
-void UHealthComponent::RemoveMaxHpBonus(float Bonus)
+void UHealthComponent::RemoveShield(float Bonus)
 {
-	MaxHp = FMath::Max(1.f, MaxHp - Bonus);
-	CurrentHp = FMath::Clamp(CurrentHp, 0.f, MaxHp);
+	if (Bonus <= 0.f) return;
+
+	// 남아있는 보호막에서 Bonus만큼 제거 (남은게 더 적으면 0으로)
+	Shield = FMath::Max(0.f, Shield - Bonus);
 }
