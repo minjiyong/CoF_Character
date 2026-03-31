@@ -28,3 +28,19 @@ void UHealthComponent::ApplyDamage_Local(float DamageAmount)
 			*Owner->GetName(), CurrentHp, Delta);
 	}
 }
+
+
+void UHealthComponent::AddMaxHpBonus(float Bonus, bool bHealAlso)
+{
+	MaxHp += Bonus;
+	if (bHealAlso)
+		CurrentHp = FMath::Clamp(CurrentHp + Bonus, 0.f, MaxHp);
+	else
+		CurrentHp = FMath::Clamp(CurrentHp, 0.f, MaxHp);
+}
+
+void UHealthComponent::RemoveMaxHpBonus(float Bonus)
+{
+	MaxHp = FMath::Max(1.f, MaxHp - Bonus);
+	CurrentHp = FMath::Clamp(CurrentHp, 0.f, MaxHp);
+}

@@ -32,4 +32,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Health")
 	bool IsDead() const { return CurrentHp <= 0.f; }
+
+	// 추가 체력(보호막 형태로 변경 할 수 있을지 알아봐야 함)
+	void AddMaxHpBonus(float Bonus, bool bHealAlso);
+	void RemoveMaxHpBonus(float Bonus);
 };

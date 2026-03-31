@@ -97,6 +97,7 @@ protected:
 
 	void Input_Skill1Started(const FInputActionValue& Value);		// 스킬1
 	void Input_Skill2Started(const FInputActionValue& Value);		// 스킬2
+	void Input_UltStarted(const FInputActionValue& Value);			// 궁극기
 
 
 	// ===== Animation =====
@@ -245,6 +246,36 @@ protected:
 	bool bSkill2BActive = false;
 	FTimerHandle Skill2B_EndTimerHandle;
 	double Skill2B_EndTime = 0.0;		// 스킬 시전한 후 남은 시간
+
+
+	// 궁극기
+	ESkillVariant UltSelected = ESkillVariant::None;
+
+	// 궁_A
+	TObjectPtr<UAnimMontage> UltMontageA = nullptr;
+
+	// 궁_B
+	TObjectPtr<UAnimMontage> UltMontageB = nullptr;
+
+	float UltB_Duration = 0.f;
+	float UltB_Cooldown = 0.f;
+	float UltB_MaxHpBonus = 0.f;
+	float UltB_AttackMultiplier = 1.f;
+
+	double UltB_NextAvailableTime = 0.0;
+
+	// 런타임 버프 상태
+	bool bUltBActive = false;
+	FTimerHandle UltB_EndTimerHandle;
+
+	// 공격력 배율(전체 공격에 적용)
+	float AttackMultiplier = 1.0f;
+
+	UFUNCTION(BlueprintCallable, Category = "Skills|Ult|B")
+	void UltB_BuffStart();
+
+	UFUNCTION(BlueprintCallable, Category = "Skills|Ult|B")
+	void UltB_BuffEnd();
 	
 
 	// ===== 캐릭터 선택(런타임 교체) =====

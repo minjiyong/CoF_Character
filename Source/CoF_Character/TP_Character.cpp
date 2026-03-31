@@ -382,7 +382,7 @@ void ATP_Character::HitStart()
 	// 이번 타 시작: 1회 히트 가능 상태로 초기화
 	if (CombatComp)
 	{
-		CombatComp->ConfigureTraceHit(CombatComp->Damage, CombatComp->TraceRange);
+		CombatComp->ConfigureTraceHit(CombatComp->Damage * AttackMultiplier, CombatComp->TraceRange);
 		CombatComp->BeginHitWindow_OneShot();
 	}
 }
@@ -491,7 +491,7 @@ void ATP_Character::Skill1A_HitStart()
 	if (!CombatComp)
 		return;
 
-	CombatComp->ConfigureDashHit(Skill1A_Damage, Skill1A_DashDuration, 80.f);	// 마지막 radius, 나중에 캐릭터데이터에 추가해서 캐싱하기
+	CombatComp->ConfigureDashHit(Skill1A_Damage * AttackMultiplier, Skill1A_DashDuration, 80.f);	// 마지막 radius, 나중에 캐릭터데이터에 추가해서 캐싱하기
 
 	CombatComp->BeginHitWindow_OneShot();
 }
@@ -565,7 +565,7 @@ void ATP_Character::Skill1B_ApplyAOE()
 	if (!CombatComp) return;
 
 	// 여기서 스킬1 내려찍기(검) 의 광역 판정 1회 실행
-	CombatComp->ConfigureAOEHit(Skill1B_Damage, Skill1B_Radius);
+	CombatComp->ConfigureAOEHit(Skill1B_Damage * AttackMultiplier, Skill1B_Radius);
 	CombatComp->BeginHitWindow_OneShot();
 }
 
@@ -642,7 +642,7 @@ void ATP_Character::Skill2A_HitStart()
 
 	// 전방 광역(부채꼴) 1회 판정
 	CombatComp->ConfigureAOEForwardHit(
-		Skill2A_Damage,
+		Skill2A_Damage * AttackMultiplier,
 		Skill2A_Radius,
 		Skill2A_ForwardOffset,
 		Skill2A_HalfAngleDeg
@@ -657,7 +657,7 @@ void ATP_Character::Skill2B_HitStart()
 	if (!CombatComp) return;
 
 	// Spin 판정 시작
-	CombatComp->ConfigureSpinHit(Skill2B_DamagePerTick, Skill2B_Radius, Skill2B_TickInterval, Skill2B_Duration);
+	CombatComp->ConfigureSpinHit(Skill2B_DamagePerTick * AttackMultiplier, Skill2B_Radius, Skill2B_TickInterval, Skill2B_Duration);
 	CombatComp->BeginHitWindow_OneShot();
 }
 
@@ -674,6 +674,100 @@ void ATP_Character::Skill2B_SpinEnd()	// 돌기 시간 끝나면 End로
 	Anim->Montage_SetNextSection(FName(TEXT("Loop")), FName(TEXT("End")), Skill2MontageB);
 }
 
+
+// -------- 궁극기 ---------
+// input
+void ATP_Character::Input_UltStarted(const FInputActionValue&)
+{
+	if (UltSelected == ESkillVariant::None) return;
+
+	// 쿨다운 디버깅 메세지
+	const double Now = GetWorld()->GetTimeSeconds();
+	if (UltSelected == ESkillVariant::A) {
+		if (Now < UltB_NextAvailableTime) {		// A로변경예정
+			ScreenDbg(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
+			return;
+		}
+	}
+	else if (UltSelected == ESkillVariant::B) {
+		if (Now < UltB_NextAvailableTime) {
+			ScreenDbg(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
+			return;
+		}
+	}
+
+	if (const UCharacterMovementComponent* Move = GetCharacterMovement())
+		if (Move->IsFalling())
+			return;
+
+	if (!CanSkillInput()) return;
+
+	// 캐스팅 동안 입력 잠금
+	SetMoveInputEnabled(true);
+	SetAttackInputEnabled(false);
+	SetGuardInputEnabled(false);
+	SetSkillInputEnabled(false);
+	SetJumpInputEnabled(false);
+
+	UAnimMontage* Montage = nullptr;
+	if (UltSelected == ESkillVariant::A) Montage = UltMontageA;
+	else if (UltSelected == ESkillVariant::B) Montage = UltMontageB;
+
+	if (!Montage) return;
+
+	PlayAnimMontage(Montage);
+
+	// 쿨다운 시작
+	//if (UltSelected == ESkillVariant::A) UltB_NextAvailableTime = Now + Skill1A_Cooldown;
+	if (UltSelected == ESkillVariant::B) UltB_NextAvailableTime = Now + UltB_Cooldown;
+}
+
+
+// 궁_B 버프
+void ATP_Character::UltB_BuffStart()
+{
+	if (bUltBActive) return;
+	bUltBActive = true;
+
+	// 공격력 버프
+	AttackMultiplier = UltB_AttackMultiplier;
+
+	// 체력 버프: HealthComponent가 max/current를 어떻게 갖고 있는지에 따라 처리 - 추후에 보호막 형태로 변경하고 싶음.
+	if (HealthComp)
+	{
+		HealthComp->AddMaxHpBonus(UltB_MaxHpBonus, /*bHealAlso*/true);
+	}
+
+	// 버프 종료 타이머
+	GetWorld()->GetTimerManager().ClearTimer(UltB_EndTimerHandle);
+	GetWorld()->GetTimerManager().SetTimer(
+		UltB_EndTimerHandle,
+		this,
+		&ATP_Character::UltB_BuffEnd,
+		UltB_Duration,
+		false
+	);
+
+	// 버프는 시전 후에는 다시 입력 허용
+	SetEveryInputEnabled(true);
+}
+
+void ATP_Character::UltB_BuffEnd()
+{
+	if (!bUltBActive) return;
+	bUltBActive = false;
+
+	AttackMultiplier = 1.0f;
+
+	if (HealthComp)
+	{
+		HealthComp->RemoveMaxHpBonus(UltB_MaxHpBonus);
+	}
+
+	GetWorld()->GetTimerManager().ClearTimer(UltB_EndTimerHandle);
+
+	// 버프 끝났을 때 입력 정책 - 버프 시전됐을 때 입력 허용했으니 여기는 없어도 될듯
+}
 
 // Character Settings 
 void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
@@ -750,6 +844,17 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	Skill2B_TickInterval = Data->Skill2B_TickInterval;
 	Skill2B_Duration = Data->Skill2B_Duration;
 	Skill2B_Cooldown = Data->Skill2B_Cooldown;
+
+	// 궁극기
+	UltSelected = Data->UltSelected;
+
+	UltMontageA = Data->Ult_Montage_A;
+	UltMontageB = Data->Ult_Montage_B;
+
+	UltB_Duration = Data->UltB_Duration;
+	UltB_Cooldown = Data->UltB_Cooldown;
+	UltB_MaxHpBonus = Data->UltB_MaxHpBonus;
+	UltB_AttackMultiplier = Data->UltB_AttackMultiplier;
 }
 
 
