@@ -87,7 +87,7 @@ public:
 	float Skill1B_Cooldown = 5.f;
 
 
-	// ------------ Skill 1 ------------
+	// ------------ Skill 2 ------------
 	// 어떤 걸 선택했는지
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2")
 	ESkillVariant Skill2Selected = ESkillVariant::None;
@@ -130,4 +130,30 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|B")
 	float Skill2B_Cooldown = 8.f;
+
+
+	// ===== Ultimate =====
+	// 어떤 걸 선택했는지
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult")
+	ESkillVariant UltSelected = ESkillVariant::None;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult")
+	TObjectPtr<UAnimMontage> Ult_Montage_A = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult")
+	TObjectPtr<UAnimMontage> Ult_Montage_B = nullptr;
+
+
+	// ===== Ult_B : Self Buff =====
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|B")
+	float UltB_Duration = 8.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|B")
+	float UltB_Cooldown = 30.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|B")
+	float UltB_MaxHpBonus = 200.f;		// 체력 증가: "최대체력 증가량(절대값)"
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|B")
+	float UltB_AttackMultiplier = 1.3f; //공격력 증가: 30% 증가
 };
