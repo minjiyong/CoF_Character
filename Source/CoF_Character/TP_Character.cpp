@@ -24,6 +24,10 @@
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimMontage.h"
 
+// Ult_A 아군 보호막 스킬, 아군 버프 스킬은 아직 유일해서 component로 분리 안해서 include함.
+#include "Engine/World.h"
+#include "Engine/OverlapResult.h"
+#include "CollisionShape.h"
 
 
 //312312312 
@@ -690,7 +694,7 @@ void ATP_Character::Input_UltStarted(const FInputActionValue&)
 	// 쿨다운 디버깅 메세지
 	const double Now = GetWorld()->GetTimeSeconds();
 	if (UltSelected == ESkillVariant::A) {
-		if (Now < UltB_NextAvailableTime) {		// A로변경예정
+		if (Now < UltA_NextAvailableTime) {	
 			ScreenDbg(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
 			return;
 		}
@@ -709,7 +713,7 @@ void ATP_Character::Input_UltStarted(const FInputActionValue&)
 	if (!CanSkillInput()) return;
 
 	// 캐스팅 동안 입력 잠금
-	SetMoveInputEnabled(true);
+	SetMoveInputEnabled(false);
 	SetAttackInputEnabled(false);
 	SetGuardInputEnabled(false);
 	SetSkillInputEnabled(false);
@@ -724,8 +728,89 @@ void ATP_Character::Input_UltStarted(const FInputActionValue&)
 	PlayAnimMontage(Montage);
 
 	// 쿨다운 시작
-	//if (UltSelected == ESkillVariant::A) UltB_NextAvailableTime = Now + Skill1A_Cooldown;
-	if (UltSelected == ESkillVariant::B) UltB_NextAvailableTime = Now + UltB_Cooldown;
+	if (UltSelected == ESkillVariant::A) UltA_NextAvailableTime = Now + Skill1A_Cooldown;
+	else if (UltSelected == ESkillVariant::B) UltB_NextAvailableTime = Now + UltB_Cooldown;
+}
+
+
+// 궁_A 아군 쉴드
+void ATP_Character::UltA_ShieldStart()
+{
+	if (!GetWorld()) return;
+
+	// 이미 남아있는 기록이 있으면 정리(중복 시전 방지)
+	UltA_ShieldGiven.Reset();
+
+	const FVector Center = GetActorLocation();
+	const float Radius = UltA_Radius;
+
+	TArray<FOverlapResult> Hits;
+	FCollisionQueryParams Params(SCENE_QUERY_STAT(UltA_Shield), false, this);
+
+	const bool bAny = GetWorld()->OverlapMultiByChannel(
+		Hits,
+		Center,
+		FQuat::Identity,
+		ECC_Pawn, // 아군 더미가 Pawn이어야 함(아래 더미 제작 참고)
+		FCollisionShape::MakeSphere(Radius),
+		Params
+	);
+
+	DrawDebugSphere(GetWorld(), Center, Radius, 24, bAny ? FColor::Red : FColor::Green, false, 1.0f, 0, 2.f);
+
+	if (bAny)
+	{
+		for (const FOverlapResult& R : Hits)
+		{
+			AActor* Target = R.GetActor();
+			if (!Target || Target == this) continue;
+
+			// 아군 판별(태그)
+			if (!Target->ActorHasTag(FName(TEXT("Ally"))))
+				continue;
+
+			UHealthComponent* HC = Target->FindComponentByClass<UHealthComponent>();
+			if (!HC) continue;
+
+			HC->AddShield(UltA_Shield);
+			UltA_ShieldGiven.Add(Target, UltA_Shield);
+		}
+	}
+
+	// 버프 종료 타이머 - 시간이 지나면 ShieldEnd가 호출되고 보호막이 제거됨.
+	GetWorld()->GetTimerManager().ClearTimer(UltA_EndTimerHandle);
+	GetWorld()->GetTimerManager().SetTimer(
+		UltA_EndTimerHandle,
+		this,
+		&ATP_Character::UltA_ShieldEnd,
+		UltA_Duration,
+		false
+	);
+
+	// 버프는 시전 후에는 다시 입력 허용
+	SetEveryInputEnabled(true);
+}
+
+void ATP_Character::UltA_ShieldEnd()
+{
+	// 저장해둔 대상들에게서 “이번 UltA로 준 양만큼” 제거
+	for (auto It = UltA_ShieldGiven.CreateIterator(); It; ++It)
+	{
+		AActor* Target = It.Key().Get();
+		const float Given = It.Value();
+
+		if (!Target) continue;
+
+		UHealthComponent* HC = Target->FindComponentByClass<UHealthComponent>();
+		if (!HC) continue;
+
+		HC->RemoveShield(Given);
+	}
+
+	UltA_ShieldGiven.Reset();
+
+	if (GetWorld())
+		GetWorld()->GetTimerManager().ClearTimer(UltA_EndTimerHandle);
 }
 
 
@@ -738,13 +823,13 @@ void ATP_Character::UltB_BuffStart()
 	// 공격력 버프
 	AttackMultiplier = UltB_AttackMultiplier;
 
-	// 체력 버프: HealthComponent가 max/current를 어떻게 갖고 있는지에 따라 처리 - 추후에 보호막 형태로 변경하고 싶음.
+	// 체력 버프: HealthComponent 에서 처리. 보호막 형태로 변경
 	if (HealthComp)
 	{
 		HealthComp->AddShield(UltB_Shield);
 	}
 
-	// 버프 종료 타이머
+	// 버프 종료 타이머 - 시간이 지나면 BuffEnd가 호출되고 보호막이 제거됨.
 	GetWorld()->GetTimerManager().ClearTimer(UltB_EndTimerHandle);
 	GetWorld()->GetTimerManager().SetTimer(
 		UltB_EndTimerHandle,
@@ -767,7 +852,7 @@ void ATP_Character::UltB_BuffEnd()
 
 	if (HealthComp)
 	{
-		HealthComp->RemoveShield(UltB_Shield);
+		HealthComp->RemoveShield(UltB_Shield);			// 보호막 제거
 	}
 
 	GetWorld()->GetTimerManager().ClearTimer(UltB_EndTimerHandle);
@@ -856,6 +941,11 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 
 	UltMontageA = Data->Ult_Montage_A;
 	UltMontageB = Data->Ult_Montage_B;
+
+	UltA_Duration = Data->UltA_Duration;
+	UltA_Cooldown = Data->UltA_Cooldown;
+	UltA_Shield = Data->UltA_Shield;
+	UltA_Radius = Data->UltA_Radius;
 
 	UltB_Duration = Data->UltB_Duration;
 	UltB_Cooldown = Data->UltB_Cooldown;

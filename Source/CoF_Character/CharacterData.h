@@ -143,6 +143,18 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult")
 	TObjectPtr<UAnimMontage> Ult_Montage_B = nullptr;
 
+	// ===== Ult_A : Ally Shield =====
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|A")
+	float UltA_Duration = 8.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|A")
+	float UltA_Cooldown = 30.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|A")
+	float UltA_Shield = 200.f;   // 아군에게 부여할 보호막 양
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|A")
+	float UltA_Radius = 600.f;   // 주변 범위(구)
 
 	// ===== Ult_B : Self Buff =====
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|B")

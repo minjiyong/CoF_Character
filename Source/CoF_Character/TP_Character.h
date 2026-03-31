@@ -254,10 +254,26 @@ protected:
 	// 궁극기
 	ESkillVariant UltSelected = ESkillVariant::None;
 
-	// 궁_A
+	// 궁_A - 아군 쉴드
 	TObjectPtr<UAnimMontage> UltMontageA = nullptr;
 
-	// 궁_B
+	float UltA_Duration = 0.f;
+	float UltA_Cooldown = 0.f;
+	float UltA_Shield = 0.f;
+	float UltA_Radius = 0.f;
+
+	double UltA_NextAvailableTime = 0.0;
+	FTimerHandle UltA_EndTimerHandle;
+	
+	TMap<TWeakObjectPtr<AActor>, float> UltA_ShieldGiven;		// UltA로 보호막을 준 대상들(약참조)
+
+	UFUNCTION(BlueprintCallable, Category = "Skills|Ult|A")
+	void UltA_ShieldStart();   // 몽타주 Notify에서 호출 (부여)
+
+	UFUNCTION(BlueprintCallable, Category = "Skills|Ult|A")
+	void UltA_ShieldEnd();     // 타이머에서 자동 호출 (제거)
+
+	// 궁_B - 자체 쉴드, 공격력 증가
 	TObjectPtr<UAnimMontage> UltMontageB = nullptr;
 
 	float UltB_Duration = 0.f;
@@ -267,12 +283,10 @@ protected:
 
 	double UltB_NextAvailableTime = 0.0;
 
-	// 런타임 버프 상태
-	bool bUltBActive = false;
-	FTimerHandle UltB_EndTimerHandle;
+	bool bUltBActive = false;			// 런타임 버프 상태
+	FTimerHandle UltB_EndTimerHandle;	// 런타임 버프 상태
 
-	// 공격력 배율(전체 공격에 적용)
-	float AttackMultiplier = 1.0f;
+	float AttackMultiplier = 1.0f;		// 공격력 배율(전체 공격에 적용)
 
 	UFUNCTION(BlueprintCallable, Category = "Skills|Ult|B")
 	void UltB_BuffStart();
