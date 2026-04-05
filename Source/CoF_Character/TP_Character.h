@@ -5,6 +5,8 @@
 
 #include "SkillTypes.h"
 
+#include "HitReactInterface.h"
+
 #include "TimerManager.h"
 
 #include "TP_Character.generated.h"
@@ -24,7 +26,7 @@ class UCombatComponent;
 class UAnimMontage;
 
 UCLASS()
-class COF_CHARACTER_API ATP_Character : public ACharacter
+class COF_CHARACTER_API ATP_Character : public ACharacter, public IHitReactInterface
 {
 	GENERATED_BODY()
 
@@ -110,6 +112,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Anim")
 	TObjectPtr<UAnimMontage> BlockHoldMontage = nullptr;			// 우클릭 방패 들기
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat|HitReact")
+	TObjectPtr<UAnimMontage> HitReactMontage = nullptr;				// 피격 애니메이션
+
 
 	// ======= 입력 잠금 =======
 	bool bCanMoveInput = true;
@@ -132,6 +137,13 @@ protected:
 	void SetSkillInputEnabled(bool bEnable);
 	void SetJumpInputEnabled(bool bEnable);
 	void SetEveryInputEnabled(bool bEnable);
+
+	// 피격
+	float HitReactPlayRate = 1.0f;
+
+	// HitReactInterface 구현
+	virtual void OnHitReact_Implementation(float DamageAmount, const FVector& HitPoint, const FVector& HitNormal) override;
+	void Debug_ForceHit();			// (더미 없이 테스트용) 강제 피격
 
 	// 콤보 상태
 	bool bComboWindowOpen = false;

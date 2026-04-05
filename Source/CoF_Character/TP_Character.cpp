@@ -232,6 +232,9 @@ void ATP_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	PlayerInputComponent->BindKey(EKeys::Three, IE_Pressed, this, &ATP_Character::SelectSlot3);
 	PlayerInputComponent->BindKey(EKeys::Four, IE_Pressed, this, &ATP_Character::SelectSlot4);
 	PlayerInputComponent->BindKey(EKeys::Five, IE_Pressed, this, &ATP_Character::SelectSlot5);
+
+	// 피격 디버깅
+	PlayerInputComponent->BindKey(EKeys::F7, IE_Pressed, this, &ATP_Character::Debug_ForceHit);		// 지금은 F7키에 바인딩
 }
 
 
@@ -441,6 +444,41 @@ void ATP_Character::Input_BlockCompleted(const FInputActionValue&)
 
 	// 이동속도 다시 복구
 	GetCharacterMovement()->MaxWalkSpeed = DefaultCharacterData->MaxWalkSpeed;
+}
+
+
+// 피격
+void ATP_Character::OnHitReact_Implementation(float DamageAmount, const FVector& HitPoint, const FVector& HitNormal)
+{
+	// 1) 데미지 적용
+	if (HealthComp)
+	{
+		HealthComp->ApplyDamage_Local(DamageAmount);
+	}
+
+	// 2) 피격 애니 재생
+	if (!HitReactMontage) return;
+
+	UAnimInstance* Anim = GetMesh() ? GetMesh()->GetAnimInstance() : nullptr;
+	if (!Anim) return;
+
+	// (선택) 이미 피격 몽타주가 돌고 있으면 재시작하지 않게
+	if (Anim->Montage_IsPlaying(HitReactMontage))
+		return;
+
+	// 추후 방향에 따라 섹션 선택(Front/Back/Left/Right) 으로 교체할지 생각해봐야함.
+	// 일단 단일 섹션이면 그냥 Play
+	PlayAnimMontage(HitReactMontage, HitReactPlayRate);
+}
+
+void ATP_Character::Debug_ForceHit()
+{
+	// 임의 데미지, 임의 히트포인트/노멀
+	const float DamageAmount = 10.f;
+	const FVector HitPoint = GetActorLocation() + GetActorForwardVector() * 50.f;
+	const FVector HitNormal = -GetActorForwardVector();
+
+	OnHitReact_Implementation(DamageAmount, HitPoint, HitNormal);
 }
 
 
@@ -900,6 +938,10 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 
 	// Blocking Animation Montage
 	BlockHoldMontage = Data->BlockHoldMontage;
+
+	// 피격
+	HitReactMontage = Data->HitReactMontage;
+	HitReactPlayRate = Data->HitReactPlayRate;
 
 	// 스킬1
 	Skill1Selected = Data->Skill1Selected;		// 인게임 선택 기본값(DA에 넣은 기본값으로 시작)

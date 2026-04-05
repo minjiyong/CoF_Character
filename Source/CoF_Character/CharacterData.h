@@ -40,6 +40,13 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
 	float Damage = 10.f;
 
+	// ===== HitReact =====
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|HitReact")
+	TObjectPtr<UAnimMontage> HitReactMontage = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|HitReact")
+	float HitReactPlayRate = 1.0f;
+
 	// Combat Animation - 기본 콤보 공격
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Anim")
 	TObjectPtr<UAnimMontage> PrimaryComboMontage;
