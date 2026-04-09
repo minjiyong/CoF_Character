@@ -24,11 +24,13 @@
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimMontage.h"
 
-// Ult_A 아군 보호막 스킬, 아군 버프 스킬은 아직 유일해서 component로 분리 안해서 include함.
-#include "Engine/World.h"
-#include "Engine/OverlapResult.h"
-#include "CollisionShape.h"
-
+// ===== Terra Skills (logic separated) =====
+#include "Skills/Terra/Terra_Skill1A_Dash.h"
+#include "Skills/Terra/Terra_Skill1B_SlamAOE.h"
+#include "Skills/Terra/Terra_Skill2A_ShieldPush.h"
+#include "Skills/Terra/Terra_Skill2B_Spin.h"
+#include "Skills/Terra/Terra_UltA_AllyShield.h"
+#include "Skills/Terra/Terra_UltB_SelfShieldBuff.h"
 
 //312312312 
 static void ScreenDbg(const FString& Msg, float Sec = 1.5f, FColor Color = FColor::Cyan)
@@ -38,7 +40,6 @@ static void ScreenDbg(const FString& Msg, float Sec = 1.5f, FColor Color = FColo
 		GEngine->AddOnScreenDebugMessage(-1, Sec, Color, Msg);
 	}
 }
-
 
 ATP_Character::ATP_Character()
 {
@@ -105,55 +106,17 @@ void ATP_Character::BeginPlay()
 }
 
 // 입력 잠금
-bool ATP_Character::CanMoveInput() const
-{
-	return bCanMoveInput;
-}
+bool ATP_Character::CanMoveInput() const { return bCanMoveInput; }
+bool ATP_Character::CanAttackInput() const { return bCanAttackInput; }
+bool ATP_Character::CanGuardInput() const { return bCanGuardInput; }
+bool ATP_Character::CanSkillInput() const { return bCanSkillInput; }
+bool ATP_Character::CanJumpInput() const { return bCanJumpInput; }
 
-bool ATP_Character::CanAttackInput() const
-{
-	return bCanAttackInput;
-}
-
-bool ATP_Character::CanGuardInput() const
-{
-	return bCanGuardInput;
-}
-
-bool ATP_Character::CanSkillInput() const
-{
-	return bCanSkillInput;
-}
-
-bool ATP_Character::CanJumpInput() const
-{
-	return bCanJumpInput;
-}
-
-void ATP_Character::SetMoveInputEnabled(bool bEnable)
-{
-	bCanMoveInput = bEnable;
-}
-
-void ATP_Character::SetAttackInputEnabled(bool bEnable)
-{
-	bCanAttackInput = bEnable;
-}
-
-void ATP_Character::SetGuardInputEnabled(bool bEnable)
-{
-	bCanGuardInput = bEnable;
-}
-
-void ATP_Character::SetSkillInputEnabled(bool bEnable)
-{
-	bCanSkillInput = bEnable;
-}
-
-void ATP_Character::SetJumpInputEnabled(bool bEnable)
-{
-	bCanJumpInput = bEnable;
-}
+void ATP_Character::SetMoveInputEnabled(bool bEnable) { bCanMoveInput = bEnable; }
+void ATP_Character::SetAttackInputEnabled(bool bEnable) { bCanAttackInput = bEnable; }
+void ATP_Character::SetGuardInputEnabled(bool bEnable) { bCanGuardInput = bEnable; }
+void ATP_Character::SetSkillInputEnabled(bool bEnable) { bCanSkillInput = bEnable; }
+void ATP_Character::SetJumpInputEnabled(bool bEnable) { bCanJumpInput = bEnable; }
 
 void ATP_Character::SetEveryInputEnabled(bool bEnable)
 {
@@ -163,7 +126,6 @@ void ATP_Character::SetEveryInputEnabled(bool bEnable)
 	SetSkillInputEnabled(bEnable);
 	SetJumpInputEnabled(bEnable);
 }
-
 
 // 플레이어 세팅
 void ATP_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -237,7 +199,6 @@ void ATP_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	PlayerInputComponent->BindKey(EKeys::F7, IE_Pressed, this, &ATP_Character::Debug_ForceHit);		// 지금은 F7키에 바인딩
 }
 
-
 // IA 관련
 void ATP_Character::Input_Move(const FInputActionValue& Value)
 {
@@ -283,7 +244,7 @@ void ATP_Character::Input_JumpCompleted(const FInputActionValue& Value)
 {
 	StopJumping();
 
-	if(bJumpAccepted) SetEveryInputEnabled(true);
+	if (bJumpAccepted) SetEveryInputEnabled(true);
 
 	bJumpAccepted = false;
 }
@@ -324,8 +285,6 @@ void ATP_Character::Input_AttackStarted(const FInputActionValue& Value)
 	}
 }
 
-
-
 // 콤보 받는 범위 - 이 타이밍에 입력이 들어왔으면 다음타 예약
 void ATP_Character::ComboWindowOpen()
 {
@@ -346,7 +305,7 @@ void ATP_Character::SaveAttack()
 
 	bAttackPressed = false;
 	//bComboQueued = false;			// 예약됨 표시용,, 지금은 크게 안 중요함.
-	
+
 	// A->B
 	if (PrimaryComboMontage && ComboIndex == 0)
 	{
@@ -356,7 +315,6 @@ void ATP_Character::SaveAttack()
 			ComboIndex = 1;
 		}
 	}
-
 }
 
 // 끝
@@ -408,7 +366,6 @@ void ATP_Character::HitEnd()
 	}
 }
 
-
 // --------- 우클릭 방패 들기 ---------
 void ATP_Character::Input_BlockStarted(const FInputActionValue&)
 {
@@ -446,7 +403,6 @@ void ATP_Character::Input_BlockCompleted(const FInputActionValue&)
 	GetCharacterMovement()->MaxWalkSpeed = DefaultCharacterData->MaxWalkSpeed;
 }
 
-
 // 피격
 void ATP_Character::OnHitReact_Implementation(float DamageAmount, const FVector& HitPoint, const FVector& HitNormal)
 {
@@ -480,7 +436,6 @@ void ATP_Character::Debug_ForceHit()
 
 	OnHitReact_Implementation(DamageAmount, HitPoint, HitNormal);
 }
-
 
 // -------- 스킬 1 ---------
 // input
@@ -532,91 +487,32 @@ void ATP_Character::Input_Skill1Started(const FInputActionValue&)
 	else if (Skill1Selected == ESkillVariant::B) Skill1B_NextAvailableTime = Now + Skill1B_Cooldown;
 }
 
-
-// Skill1_A 돌진
+// ===== Skill1_A 돌진 (wrapper) =====
 void ATP_Character::Skill1A_HitStart()
 {
-	if (!CombatComp)
-		return;
-
-	CombatComp->ConfigureDashHit(Skill1A_Damage * AttackMultiplier, Skill1A_DashDuration, 80.f);	// 마지막 radius, 나중에 캐릭터데이터에 추가해서 캐싱하기
-
-	CombatComp->BeginHitWindow_OneShot();
+	if (Terra_Skill1A) Terra_Skill1A->HitStart();
 }
 
 void ATP_Character::Skill1A_HitEnd()		//역시나 당장은 필요없는듯 기존 hitend 돌려쓰는중 나중에 필요하면 바꾸자.
 {
-	if (!CombatComp)
-		return;
-
-	CombatComp->EndHitWindow();
+	if (Terra_Skill1A) Terra_Skill1A->HitEnd();
 }
 
 void ATP_Character::Skill1A_DashStart()
 {
-	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
-	if (!MoveComp || bSkillDashMoving)
-		return;
-
-	bSkillDashMoving = true;
-
-	SavedGroundFriction = MoveComp->GroundFriction;
-	SavedBrakingFrictionFactor = MoveComp->BrakingFrictionFactor;
-	SavedBrakingDecelerationWalking = MoveComp->BrakingDecelerationWalking;
-	SavedBrakingDecelerationFlying = MoveComp->BrakingDecelerationFlying;
-
-	bSavedOrientRotationToMovement = MoveComp->bOrientRotationToMovement;
-	bSavedUseControllerRotationYaw = bUseControllerRotationYaw;
-
-	MoveComp->GroundFriction = 0.f;
-	MoveComp->BrakingFrictionFactor = 0.f;
-	MoveComp->BrakingDecelerationWalking = 0.f;
-	MoveComp->BrakingDecelerationFlying = 0.f;
-
-	MoveComp->bOrientRotationToMovement = false;
-	bUseControllerRotationYaw = false;
-
-	MoveComp->SetMovementMode(MOVE_Flying);
-
-	const FVector Dir = GetActorForwardVector().GetSafeNormal2D();
-	const float Speed = (Skill1A_DashDuration > 0.f)
-		? (Skill1A_DashDistance / Skill1A_DashDuration)
-		: 0.f;
-
-	MoveComp->Velocity = Dir * Speed;
+	if (Terra_Skill1A) Terra_Skill1A->DashStart();
 }
 
 void ATP_Character::Skill1A_DashEnd()
 {
-	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
-	if (!MoveComp || !bSkillDashMoving)
-		return;
-
-	bSkillDashMoving = false;
-
-	MoveComp->StopMovementImmediately();
-	MoveComp->SetMovementMode(MOVE_Walking);
-
-	MoveComp->GroundFriction = SavedGroundFriction;
-	MoveComp->BrakingFrictionFactor = SavedBrakingFrictionFactor;
-	MoveComp->BrakingDecelerationWalking = SavedBrakingDecelerationWalking;
-	MoveComp->BrakingDecelerationFlying = SavedBrakingDecelerationFlying;
-
-	MoveComp->bOrientRotationToMovement = bSavedOrientRotationToMovement;
-	bUseControllerRotationYaw = bSavedUseControllerRotationYaw;
+	if (Terra_Skill1A) Terra_Skill1A->DashEnd();
 }
 
-
-// skill1_B 적용 AOE(광역 공격)
+// ===== skill1_B 적용 AOE(광역 공격) (wrapper) =====
 void ATP_Character::Skill1B_ApplyAOE()
 {
-	if (!CombatComp) return;
-
-	// 여기서 스킬1 내려찍기(검) 의 광역 판정 1회 실행
-	CombatComp->ConfigureAOEHit(Skill1B_Damage * AttackMultiplier, Skill1B_Radius);
-	CombatComp->BeginHitWindow_OneShot();
+	if (Terra_Skill1B) Terra_Skill1B->ApplyAOE();
 }
-
 
 // -------- 스킬 2 ---------
 // input
@@ -664,7 +560,10 @@ void ATP_Character::Input_Skill2Started(const FInputActionValue&)
 
 	PlayAnimMontage(Montage);
 
-	if (Skill2Selected == ESkillVariant::A) Skill2A_NextAvailableTime = Now + Skill2A_Cooldown;
+	if (Skill2Selected == ESkillVariant::A)
+	{
+		Skill2A_NextAvailableTime = Now + Skill2A_Cooldown;
+	}
 	else if (Skill2Selected == ESkillVariant::B)
 	{
 		bSkill2BActive = true;
@@ -683,45 +582,22 @@ void ATP_Character::Input_Skill2Started(const FInputActionValue&)
 	}
 }
 
-// 스킬 2_A 방패 밀쳐내기 전방 광역 공격 
+// ===== Skill2_A (wrapper) =====
 void ATP_Character::Skill2A_HitStart()
 {
-	if (!CombatComp) return;
-
-	// 전방 광역(부채꼴) 1회 판정
-	CombatComp->ConfigureAOEForwardHit(
-		Skill2A_Damage * AttackMultiplier,
-		Skill2A_Radius,
-		Skill2A_ForwardOffset,
-		Skill2A_HalfAngleDeg
-	);
-
-	CombatComp->BeginHitWindow_OneShot();
+	if (Terra_Skill2A) Terra_Skill2A->HitStart();
 }
 
-// 스킬2_B 돌기
+// ===== Skill2_B (wrapper) =====
 void ATP_Character::Skill2B_HitStart()
 {
-	if (!CombatComp) return;
-
-	// Spin 판정 시작
-	CombatComp->ConfigureSpinHit(Skill2B_DamagePerTick * AttackMultiplier, Skill2B_Radius, Skill2B_TickInterval, Skill2B_Duration);
-	CombatComp->BeginHitWindow_OneShot();
+	if (Terra_Skill2B) Terra_Skill2B->HitStart();
 }
 
 void ATP_Character::Skill2B_SpinEnd()	// 돌기 시간 끝나면 End로
 {
-	// 시전 종료 시간이 아직이면 아무것도 안 함
-	if (GetWorld()->GetTimeSeconds() < Skill2B_EndTime)
-		return;
-
-	UAnimInstance* Anim = GetMesh() ? GetMesh()->GetAnimInstance() : nullptr;
-	if (!Anim || !Skill2MontageB) return;
-
-	// 이미 End로 빠지도록 예약했으면 중복 예약하지 않게
-	Anim->Montage_SetNextSection(FName(TEXT("Loop")), FName(TEXT("End")), Skill2MontageB);
+	if (Terra_Skill2B) Terra_Skill2B->SpinEnd();
 }
-
 
 // -------- 궁극기 ---------
 // input
@@ -732,7 +608,7 @@ void ATP_Character::Input_UltStarted(const FInputActionValue&)
 	// 쿨다운 디버깅 메세지
 	const double Now = GetWorld()->GetTimeSeconds();
 	if (UltSelected == ESkillVariant::A) {
-		if (Now < UltA_NextAvailableTime) {	
+		if (Now < UltA_NextAvailableTime) {
 			ScreenDbg(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
 			return;
 		}
@@ -770,132 +646,26 @@ void ATP_Character::Input_UltStarted(const FInputActionValue&)
 	else if (UltSelected == ESkillVariant::B) UltB_NextAvailableTime = Now + UltB_Cooldown;
 }
 
-
-// 궁_A 아군 쉴드
+// ===== UltA (wrapper) =====
 void ATP_Character::UltA_ShieldStart()
 {
-	if (!GetWorld()) return;
-
-	// 이미 남아있는 기록이 있으면 정리(중복 시전 방지)
-	UltA_ShieldGiven.Reset();
-
-	const FVector Center = GetActorLocation();
-	const float Radius = UltA_Radius;
-
-	TArray<FOverlapResult> Hits;
-	FCollisionQueryParams Params(SCENE_QUERY_STAT(UltA_Shield), false, this);
-
-	const bool bAny = GetWorld()->OverlapMultiByChannel(
-		Hits,
-		Center,
-		FQuat::Identity,
-		ECC_Pawn, // 아군 더미가 Pawn이어야 함(아래 더미 제작 참고)
-		FCollisionShape::MakeSphere(Radius),
-		Params
-	);
-
-	DrawDebugSphere(GetWorld(), Center, Radius, 24, bAny ? FColor::Red : FColor::Green, false, 1.0f, 0, 2.f);
-
-	if (bAny)
-	{
-		for (const FOverlapResult& R : Hits)
-		{
-			AActor* Target = R.GetActor();
-			if (!Target || Target == this) continue;
-
-			// 아군 판별(태그)
-			if (!Target->ActorHasTag(FName(TEXT("Ally"))))
-				continue;
-
-			UHealthComponent* HC = Target->FindComponentByClass<UHealthComponent>();
-			if (!HC) continue;
-
-			HC->AddShield(UltA_Shield);
-			UltA_ShieldGiven.Add(Target, UltA_Shield);
-		}
-	}
-
-	// 버프 종료 타이머 - 시간이 지나면 ShieldEnd가 호출되고 보호막이 제거됨.
-	GetWorld()->GetTimerManager().ClearTimer(UltA_EndTimerHandle);
-	GetWorld()->GetTimerManager().SetTimer(
-		UltA_EndTimerHandle,
-		this,
-		&ATP_Character::UltA_ShieldEnd,
-		UltA_Duration,
-		false
-	);
-
-	// 버프는 시전 후에는 다시 입력 허용
-	SetEveryInputEnabled(true);
+	if (Terra_UltA) Terra_UltA->ShieldStart();
 }
 
 void ATP_Character::UltA_ShieldEnd()
 {
-	// 저장해둔 대상들에게서 “이번 UltA로 준 양만큼” 제거
-	for (auto It = UltA_ShieldGiven.CreateIterator(); It; ++It)
-	{
-		AActor* Target = It.Key().Get();
-		const float Given = It.Value();
-
-		if (!Target) continue;
-
-		UHealthComponent* HC = Target->FindComponentByClass<UHealthComponent>();
-		if (!HC) continue;
-
-		HC->RemoveShield(Given);
-	}
-
-	UltA_ShieldGiven.Reset();
-
-	if (GetWorld())
-		GetWorld()->GetTimerManager().ClearTimer(UltA_EndTimerHandle);
+	if (Terra_UltA) Terra_UltA->ShieldEnd();
 }
 
-
-// 궁_B 버프
+// ===== UltB (wrapper) =====
 void ATP_Character::UltB_BuffStart()
 {
-	if (bUltBActive) return;
-	bUltBActive = true;
-
-	// 공격력 버프
-	AttackMultiplier = UltB_AttackMultiplier;
-
-	// 체력 버프: HealthComponent 에서 처리. 보호막 형태로 변경
-	if (HealthComp)
-	{
-		HealthComp->AddShield(UltB_Shield);
-	}
-
-	// 버프 종료 타이머 - 시간이 지나면 BuffEnd가 호출되고 보호막이 제거됨.
-	GetWorld()->GetTimerManager().ClearTimer(UltB_EndTimerHandle);
-	GetWorld()->GetTimerManager().SetTimer(
-		UltB_EndTimerHandle,
-		this,
-		&ATP_Character::UltB_BuffEnd,
-		UltB_Duration,
-		false
-	);
-
-	// 버프는 시전 후에는 다시 입력 허용
-	SetEveryInputEnabled(true);
+	if (Terra_UltB) Terra_UltB->BuffStart();
 }
 
 void ATP_Character::UltB_BuffEnd()
 {
-	if (!bUltBActive) return;
-	bUltBActive = false;
-
-	AttackMultiplier = 1.0f;
-
-	if (HealthComp)
-	{
-		HealthComp->RemoveShield(UltB_Shield);			// 보호막 제거
-	}
-
-	GetWorld()->GetTimerManager().ClearTimer(UltB_EndTimerHandle);
-
-	// 버프 끝났을 때 입력 정책 - 버프 시전됐을 때 입력 허용했으니 여기는 없어도 될듯
+	if (Terra_UltB) Terra_UltB->BuffEnd();
 }
 
 // Character Settings 
@@ -920,7 +690,7 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	}
 
 	// Combat
-	if (CombatComp) 
+	if (CombatComp)
 	{
 		CombatComp->TraceRange = Data->TraceRange;
 		CombatComp->Damage = Data->Damage;
@@ -993,8 +763,18 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	UltB_Cooldown = Data->UltB_Cooldown;
 	UltB_Shield = Data->UltB_Shield;
 	UltB_AttackMultiplier = Data->UltB_AttackMultiplier;
-}
 
+	// ===== Terra Skill Objects init =====
+	// - 캐릭터가 Terra든 Gideon이든, 일단은 Terra 구현이 연결돼 있어도
+	//   SkillSelected가 None이면 실행되지 않으니 안전.
+	// - 나중에 Gideon 스킬 분리하면 여기에서 캐릭터 타입에 따라 교체하면 됨.
+	if (!Terra_Skill1A) { Terra_Skill1A = NewObject<UTerra_Skill1A_Dash>(this); Terra_Skill1A->Init(this); }
+	if (!Terra_Skill1B) { Terra_Skill1B = NewObject<UTerra_Skill1B_SlamAOE>(this); Terra_Skill1B->Init(this); }
+	if (!Terra_Skill2A) { Terra_Skill2A = NewObject<UTerra_Skill2A_ShieldPush>(this); Terra_Skill2A->Init(this); }
+	if (!Terra_Skill2B) { Terra_Skill2B = NewObject<UTerra_Skill2B_Spin>(this); Terra_Skill2B->Init(this); }
+	if (!Terra_UltA) { Terra_UltA = NewObject<UTerra_UltA_AllyShield>(this); Terra_UltA->Init(this); }
+	if (!Terra_UltB) { Terra_UltB = NewObject<UTerra_UltB_SelfShieldBuff>(this); Terra_UltB->Init(this); }
+}
 
 // Character Select
 void ATP_Character::SelectCharacterSlot(int32 Index)
@@ -1018,4 +798,3 @@ void ATP_Character::SelectSlot2() { SelectCharacterSlot(1); }
 void ATP_Character::SelectSlot3() { SelectCharacterSlot(2); }
 void ATP_Character::SelectSlot4() { SelectCharacterSlot(3); }
 void ATP_Character::SelectSlot5() { SelectCharacterSlot(4); }
-

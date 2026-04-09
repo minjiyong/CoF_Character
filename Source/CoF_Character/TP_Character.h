@@ -4,9 +4,7 @@
 #include "GameFramework/Character.h"
 
 #include "SkillTypes.h"
-
 #include "HitReactInterface.h"
-
 #include "TimerManager.h"
 
 #include "TP_Character.generated.h"
@@ -29,6 +27,14 @@ UCLASS()
 class COF_CHARACTER_API ATP_Character : public ACharacter, public IHitReactInterface
 {
 	GENERATED_BODY()
+
+	// ===== Terra Skills (logic separated) =====
+	friend class UTerra_Skill1A_Dash;
+	friend class UTerra_Skill1B_SlamAOE;
+	friend class UTerra_Skill2A_ShieldPush;
+	friend class UTerra_Skill2B_Spin;
+	friend class UTerra_UltA_AllyShield;
+	friend class UTerra_UltB_SelfShieldBuff;
 
 public:
 	ATP_Character();
@@ -182,10 +188,32 @@ protected:
 	bool bBlocking = false;
 
 
-	// 스킬1 뭘 선택했는지
-	ESkillVariant Skill1Selected = ESkillVariant::None;		
+	// ===== Terra Skill Logic Objects =====
+	// - AnimNotify / BP가 기존에 ATP_Character의 UFUNCTION들을 직접 호출하고 있으므로,
+	//   UFUNCTION 시그니처는 그대로 유지하고, 내부 구현만 Terra_* 객체로 위임한다.
+	UPROPERTY()
+	TObjectPtr<UTerra_Skill1A_Dash> Terra_Skill1A = nullptr;
 
-	// 스킬1_A 돌진
+	UPROPERTY()
+	TObjectPtr<UTerra_Skill1B_SlamAOE> Terra_Skill1B = nullptr;
+
+	UPROPERTY()
+	TObjectPtr<UTerra_Skill2A_ShieldPush> Terra_Skill2A = nullptr;
+
+	UPROPERTY()
+	TObjectPtr<UTerra_Skill2B_Spin> Terra_Skill2B = nullptr;
+
+	UPROPERTY()
+	TObjectPtr<UTerra_UltA_AllyShield> Terra_UltA = nullptr;
+
+	UPROPERTY()
+	TObjectPtr<UTerra_UltB_SelfShieldBuff> Terra_UltB = nullptr;
+
+
+	// 스킬1 뭘 선택했는지
+	ESkillVariant Skill1Selected = ESkillVariant::None;
+
+	// 스킬1_A 돌진 (UFUNCTION은 유지, 내부 구현은 Terra_Skill1A로 위임)
 	UFUNCTION(BlueprintCallable, Category = "Skills|Skill1|A")
 	void Skill1A_DashStart();			// 실제 돌진 시, 상태를 fly로 만듬(바닥 충돌 때문에)
 
@@ -276,7 +304,7 @@ protected:
 
 	double UltA_NextAvailableTime = 0.0;
 	FTimerHandle UltA_EndTimerHandle;
-	
+
 	TMap<TWeakObjectPtr<AActor>, float> UltA_ShieldGiven;		// UltA로 보호막을 준 대상들(약참조)
 
 	UFUNCTION(BlueprintCallable, Category = "Skills|Ult|A")
@@ -305,7 +333,7 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category = "Skills|Ult|B")
 	void UltB_BuffEnd();
-	
+
 
 	// ===== 캐릭터 선택(런타임 교체) =====
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character|Switch")
