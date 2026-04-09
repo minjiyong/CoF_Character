@@ -6,6 +6,14 @@
 #include "DrawDebugHelpers.h"
 #include "Engine/OverlapResult.h"
 
+
+UWorld* UTerra_UltA_AllyShield::GetWorld() const
+{
+	if (ATP_Character* C = GetOwnerChar())
+		return C->GetWorld();
+	return nullptr;
+}
+
 void UTerra_UltA_AllyShield::ShieldStart()
 {
 	ATP_Character* C = GetOwnerChar();
@@ -14,7 +22,7 @@ void UTerra_UltA_AllyShield::ShieldStart()
 	if (!C->GetWorld()) return;
 
 	// 이미 남아있는 기록이 있으면 정리(중복 시전 방지)
-	C->UltA_ShieldGiven.Reset();
+	ShieldGiven.Reset();
 
 	const FVector Center = C->GetActorLocation();
 	const float Radius = C->UltA_Radius;
@@ -48,19 +56,22 @@ void UTerra_UltA_AllyShield::ShieldStart()
 			if (!HC) continue;
 
 			HC->AddShield(C->UltA_Shield);
-			C->UltA_ShieldGiven.Add(Target, C->UltA_Shield);
+			ShieldGiven.Add(Target, C->UltA_Shield);
 		}
 	}
 
 	// 버프 종료 타이머 - 시간이 지나면 ShieldEnd가 호출되고 보호막이 제거됨.
-	C->GetWorld()->GetTimerManager().ClearTimer(C->UltA_EndTimerHandle);
-	C->GetWorld()->GetTimerManager().SetTimer(
-		C->UltA_EndTimerHandle,
-		C,
-		&ATP_Character::UltA_ShieldEnd,
-		C->UltA_Duration,
-		false
-	);
+	if (UWorld* W = GetWorld())
+	{
+		W->GetTimerManager().ClearTimer(EndTimerHandle);
+		W->GetTimerManager().SetTimer(
+			EndTimerHandle,
+			this,
+			&UTerra_UltA_AllyShield::ShieldEnd,
+			C->UltA_Duration,
+			false
+		);
+	}
 
 	// 버프는 시전 후에는 다시 입력 허용
 	C->SetEveryInputEnabled(true);
@@ -72,7 +83,7 @@ void UTerra_UltA_AllyShield::ShieldEnd()
 	if (!C) return;
 
 	// 저장해둔 대상들에게서 “이번 UltA로 준 양만큼” 제거
-	for (auto It = C->UltA_ShieldGiven.CreateIterator(); It; ++It)
+	for (auto It = ShieldGiven.CreateIterator(); It; ++It)
 	{
 		AActor* Target = It.Key().Get();
 		const float Given = It.Value();
@@ -85,8 +96,8 @@ void UTerra_UltA_AllyShield::ShieldEnd()
 		HC->RemoveShield(Given);
 	}
 
-	C->UltA_ShieldGiven.Reset();
+	ShieldGiven.Reset();
 
 	if (C->GetWorld())
-		C->GetWorld()->GetTimerManager().ClearTimer(C->UltA_EndTimerHandle);
+		C->GetWorld()->GetTimerManager().ClearTimer(EndTimerHandle);
 }

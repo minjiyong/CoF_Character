@@ -16,6 +16,26 @@ class COF_CHARACTER_API UTerra_UltA_AllyShield : public UCoF_SkillBase
 	GENERATED_BODY()
 
 public:
+	double NextAvailableTime = 0.0;
+	FTimerHandle EndTimerHandle;
+
+	// UltA로 보호막을 준 대상들(약참조) - TP_Character에서 옮겨옴
+	TMap<TWeakObjectPtr<AActor>, float> ShieldGiven;
+
+	void ResetRuntime()
+	{
+		NextAvailableTime = 0.0;
+		ShieldGiven.Reset();
+		if (UWorld* W = GetWorld()) W->GetTimerManager().ClearTimer(EndTimerHandle);
+	}
+
+	bool IsInCooldown(double Now) const { return Now < NextAvailableTime; }
+	void StartCooldown(double Now, float CooldownSec) { NextAvailableTime = Now + CooldownSec; }
+
+private:
+	UWorld* GetWorld() const;
+
+public:
 	void ShieldStart(); // 몽타주 Notify에서 호출 (부여)
 	void ShieldEnd();   // 타이머에서 자동 호출 (제거)
 };

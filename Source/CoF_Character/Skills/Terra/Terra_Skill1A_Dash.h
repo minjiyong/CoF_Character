@@ -15,8 +15,34 @@ class COF_CHARACTER_API UTerra_Skill1A_Dash : public UCoF_SkillBase
 	GENERATED_BODY()
 
 public:
+	// ===== runtime state (TP_Character에서 옮겨옴) =====
+	double NextAvailableTime = 0.0;
+
+	// 대쉬 값 저장 후 원복용
+	bool bDashMoving = false; // 돌진 중인지. 다른 키입력 방지용
+
+	float SavedGroundFriction = 0.f;
+	float SavedBrakingFrictionFactor = 0.f;
+	float SavedBrakingDecelerationWalking = 0.f;
+	float SavedBrakingDecelerationFlying = 0.f;
+
+	bool bSavedOrientRotationToMovement = false;
+	bool bSavedUseControllerRotationYaw = false;
+
+	// 런타임 초기화(캐릭터 교체/데이터 교체 시 호출)
+	void ResetRuntime()
+	{
+		NextAvailableTime = 0.0;
+		bDashMoving = false;
+	}
+
+	// 쿨다운 체크/시작
+	bool IsInCooldown(double Now) const { return Now < NextAvailableTime; }
+	void StartCooldown(double Now, float CooldownSec) { NextAvailableTime = Now + CooldownSec; }
+
+public:
 	void HitStart();
-	void HitEnd();			// 역시나 당장은 필요없는듯 기존 hitend 돌려쓰는중 나중에 필요하면 바꾸자.			
-	void DashStart();		// 실제 돌진 시, 상태를 fly로 만듬(바닥 충돌 때문에)
+	void HitEnd(); // 역시나 당장은 필요없는듯 기존 hitend 돌려쓰는중 나중에 필요하면 바꾸자.
+	void DashStart(); // 실제 돌진 시, 상태를 fly로 만듬(바닥 충돌 때문에)
 	void DashEnd();
 };

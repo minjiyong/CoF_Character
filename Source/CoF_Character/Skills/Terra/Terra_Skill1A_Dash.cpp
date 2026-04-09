@@ -32,17 +32,17 @@ void UTerra_Skill1A_Dash::DashStart()
 	if (!C) return;
 
 	UCharacterMovementComponent* MoveComp = C->GetCharacterMovement();
-	if (!MoveComp || C->bSkillDashMoving) return;
+	if (!MoveComp || bDashMoving) return;
 
-	C->bSkillDashMoving = true;
+	bDashMoving = true;
 
 	// 기존 저장값
-	C->SavedGroundFriction = MoveComp->GroundFriction;
-	C->SavedBrakingFrictionFactor = MoveComp->BrakingFrictionFactor;
-	C->SavedBrakingDecelerationWalking = MoveComp->BrakingDecelerationWalking;
-	C->SavedBrakingDecelerationFlying = MoveComp->BrakingDecelerationFlying;
-	C->bSavedOrientRotationToMovement = MoveComp->bOrientRotationToMovement;
-	C->bSavedUseControllerRotationYaw = C->bUseControllerRotationYaw;
+	SavedGroundFriction = MoveComp->GroundFriction;
+	SavedBrakingFrictionFactor = MoveComp->BrakingFrictionFactor;
+	SavedBrakingDecelerationWalking = MoveComp->BrakingDecelerationWalking;
+	SavedBrakingDecelerationFlying = MoveComp->BrakingDecelerationFlying;
+	bSavedOrientRotationToMovement = MoveComp->bOrientRotationToMovement;
+	bSavedUseControllerRotationYaw = C->bUseControllerRotationYaw;
 
 	// 대쉬 동안 마찰/감속 제거
 	MoveComp->GroundFriction = 0.f;
@@ -68,18 +68,18 @@ void UTerra_Skill1A_Dash::DashEnd()
 	if (!C) return;
 
 	UCharacterMovementComponent* MoveComp = C->GetCharacterMovement();
-	if (!MoveComp || !C->bSkillDashMoving) return;
+	if (!MoveComp || !bDashMoving) return;
 
-	C->bSkillDashMoving = false;
+	bDashMoving = false;
 
 	MoveComp->StopMovementImmediately();
 	MoveComp->SetMovementMode(MOVE_Walking);
 
-	// 원복
-	MoveComp->GroundFriction = C->SavedGroundFriction;
-	MoveComp->BrakingFrictionFactor = C->SavedBrakingFrictionFactor;
-	MoveComp->BrakingDecelerationWalking = C->SavedBrakingDecelerationWalking;
-	MoveComp->BrakingDecelerationFlying = C->SavedBrakingDecelerationFlying;
-	MoveComp->bOrientRotationToMovement = C->bSavedOrientRotationToMovement;
-	C->bUseControllerRotationYaw = C->bSavedUseControllerRotationYaw;
+	// 복구
+	MoveComp->GroundFriction = SavedGroundFriction;
+	MoveComp->BrakingFrictionFactor = SavedBrakingFrictionFactor;
+	MoveComp->BrakingDecelerationWalking = SavedBrakingDecelerationWalking;
+	MoveComp->BrakingDecelerationFlying = SavedBrakingDecelerationFlying;
+	MoveComp->bOrientRotationToMovement = bSavedOrientRotationToMovement;
+	C->bUseControllerRotationYaw = bSavedUseControllerRotationYaw;
 }

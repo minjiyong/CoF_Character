@@ -328,20 +328,15 @@ void ATP_Character::ResetCombo()
 	bComboQueued = false;
 	bAttackPressed = false;
 
-	// Skill2B가 활성인 경우에만 종료 정리
-	if (bSkill2BActive)
+	// Skill2B가 활성인 경우에만 종료 정리 (런타임은 스킬 객체가 관리)
+	if (Terra_Skill2B && Terra_Skill2B->IsActive())
 	{
-		bSkill2BActive = false;
-
 		// 판정 종료
 		if (CombatComp)
 			CombatComp->EndHitWindow();
 
-		// 타이머 정리
-		if (UWorld* W = GetWorld())
-			W->GetTimerManager().ClearTimer(Skill2B_EndTimerHandle);
-
-		Skill2B_EndTime = 0.0;
+		// 타이머/EndTime/Active 정리
+		Terra_Skill2B->CancelSpin();
 	}
 
 	SetEveryInputEnabled(true);		// input 받기
@@ -444,16 +439,21 @@ void ATP_Character::Input_Skill1Started(const FInputActionValue&)
 	if (Skill1Selected == ESkillVariant::None)
 		return;
 
+	// 스킬 객체가 아직 없으면(초기화 전에 입력 들어오는 경우) 방어
+	if (!Terra_Skill1A || !Terra_Skill1B)
+		return;
+
 	// 쿨다운 디버깅 메세지
 	const double Now = GetWorld()->GetTimeSeconds();
+
 	if (Skill1Selected == ESkillVariant::A) {
-		if (Now < Skill1A_NextAvailableTime) {
+		if (Terra_Skill1A->IsInCooldown(Now)) {
 			ScreenDbg(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
 			return;
 		}
 	}
 	else if (Skill1Selected == ESkillVariant::B) {
-		if (Now < Skill1B_NextAvailableTime) {
+		if (Terra_Skill1B->IsInCooldown(Now)) {
 			ScreenDbg(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
 			return;
 		}
@@ -464,6 +464,7 @@ void ATP_Character::Input_Skill1Started(const FInputActionValue&)
 		if (Move->IsFalling())			// 공중 상태일 때 막기를 따로 - 입력을 안받아도 떨어지는 경우 시전 등...
 			return;
 	}
+
 	StopJumping();
 
 	if (!CanSkillInput())
@@ -483,8 +484,9 @@ void ATP_Character::Input_Skill1Started(const FInputActionValue&)
 
 	PlayAnimMontage(Montage);
 
-	if (Skill1Selected == ESkillVariant::A) Skill1A_NextAvailableTime = Now + Skill1A_Cooldown;
-	else if (Skill1Selected == ESkillVariant::B) Skill1B_NextAvailableTime = Now + Skill1B_Cooldown;
+	// 쿨다운 시작 (런타임 상태는 스킬 객체가 관리)
+	if (Skill1Selected == ESkillVariant::A) Terra_Skill1A->StartCooldown(Now, Skill1A_Cooldown);
+	else if (Skill1Selected == ESkillVariant::B) Terra_Skill1B->StartCooldown(Now, Skill1B_Cooldown);
 }
 
 // ===== Skill1_A 돌진 (wrapper) =====
@@ -521,16 +523,21 @@ void ATP_Character::Input_Skill2Started(const FInputActionValue&)
 	if (Skill2Selected == ESkillVariant::None)
 		return;
 
+	// 스킬 객체 방어
+	if (!Terra_Skill2A || !Terra_Skill2B)
+		return;
+
 	// 쿨다운 디버깅 메세지
 	const double Now = GetWorld()->GetTimeSeconds();
+
 	if (Skill2Selected == ESkillVariant::A) {
-		if (Now < Skill2A_NextAvailableTime) {
+		if (Terra_Skill2A->IsInCooldown(Now)) {
 			ScreenDbg(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
 			return;
 		}
 	}
 	else if (Skill2Selected == ESkillVariant::B) {
-		if (Now < Skill2B_NextAvailableTime) {
+		if (Terra_Skill2B->IsInCooldown(Now)) {
 			ScreenDbg(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
 			return;
 		}
@@ -541,6 +548,7 @@ void ATP_Character::Input_Skill2Started(const FInputActionValue&)
 		if (Move->IsFalling())			// 공중 상태일 때 입력 막기를 따로 - 입력을 안받아도 떨어지는 경우 시전 등...
 			return;
 	}
+
 	StopJumping();
 
 	if (!CanSkillInput())
@@ -562,23 +570,13 @@ void ATP_Character::Input_Skill2Started(const FInputActionValue&)
 
 	if (Skill2Selected == ESkillVariant::A)
 	{
-		Skill2A_NextAvailableTime = Now + Skill2A_Cooldown;
+		Terra_Skill2A->StartCooldown(Now, Skill2A_Cooldown);
 	}
 	else if (Skill2Selected == ESkillVariant::B)
 	{
-		bSkill2BActive = true;
-
-		Skill2B_EndTime = Now + Skill2B_Duration;
-
-		GetWorld()->GetTimerManager().SetTimer(
-			Skill2B_EndTimerHandle,
-			this,
-			&ATP_Character::Skill2B_SpinEnd,
-			Skill2B_Duration,
-			false
-		);
-
-		Skill2B_NextAvailableTime = Now + Skill2B_Cooldown;
+		// Spin 런타임(EndTime/TimerHandle/Active)은 스킬 객체가 관리
+		Terra_Skill2B->BeginSpin(Now, Skill2B_Duration);
+		Terra_Skill2B->StartCooldown(Now, Skill2B_Cooldown);
 	}
 }
 
@@ -605,16 +603,20 @@ void ATP_Character::Input_UltStarted(const FInputActionValue&)
 {
 	if (UltSelected == ESkillVariant::None) return;
 
+	if (!Terra_UltA || !Terra_UltB)
+		return;
+
 	// 쿨다운 디버깅 메세지
 	const double Now = GetWorld()->GetTimeSeconds();
+
 	if (UltSelected == ESkillVariant::A) {
-		if (Now < UltA_NextAvailableTime) {
+		if (Terra_UltA->IsInCooldown(Now)) {
 			ScreenDbg(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
 			return;
 		}
 	}
 	else if (UltSelected == ESkillVariant::B) {
-		if (Now < UltB_NextAvailableTime) {
+		if (Terra_UltB->IsInCooldown(Now)) {
 			ScreenDbg(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
 			return;
 		}
@@ -641,9 +643,9 @@ void ATP_Character::Input_UltStarted(const FInputActionValue&)
 
 	PlayAnimMontage(Montage);
 
-	// 쿨다운 시작
-	if (UltSelected == ESkillVariant::A) UltA_NextAvailableTime = Now + Skill1A_Cooldown;
-	else if (UltSelected == ESkillVariant::B) UltB_NextAvailableTime = Now + UltB_Cooldown;
+	// 쿨다운 시작 (런타임 상태는 스킬 객체가 관리)
+	if (UltSelected == ESkillVariant::A) Terra_UltA->StartCooldown(Now, UltA_Cooldown);
+	else if (UltSelected == ESkillVariant::B) Terra_UltB->StartCooldown(Now, UltB_Cooldown);
 }
 
 // ===== UltA (wrapper) =====
@@ -723,12 +725,10 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	Skill1A_DashDistance = Data->Skill1A_DashDistance;
 	Skill1A_DashDuration = Data->Skill1A_DashDuration;
 	Skill1A_Cooldown = Data->Skill1A_Cooldown;
-	Skill1A_NextAvailableTime = 0.0;
 
 	Skill1B_Damage = Data->Skill1B_Damage;
 	Skill1B_Radius = Data->Skill1B_Radius;
 	Skill1B_Cooldown = Data->Skill1B_Cooldown;
-	Skill1B_NextAvailableTime = 0.0;
 
 	// 스킬2
 	Skill2Selected = Data->Skill2Selected;
@@ -774,6 +774,15 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	if (!Terra_Skill2B) { Terra_Skill2B = NewObject<UTerra_Skill2B_Spin>(this); Terra_Skill2B->Init(this); }
 	if (!Terra_UltA) { Terra_UltA = NewObject<UTerra_UltA_AllyShield>(this); Terra_UltA->Init(this); }
 	if (!Terra_UltB) { Terra_UltB = NewObject<UTerra_UltB_SelfShieldBuff>(this); Terra_UltB->Init(this); }
+
+	// ===== 런타임 상태 초기화 =====
+	// - 캐릭터 교체(슬롯 변경) 시, 이전 캐릭터의 쿨다운/타이머/맵 상태가 남으면 안 됨.
+	Terra_Skill1A->ResetRuntime();
+	Terra_Skill1B->ResetRuntime();
+	Terra_Skill2A->ResetRuntime();
+	Terra_Skill2B->ResetRuntime();
+	Terra_UltA->ResetRuntime();
+	Terra_UltB->ResetRuntime();
 }
 
 // Character Select

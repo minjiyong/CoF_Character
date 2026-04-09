@@ -231,18 +231,6 @@ protected:
 	float Skill1A_DashDistance = 0.f;
 	float Skill1A_DashDuration = 0.f;			// 몇 초 동안 밀고 갈지
 	float Skill1A_Cooldown = 0.f;
-	double Skill1A_NextAvailableTime = 0.0;
-
-	// 대쉬 전후 값 저장 후 원복용
-	bool bSkillDashMoving = false;				// 돌진 중인지. 다른 키입력 방지용
-
-	float SavedGroundFriction = 0.f;
-	float SavedBrakingFrictionFactor = 0.f;
-	float SavedBrakingDecelerationWalking = 0.f;
-	float SavedBrakingDecelerationFlying = 0.f;
-
-	bool bSavedOrientRotationToMovement = false;
-	bool bSavedUseControllerRotationYaw = false;
 
 
 	// 스킬1_B 도끼찍기
@@ -253,7 +241,6 @@ protected:
 	float Skill1B_Damage = 0.f;
 	float Skill1B_Radius = 0.f;
 	float Skill1B_Cooldown = 0.f;
-	double Skill1B_NextAvailableTime = 0.0;
 
 
 	// 스킬 2
@@ -270,7 +257,6 @@ protected:
 	float Skill2A_HalfAngleDeg = 0.f;
 	float Skill2A_Cooldown = 0.f;
 
-	double Skill2A_NextAvailableTime = 0.0;
 
 	// 스킬 2_B 돌기
 	UFUNCTION(BlueprintCallable, Category = "Skills|Skill2|B")
@@ -284,11 +270,6 @@ protected:
 	float Skill2B_TickInterval = 0.f;
 	float Skill2B_Duration = 0.f;
 	float Skill2B_Cooldown = 0.f;
-	double Skill2B_NextAvailableTime = 0.0;
-
-	bool bSkill2BActive = false;
-	FTimerHandle Skill2B_EndTimerHandle;
-	double Skill2B_EndTime = 0.0;		// 스킬 시전한 후 남은 시간
 
 
 	// 궁극기
@@ -301,11 +282,6 @@ protected:
 	float UltA_Cooldown = 0.f;
 	float UltA_Shield = 0.f;
 	float UltA_Radius = 0.f;
-
-	double UltA_NextAvailableTime = 0.0;
-	FTimerHandle UltA_EndTimerHandle;
-
-	TMap<TWeakObjectPtr<AActor>, float> UltA_ShieldGiven;		// UltA로 보호막을 준 대상들(약참조)
 
 	UFUNCTION(BlueprintCallable, Category = "Skills|Ult|A")
 	void UltA_ShieldStart();   // 몽타주 Notify에서 호출 (부여)
@@ -320,11 +296,6 @@ protected:
 	float UltB_Cooldown = 0.f;
 	float UltB_Shield = 0.f;
 	float UltB_AttackMultiplier = 1.f;
-
-	double UltB_NextAvailableTime = 0.0;
-
-	bool bUltBActive = false;			// 런타임 버프 상태
-	FTimerHandle UltB_EndTimerHandle;	// 런타임 버프 상태
 
 	float AttackMultiplier = 1.0f;		// 공격력 배율(전체 공격에 적용)
 
