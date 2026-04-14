@@ -71,7 +71,17 @@ void ATP_Character::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// 로컬 플레이어(내 화면)에서만 MappingContext 추가
+	// ===== 캐릭터 데이터는 항상 먼저 적용 =====
+	if (CharacterSlots.Num() > 0 && CharacterSlots[0])
+	{
+		SelectCharacterSlot(0);
+	}
+	else if (DefaultCharacterData)
+	{
+		ApplyCharacterData(DefaultCharacterData);
+	}
+
+	// ===== 로컬 플레이어(내 화면)에서만 MappingContext 추가 =====
 	APlayerController* PC = Cast<APlayerController>(GetController());
 	if (!PC) return;
 
@@ -81,7 +91,6 @@ void ATP_Character::BeginPlay()
 	UEnhancedInputLocalPlayerSubsystem* Subsys = LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
 	if (!Subsys) return;
 
-	// 디폴트 IMC(IA) 적용
 	if (DefaultMappingContext)
 	{
 		Subsys->AddMappingContext(DefaultMappingContext, 0);
@@ -89,19 +98,6 @@ void ATP_Character::BeginPlay()
 	else
 	{
 		UE_LOG(LogTemp, Error, TEXT("[Input] DefaultMappingContext is null. Set it in BP child."));
-	}
-
-	// 시작 시 0번 캐릭터가 있다면 select
-	if (CharacterSlots.Num() > 0 && CharacterSlots[0])
-	{
-		SelectCharacterSlot(0);
-		return;
-	}
-
-	// 디폴트 캐릭터 데이터 적용
-	if (DefaultCharacterData)
-	{
-		ApplyCharacterData(DefaultCharacterData);
 	}
 }
 
