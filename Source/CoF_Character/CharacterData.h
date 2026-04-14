@@ -46,6 +46,12 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attack", meta = (ClampMin = "0.0"))
 	float PrimaryAttackSphereRadius = 120.f;	// (Sphere 기반)
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attack", meta = (ClampMin = "0.0"))
+	float PrimaryAttackForwardOffset = 50.f;	// 전방 부채꼴 범위로 제한 - 앞으로 얼마나
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attack", meta = (ClampMin = "0.0", ClampMax = "180.0"))
+	float PrimaryAttackHalfAngleDeg = 60.f;		// 전방 부채꼴 범위로 제한 - 각도
+
 
 	// Combat Animation - 기본 콤보 공격
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Anim")

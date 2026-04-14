@@ -346,7 +346,12 @@ void ATP_Character::HitStart()
 	switch (PrimaryAttackHitType)
 	{
 	case EPrimaryAttackHitType::Sphere:
-		CombatComp->ConfigureAOEHit(CombatComp->Damage, PrimaryAttackSphereRadius);
+		CombatComp->ConfigureAOEForwardHit(
+			CombatComp->Damage,
+			PrimaryAttackSphereRadius,
+			PrimaryAttackForwardOffset,
+			PrimaryAttackHalfAngleDeg
+		);
 		break;
 
 	case EPrimaryAttackHitType::LineTrace:
@@ -717,6 +722,8 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	// 기본 공격
 	PrimaryAttackHitType = Data->PrimaryAttackHitType;
 	PrimaryAttackSphereRadius = Data->PrimaryAttackSphereRadius;
+	PrimaryAttackForwardOffset = Data->PrimaryAttackForwardOffset;
+	PrimaryAttackHalfAngleDeg = Data->PrimaryAttackHalfAngleDeg;
 
 	// Blocking Animation Montage
 	BlockHoldMontage = Data->BlockHoldMontage;

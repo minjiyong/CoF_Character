@@ -159,6 +159,12 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	float PrimaryAttackSphereRadius = 120.f;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	float PrimaryAttackForwardOffset = 120.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	float PrimaryAttackHalfAngleDeg = 60.f;
+
 	// ÄÞº¸ »óÅÂ
 	bool bComboWindowOpen = false;
 	bool bComboQueued = false;
