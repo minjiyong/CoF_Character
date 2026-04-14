@@ -341,12 +341,22 @@ void ATP_Character::ResetCombo()
 // Hit 판정할 영역
 void ATP_Character::HitStart()
 {
-	// 이번 타 시작: 1회 히트 가능 상태로 초기화
-	if (CombatComp)
+	if (!CombatComp) return;
+
+	switch (PrimaryAttackHitType)
 	{
-		CombatComp->ConfigureTraceHit(CombatComp->Damage * AttackMultiplier, CombatComp->TraceRange);
-		CombatComp->BeginHitWindow_OneShot();
+	case EPrimaryAttackHitType::Sphere:
+		CombatComp->ConfigureAOEHit(CombatComp->Damage, PrimaryAttackSphereRadius);
+		break;
+
+	case EPrimaryAttackHitType::LineTrace:
+	default:
+		CombatComp->ConfigureTraceHit(CombatComp->Damage, CombatComp->TraceRange);
+		break;
 	}
+
+	// 이번 타 시작: 1회 히트 가능 상태로 초기화
+	CombatComp->BeginHitWindow_OneShot();
 }
 
 void ATP_Character::HitEnd()
@@ -703,6 +713,10 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 
 	// Combo Animation Montage
 	PrimaryComboMontage = Data->PrimaryComboMontage;
+
+	// 기본 공격
+	PrimaryAttackHitType = Data->PrimaryAttackHitType;
+	PrimaryAttackSphereRadius = Data->PrimaryAttackSphereRadius;
 
 	// Blocking Animation Montage
 	BlockHoldMontage = Data->BlockHoldMontage;

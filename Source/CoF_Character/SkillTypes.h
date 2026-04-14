@@ -5,6 +5,13 @@
 #include "CoreMinimal.h"
 #include "SkillTypes.generated.h"
 
+// 평타 - 라인트레이스 기반도 일단 살려두기
+UENUM(BlueprintType)
+enum class EPrimaryAttackHitType : uint8
+{
+	LineTrace UMETA(DisplayName = "LineTrace"),
+	Sphere    UMETA(DisplayName = "Sphere")
+};
 
 // 스킬 데이터 - A/B 2가지 중 선택
 UENUM(BlueprintType)

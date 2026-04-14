@@ -151,6 +151,14 @@ protected:
 	virtual void OnHitReact_Implementation(float DamageAmount, const FVector& HitPoint, const FVector& HitNormal) override;
 	void Debug_ForceHit();			// (더미 없이 테스트용) 강제 피격
 
+
+	// 기본 공격
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	EPrimaryAttackHitType PrimaryAttackHitType = EPrimaryAttackHitType::LineTrace;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	float PrimaryAttackSphereRadius = 120.f;
+
 	// 콤보 상태
 	bool bComboWindowOpen = false;
 	bool bComboQueued = false;

@@ -33,12 +33,23 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stats")
 	float MaxWalkSpeed = 500.f;
 
-	// ===== Combat (Trace 기반) =====
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
-	float TraceRange = 800.f;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
+	// ===== Attack =====
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attack")
 	float Damage = 10.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attack")
+	EPrimaryAttackHitType PrimaryAttackHitType = EPrimaryAttackHitType::LineTrace;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attack")
+	float TraceRange = 800.f;		// (Trace 기반)
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attack", meta = (ClampMin = "0.0"))
+	float PrimaryAttackSphereRadius = 120.f;	// (Sphere 기반)
+
+
+	// Combat Animation - 기본 콤보 공격
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Anim")
+	TObjectPtr<UAnimMontage> PrimaryComboMontage;
 
 	// ===== HitReact =====
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|HitReact")
@@ -46,10 +57,6 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|HitReact")
 	float HitReactPlayRate = 1.0f;
-
-	// Combat Animation - 기본 콤보 공격
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Anim")
-	TObjectPtr<UAnimMontage> PrimaryComboMontage;
 
 	// Blocking Animation 방패 들기 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Anim")
