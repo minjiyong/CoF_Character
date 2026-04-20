@@ -32,6 +32,9 @@
 #include "Skills/Terra/Terra_UltA_AllyShield.h"
 #include "Skills/Terra/Terra_UltB_SelfShieldBuff.h"
 
+// ===== Terra Skills =====
+#include "Skills/Kallari/Kallari_Skill2A_ShurikenTeleport.h"
+
 //312312312 
 static void ScreenDbg(const FString& Msg, float Sec = 1.5f, FColor Color = FColor::Cyan)
 {
@@ -534,21 +537,43 @@ void ATP_Character::Input_Skill2Started(const FInputActionValue&)
 	if (Skill2Selected == ESkillVariant::None)
 		return;
 
-	// 스킬 객체 방어
-	if (!Terra_Skill2A || !Terra_Skill2B)
-		return;
+	const bool bSkill2AReady =
+		(Skill2A_Implementation == ESkill2AImplementation::TerraShieldPush && Terra_Skill2A) ||
+		(Skill2A_Implementation == ESkill2AImplementation::KallariShurikenTeleport && Kallari_Skill2A);
 
-	// 쿨다운 디버깅 메세지
+	// 스킬 객체 방어
+	if ((Skill2Selected == ESkillVariant::A && !bSkill2AReady) ||
+		(Skill2Selected == ESkillVariant::B && !Terra_Skill2B))
+	{
+		return;
+	}
+
 	const double Now = GetWorld()->GetTimeSeconds();
 
-	if (Skill2Selected == ESkillVariant::A) {
-		if (Terra_Skill2A->IsInCooldown(Now)) {
+	// 쿨다운 디버깅 메세지
+	if (Skill2Selected == ESkillVariant::A)
+	{
+		bool bInCooldown = false;
+
+		if (Skill2A_Implementation == ESkill2AImplementation::TerraShieldPush && Terra_Skill2A)
+		{
+			bInCooldown = Terra_Skill2A->IsInCooldown(Now);
+		}
+		else if (Skill2A_Implementation == ESkill2AImplementation::KallariShurikenTeleport && Kallari_Skill2A)
+		{
+			bInCooldown = Kallari_Skill2A->IsInCooldown(Now);
+		}
+
+		if (bInCooldown)
+		{
 			ScreenDbg(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
 			return;
 		}
 	}
-	else if (Skill2Selected == ESkillVariant::B) {
-		if (Terra_Skill2B->IsInCooldown(Now)) {
+	else if (Skill2Selected == ESkillVariant::B)
+	{
+		if (Terra_Skill2B && Terra_Skill2B->IsInCooldown(Now))
+		{
 			ScreenDbg(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
 			return;
 		}
@@ -581,11 +606,17 @@ void ATP_Character::Input_Skill2Started(const FInputActionValue&)
 
 	if (Skill2Selected == ESkillVariant::A)
 	{
-		Terra_Skill2A->StartCooldown(Now, Skill2A_Cooldown);
+		if (Skill2A_Implementation == ESkill2AImplementation::TerraShieldPush && Terra_Skill2A)
+		{
+			Terra_Skill2A->StartCooldown(Now, Skill2A_Cooldown);
+		}
+		else if (Skill2A_Implementation == ESkill2AImplementation::KallariShurikenTeleport && Kallari_Skill2A)
+		{
+			Kallari_Skill2A->StartCooldown(Now, Skill2A_Cooldown);
+		}
 	}
-	else if (Skill2Selected == ESkillVariant::B)
+	else if (Skill2Selected == ESkillVariant::B && Terra_Skill2B)
 	{
-		// Spin 런타임(EndTime/TimerHandle/Active)은 스킬 객체가 관리
 		Terra_Skill2B->BeginSpin(Now, Skill2B_Duration);
 		Terra_Skill2B->StartCooldown(Now, Skill2B_Cooldown);
 	}
@@ -594,7 +625,18 @@ void ATP_Character::Input_Skill2Started(const FInputActionValue&)
 // ===== Skill2_A (wrapper) =====
 void ATP_Character::Skill2A_HitStart()
 {
-	if (Terra_Skill2A) Terra_Skill2A->HitStart();
+	if (Skill2A_Implementation == ESkill2AImplementation::TerraShieldPush && Terra_Skill2A)
+	{
+		Terra_Skill2A->HitStart();
+	}
+}
+
+void ATP_Character::Skill2A_ThrowProjectile()
+{
+	if (Skill2A_Implementation == ESkill2AImplementation::KallariShurikenTeleport && Kallari_Skill2A)
+	{
+		Kallari_Skill2A->ThrowProjectile();
+	}
 }
 
 // ===== Skill2_B (wrapper) =====
@@ -765,6 +807,15 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	Skill2B_Duration = Data->Skill2B_Duration;
 	Skill2B_Cooldown = Data->Skill2B_Cooldown;
 
+	Skill2A_Implementation = Data->Skill2A_Implementation;
+	Skill2A_ProjectileClass = Data->Skill2A_ProjectileClass;
+	Skill2A_ProjectileSpeed = Data->Skill2A_ProjectileSpeed;
+	Skill2A_ProjectileLifeSeconds = Data->Skill2A_ProjectileLifeSeconds;
+	Skill2A_ProjectileRadius = Data->Skill2A_ProjectileRadius;
+	Skill2A_ProjectileSpawnForwardOffset = Data->Skill2A_ProjectileSpawnForwardOffset;
+	Skill2A_ProjectileSpawnZOffset = Data->Skill2A_ProjectileSpawnZOffset;
+	Skill2A_ProjectileSpawnSocket = Data->Skill2A_ProjectileSpawnSocket;
+
 	// 궁극기
 	UltSelected = Data->UltSelected;
 
@@ -792,14 +843,18 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	if (!Terra_UltA) { Terra_UltA = NewObject<UTerra_UltA_AllyShield>(this); Terra_UltA->Init(this); }
 	if (!Terra_UltB) { Terra_UltB = NewObject<UTerra_UltB_SelfShieldBuff>(this); Terra_UltB->Init(this); }
 
+	if (!Kallari_Skill2A) { Kallari_Skill2A = NewObject<UKallari_Skill2A_ShurikenTeleport>(this); Kallari_Skill2A->Init(this); }
+
 	// ===== 런타임 상태 초기화 =====
 	// - 캐릭터 교체(슬롯 변경) 시, 이전 캐릭터의 쿨다운/타이머/맵 상태가 남으면 안 됨.
-	Terra_Skill1A->ResetRuntime();
-	Terra_Skill1B->ResetRuntime();
-	Terra_Skill2A->ResetRuntime();
-	Terra_Skill2B->ResetRuntime();
-	Terra_UltA->ResetRuntime();
-	Terra_UltB->ResetRuntime();
+	if (!Terra_Skill1A) Terra_Skill1A->ResetRuntime();
+	if (!Terra_Skill1B) Terra_Skill1B->ResetRuntime();
+	if (!Terra_Skill2A) Terra_Skill2A->ResetRuntime();
+	if (!Terra_Skill2B) Terra_Skill2B->ResetRuntime();
+	if (!Terra_UltA) Terra_UltA->ResetRuntime();
+	if (!Terra_UltB) Terra_UltB->ResetRuntime();
+
+	if (Kallari_Skill2A) Kallari_Skill2A->ResetRuntime();
 }
 
 // Character Select

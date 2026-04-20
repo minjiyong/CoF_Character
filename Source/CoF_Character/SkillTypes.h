@@ -30,3 +30,11 @@ enum class ESkillSlot : uint8
 	Skill2 UMETA(DisplayName = "Skill2"),
 	Ult    UMETA(DisplayName = "Ultimate"),
 };
+
+// 스킬2 중 어떤것인지
+UENUM(BlueprintType)
+enum class ESkill2AImplementation : uint8
+{
+	TerraShieldPush UMETA(DisplayName = "TerraShieldPush"),
+	KallariShurikenTeleport UMETA(DisplayName = "KallariShurikenTeleport")
+};

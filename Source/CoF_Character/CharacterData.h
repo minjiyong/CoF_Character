@@ -12,6 +12,7 @@ class USkeletalMesh;
 class UAnimInstance;
 class UAnimMontage;
 
+class AKallari_Skill2A_ShurikenProjectile;
 
 UCLASS(BlueprintType)
 class COF_CHARACTER_API UCharacterData : public UPrimaryDataAsset
@@ -118,6 +119,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2")
 	TObjectPtr<UAnimMontage> Skill2_Montage_B = nullptr;
 
+	// 2_A 중 어떤건지
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A")
+	ESkill2AImplementation Skill2A_Implementation = ESkill2AImplementation::TerraShieldPush;
 
 	// 2_A 방패 밀쳐내기 (전방공격)
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A")
@@ -135,6 +139,29 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A")
 	float Skill2A_Cooldown = 6.f;
 
+	// 2_A Kallari - 수리검 던지고 텔레포트
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Kallari")
+	TSubclassOf<AKallari_Skill2A_ShurikenProjectile> Skill2A_ProjectileClass = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Kallari")
+	float Skill2A_ProjectileSpeed = 2600.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Kallari")
+	float Skill2A_ProjectileLifeSeconds = 1.8f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Kallari")
+	float Skill2A_ProjectileRadius = 18.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Kallari")
+	float Skill2A_ProjectileSpawnForwardOffset = 60.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Kallari")
+	float Skill2A_ProjectileSpawnZOffset = 35.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Kallari")
+	FName Skill2A_ProjectileSpawnSocket = NAME_None;
+
+
 	// 2_B 돌기
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|B")
 	float Skill2B_DamagePerTick = 8.f;
@@ -150,6 +177,7 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|B")
 	float Skill2B_Cooldown = 8.f;
+
 
 
 	// ===== Ultimate =====

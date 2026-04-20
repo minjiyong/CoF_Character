@@ -36,10 +36,13 @@ class COF_CHARACTER_API ATP_Character : public ACharacter, public IHitReactInter
 	friend class UTerra_UltA_AllyShield;
 	friend class UTerra_UltB_SelfShieldBuff;
 
+	// ===== Kallari Skills =====
+	friend class AKallari_Skill2A_ShurikenProjectile;
+	friend class UKallari_Skill2A_ShurikenTeleport;
+
 public:
 	ATP_Character();
 
-protected:
 	virtual void BeginPlay() override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
@@ -223,6 +226,9 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UTerra_UltB_SelfShieldBuff> Terra_UltB = nullptr;
 
+	UPROPERTY()
+	TObjectPtr<UKallari_Skill2A_ShurikenTeleport> Kallari_Skill2A = nullptr;
+
 
 	// 스킬1 뭘 선택했는지
 	ESkillVariant Skill1Selected = ESkillVariant::None;
@@ -260,16 +266,30 @@ protected:
 	// 스킬 2
 	ESkillVariant Skill2Selected = ESkillVariant::None;
 
-	// 스킬 2_A 방패 밀쳐내기 전방 광역 공격
+	// 스킬 2_A 방패 밀쳐내기 전방 광역 공격 / Kallari 수리검 순간이동
 	UFUNCTION(BlueprintCallable, Category = "Skills|Skill2|A")
 	void Skill2A_HitStart();
 
+	UFUNCTION(BlueprintCallable, Category = "Skills|Skill2|A")
+	void Skill2A_ThrowProjectile();
+
 	TObjectPtr<UAnimMontage> Skill2MontageA = nullptr;
+
+	ESkill2AImplementation Skill2A_Implementation = ESkill2AImplementation::TerraShieldPush;
+
 	float Skill2A_Damage = 0.f;
 	float Skill2A_Radius = 0.f;
 	float Skill2A_ForwardOffset = 0.f;
 	float Skill2A_HalfAngleDeg = 0.f;
 	float Skill2A_Cooldown = 0.f;
+
+	TSubclassOf<AKallari_Skill2A_ShurikenProjectile> Skill2A_ProjectileClass = nullptr;
+	float Skill2A_ProjectileSpeed = 0.f;
+	float Skill2A_ProjectileLifeSeconds = 0.f;
+	float Skill2A_ProjectileRadius = 0.f;
+	float Skill2A_ProjectileSpawnForwardOffset = 0.f;
+	float Skill2A_ProjectileSpawnZOffset = 0.f;
+	FName Skill2A_ProjectileSpawnSocket = NAME_None;
 
 
 	// 스킬 2_B 돌기

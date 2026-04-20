@@ -52,6 +52,9 @@ public:
 	// 스킬 2_B 돌기
 	void ConfigureSpinHit(float InDamagePerTick, float InRadius, float InTickInterval, float InDuration);
 
+	// HitReact 호출 유틸
+	void ApplyHitToActor(AActor* Target, float InDamage, const FVector& HitPoint, const FVector& HitNormal);
+
 
 protected:
 	virtual void BeginPlay() override;
@@ -62,10 +65,6 @@ protected:
 
 	// HitWindow에서 실제로 1회 실행되는 판정 본체, 기본공격용
 	void ProcessHitQuery();
-
-	// HitReact 호출 유틸
-	void ApplyHitToActor(AActor* Target, float InDamage, const FVector& HitPoint, const FVector& HitNormal);
-
 
 private:
 	bool bHitWindowOpen = false;
