@@ -37,7 +37,25 @@ void UKallari_Skill2A_ShurikenTeleport::ThrowProjectile()
         FVector CamLoc;
         FRotator CamRot;
         PC->GetPlayerViewPoint(CamLoc, CamRot);
-        SpawnRotation = CamRot;
+
+        const FVector TraceStart = CamLoc;
+        const FVector TraceEnd = TraceStart + CamRot.Vector() * 10000.f;
+
+        FHitResult Hit;
+        FCollisionQueryParams Params(SCENE_QUERY_STAT(KallariSkill2A_AimTrace), false, C);
+        Params.AddIgnoredActor(C);
+
+        FVector TargetPoint = TraceEnd;
+        if (C->GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Visibility, Params))
+        {
+            TargetPoint = Hit.ImpactPoint;
+        }
+
+        const FVector ShootDir = (TargetPoint - SpawnLocation).GetSafeNormal();
+        if (!ShootDir.IsNearlyZero())
+        {
+            SpawnRotation = ShootDir.Rotation();
+        }
     }
 
     FActorSpawnParameters Params;

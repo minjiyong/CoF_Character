@@ -128,16 +128,16 @@ public:
 	float Skill2A_Damage = 20.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A")
+	float Skill2A_Cooldown = 6.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Terra")
 	float Skill2A_Radius = 220.f;              // 폭(구 반경)
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Terra")
 	float Skill2A_ForwardOffset = 150.f;        // 전방 중심 오프셋
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Terra")
 	float Skill2A_HalfAngleDeg = 60.f;          // 부채꼴 반각(총 120도)
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A")
-	float Skill2A_Cooldown = 6.f;
 
 	// 2_A Kallari - 수리검 던지고 텔레포트
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Kallari")
