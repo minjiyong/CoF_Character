@@ -32,7 +32,20 @@ void UKallari_Skill2A_ShurikenTeleport::ThrowProjectile()
 
     FRotator SpawnRotation = C->GetActorRotation();
 
-    if (APlayerController* PC = Cast<APlayerController>(C->GetController()))
+    if (C->HasValidLockOnTarget())
+    {
+        AActor* LockTarget = C->GetLockOnTarget();
+
+        FVector TargetOrigin, TargetExtent;
+        LockTarget->GetActorBounds(true, TargetOrigin, TargetExtent);
+
+        const FVector ShootDir = (TargetOrigin - SpawnLocation).GetSafeNormal();
+        if (!ShootDir.IsNearlyZero())
+        {
+            SpawnRotation = ShootDir.Rotation();
+        }
+    }
+    else if (APlayerController* PC = Cast<APlayerController>(C->GetController()))
     {
         FVector CamLoc;
         FRotator CamRot;

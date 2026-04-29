@@ -74,6 +74,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
 	UInputAction* JumpAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputAction* LockOnAction;			// 락온(좌 컨트롤)
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
 	UInputAction* AttackAction;			// 기본 공격(좌클릭)
 
@@ -103,6 +106,7 @@ public:
 	void Input_Look(const FInputActionValue& Value);
 	void Input_JumpStarted(const FInputActionValue& Value);
 	void Input_JumpCompleted(const FInputActionValue& Value);
+	void Input_LockOnToggle(const FInputActionValue& Value);
 
 	void Input_AttackStarted(const FInputActionValue& Value);		// 기본 공격(좌클릭)
 
@@ -146,6 +150,19 @@ public:
 	void SetSkillInputEnabled(bool bEnable);
 	void SetJumpInputEnabled(bool bEnable);
 	void SetEveryInputEnabled(bool bEnable);
+
+
+	// ===== 락온 시스템 ======
+	virtual void Tick(float DeltaSeconds) override;
+
+	bool HasValidLockOnTarget() const;
+	void RefreshBossLockOnTarget();
+	void ClearLockOn();
+	void UpdateLockOnRotation(float DeltaSeconds);
+
+	UFUNCTION(BlueprintCallable, Category = "LockOn")
+	AActor* GetLockOnTarget() const { return LockOnTarget; }
+
 
 	// 피격
 	float HitReactPlayRate = 1.0f;
@@ -338,6 +355,23 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Skills|Ult|B")
 	void UltB_BuffEnd();
+
+
+	// 락온 관련 멤버 변수들 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "LockOn")
+	FName BossLockOnTag = TEXT("BOSS");
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "LockOn")
+	float LockOnMaxDistance = 1500.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "LockOn")
+	float LockOnRotateSpeed = 10.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "LockOn")
+	bool bLockOnEnabled = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "LockOn")
+	TObjectPtr<AActor> LockOnTarget = nullptr;
 
 
 	// ===== 캐릭터 선택(런타임 교체) =====

@@ -16,6 +16,9 @@
 #include "CombatComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 
+// LockOn
+#include "Kismet/GameplayStatics.h"
+
 // Character Select
 #include "InputCoreTypes.h"
 #include "CharacterData.h"
@@ -35,7 +38,7 @@
 // ===== Terra Skills =====
 #include "Skills/Kallari/Kallari_Skill2A_ShurikenTeleport.h"
 
-//312312312 
+// Debug
 static void ScreenDbg(const FString& Msg, float Sec = 1.5f, FColor Color = FColor::Cyan)
 {
 	if (GEngine)
@@ -126,6 +129,116 @@ void ATP_Character::SetEveryInputEnabled(bool bEnable)
 	SetJumpInputEnabled(bEnable);
 }
 
+
+// Tick(우선 락온에서 사용)
+void ATP_Character::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	if (!bLockOnEnabled)
+	{
+		return;
+	}
+
+	if (!HasValidLockOnTarget())
+	{
+		ClearLockOn();
+		return;
+	}
+
+	UpdateLockOnRotation(DeltaSeconds);
+}
+
+// 락온 유효성 검사
+bool ATP_Character::HasValidLockOnTarget() const
+{
+	if (!IsValid(LockOnTarget))
+	{
+		return false;
+	}
+
+	const float DistSq = FVector::DistSquared(GetActorLocation(), LockOnTarget->GetActorLocation());
+	return DistSq <= FMath::Square(LockOnMaxDistance);
+}
+
+// 보스 락온 대상 찾기
+void ATP_Character::RefreshBossLockOnTarget()
+{
+	LockOnTarget = nullptr;
+
+	TArray<AActor*> BossActors;
+	UGameplayStatics::GetAllActorsWithTag(GetWorld(), BossLockOnTag, BossActors);
+
+	float BestDistSq = TNumericLimits<float>::Max();
+
+	for (AActor* Boss : BossActors)
+	{
+		if (!IsValid(Boss) || Boss == this)
+		{
+			continue;
+		}
+
+		const float DistSq = FVector::DistSquared(GetActorLocation(), Boss->GetActorLocation());
+		if (DistSq > FMath::Square(LockOnMaxDistance))
+		{
+			continue;
+		}
+
+		if (DistSq < BestDistSq)
+		{
+			BestDistSq = DistSq;
+			LockOnTarget = Boss;
+		}
+	}
+}
+
+// 몸체를 락온 대상으로 돌린다.
+void ATP_Character::UpdateLockOnRotation(float DeltaSeconds)
+{
+	if (!HasValidLockOnTarget())
+	{
+		return;
+	}
+
+	FVector ToTarget = LockOnTarget->GetActorLocation() - GetActorLocation();
+	ToTarget.Z = 0.f;
+
+	if (ToTarget.IsNearlyZero())
+	{
+		return;
+	}
+
+	const FRotator TargetRot = ToTarget.Rotation();
+	const FRotator NewRot = FMath::RInterpTo(
+		GetActorRotation(),
+		FRotator(0.f, TargetRot.Yaw, 0.f),
+		DeltaSeconds,
+		LockOnRotateSpeed
+	);
+
+	SetActorRotation(NewRot);
+
+	if (Controller)
+	{
+		FRotator ControlRot = Controller->GetControlRotation();
+		ControlRot.Yaw = TargetRot.Yaw;
+		Controller->SetControlRotation(ControlRot);
+	}
+}
+
+// 락온 해제
+void ATP_Character::ClearLockOn()
+{
+	bLockOnEnabled = false;
+	LockOnTarget = nullptr;
+
+	if (UCharacterMovementComponent* Move = GetCharacterMovement())
+	{
+		Move->bOrientRotationToMovement = true;
+	}
+}
+
+
 // 플레이어 세팅
 void ATP_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -154,6 +267,12 @@ void ATP_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	{
 		EIC->BindAction(JumpAction, ETriggerEvent::Started, this, &ATP_Character::Input_JumpStarted);
 		EIC->BindAction(JumpAction, ETriggerEvent::Completed, this, &ATP_Character::Input_JumpCompleted);
+	}
+
+	// 락온 좌컨트롤
+	if (LockOnAction)
+	{
+		EIC->BindAction(LockOnAction, ETriggerEvent::Started, this, &ATP_Character::Input_LockOnToggle);
 	}
 
 	// 좌클릭 콤보 공격
@@ -246,6 +365,29 @@ void ATP_Character::Input_JumpCompleted(const FInputActionValue& Value)
 	if (bJumpAccepted) SetEveryInputEnabled(true);
 
 	bJumpAccepted = false;
+}
+
+void ATP_Character::Input_LockOnToggle(const FInputActionValue& Value)
+{
+	if (bLockOnEnabled)
+	{
+		ClearLockOn();
+		return;
+	}
+
+	RefreshBossLockOnTarget();
+
+	if (!HasValidLockOnTarget())
+	{
+		return;
+	}
+
+	bLockOnEnabled = true;
+
+	if (UCharacterMovementComponent* Move = GetCharacterMovement())
+	{
+		Move->bOrientRotationToMovement = false;
+	}
 }
 
 void ATP_Character::Input_AttackStarted(const FInputActionValue& Value)
