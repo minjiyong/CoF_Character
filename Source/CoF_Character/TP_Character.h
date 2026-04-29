@@ -23,6 +23,9 @@ class UCombatComponent;
 // Animation
 class UAnimMontage;
 
+// Camera
+class UUserWidget;
+
 UCLASS()
 class COF_CHARACTER_API ATP_Character : public ACharacter, public IHitReactInterface
 {
@@ -159,6 +162,10 @@ public:
 	void RefreshBossLockOnTarget();
 	void ClearLockOn();
 	void UpdateLockOnRotation(float DeltaSeconds);
+
+	void UpdateLockOnCamera(float DeltaSeconds);   // 락온 중 카메라 보정
+	void EnsureLockOnWidget();                     // 락온 UI 생성
+	void UpdateLockOnWidget();                     // 락온 UI 위치 갱신
 
 	UFUNCTION(BlueprintCallable, Category = "LockOn")
 	AActor* GetLockOnTarget() const { return LockOnTarget; }
@@ -365,13 +372,35 @@ public:
 	float LockOnMaxDistance = 1500.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "LockOn")
-	float LockOnRotateSpeed = 10.f;
+	float LockOnRotateSpeed = 4.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "LockOn")
 	bool bLockOnEnabled = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "LockOn")
 	TObjectPtr<AActor> LockOnTarget = nullptr;
+
+	// 락온 카메라/ui 관련 멤버 변수들
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "LockOn|Camera")
+	float LockOnCameraArmLength = 360.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "LockOn|Camera")
+	FVector LockOnCameraSocketOffset = FVector(0.f, 60.f, 40.f);
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "LockOn|Camera")
+	float LockOnCameraInterpSpeed = 6.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "LockOn|UI")
+	TSubclassOf<UUserWidget> LockOnWidgetClass = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "LockOn|UI")
+	float LockOnWidgetWorldOffsetZ = 120.f;
+
+	UPROPERTY()
+	TObjectPtr<UUserWidget> LockOnWidgetInstance = nullptr;
+
+	float DefaultCameraArmLength = 0.f;
+	FVector DefaultCameraSocketOffset = FVector::ZeroVector;
 
 
 	// ===== 캐릭터 선택(런타임 교체) =====

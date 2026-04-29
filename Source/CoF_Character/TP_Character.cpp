@@ -18,6 +18,9 @@
 
 // LockOn
 #include "Kismet/GameplayStatics.h"
+// LockOn UI
+#include "Blueprint/UserWidget.h"
+#include "Blueprint/WidgetLayoutLibrary.h"
 
 // Character Select
 #include "InputCoreTypes.h"
@@ -87,6 +90,13 @@ void ATP_Character::BeginPlay()
 		ApplyCharacterData(DefaultCharacterData);
 	}
 
+	// ===== 락온 카메라 기본값 저장 =====
+	if (CameraBoom)
+	{
+		DefaultCameraArmLength = CameraBoom->TargetArmLength;
+		DefaultCameraSocketOffset = CameraBoom->SocketOffset;
+	}
+
 	// ===== 로컬 플레이어(내 화면)에서만 MappingContext 추가 =====
 	APlayerController* PC = Cast<APlayerController>(GetController());
 	if (!PC) return;
@@ -100,6 +110,8 @@ void ATP_Character::BeginPlay()
 	if (DefaultMappingContext)
 	{
 		Subsys->AddMappingContext(DefaultMappingContext, 0);
+		// ===== 락온 UI 준비 =====
+		EnsureLockOnWidget();
 	}
 	else
 	{
@@ -135,18 +147,18 @@ void ATP_Character::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	if (!bLockOnEnabled)
-	{
-		return;
-	}
-
-	if (!HasValidLockOnTarget())
+	if (bLockOnEnabled && !HasValidLockOnTarget())
 	{
 		ClearLockOn();
-		return;
 	}
 
-	UpdateLockOnRotation(DeltaSeconds);
+	if (bLockOnEnabled && HasValidLockOnTarget())
+	{
+		UpdateLockOnRotation(DeltaSeconds);
+	}
+
+	UpdateLockOnCamera(DeltaSeconds);
+	UpdateLockOnWidget();
 }
 
 // 락온 유효성 검사
@@ -209,20 +221,29 @@ void ATP_Character::UpdateLockOnRotation(float DeltaSeconds)
 	}
 
 	const FRotator TargetRot = ToTarget.Rotation();
-	const FRotator NewRot = FMath::RInterpTo(
+
+	const FRotator NewActorRot = FMath::RInterpTo(
 		GetActorRotation(),
 		FRotator(0.f, TargetRot.Yaw, 0.f),
 		DeltaSeconds,
 		LockOnRotateSpeed
 	);
 
-	SetActorRotation(NewRot);
+	SetActorRotation(NewActorRot);
 
 	if (Controller)
 	{
-		FRotator ControlRot = Controller->GetControlRotation();
-		ControlRot.Yaw = TargetRot.Yaw;
-		Controller->SetControlRotation(ControlRot);
+		const FRotator CurrentControlRot = Controller->GetControlRotation();
+		const FRotator DesiredControlRot(CurrentControlRot.Pitch, TargetRot.Yaw, CurrentControlRot.Roll);
+
+		const FRotator NewControlRot = FMath::RInterpTo(
+			CurrentControlRot,
+			DesiredControlRot,
+			DeltaSeconds,
+			LockOnRotateSpeed
+		);
+
+		Controller->SetControlRotation(NewControlRot);
 	}
 }
 
@@ -236,8 +257,114 @@ void ATP_Character::ClearLockOn()
 	{
 		Move->bOrientRotationToMovement = true;
 	}
+	if (LockOnWidgetInstance)
+	{
+		LockOnWidgetInstance->SetVisibility(ESlateVisibility::Hidden);
+	}
 }
 
+// 락온 중이면 카메라를 조금 뒤로 빼고 보정 / 락온 해제 시 원래 카메라로 부드럽게 복귀
+void ATP_Character::UpdateLockOnCamera(float DeltaSeconds)
+{
+	if (!CameraBoom)
+	{
+		return;
+	}
+
+	const bool bUseLockOnCamera = bLockOnEnabled && HasValidLockOnTarget();
+
+	const float DesiredArmLength = bUseLockOnCamera ? LockOnCameraArmLength : DefaultCameraArmLength;
+	const FVector DesiredSocketOffset = bUseLockOnCamera ? LockOnCameraSocketOffset : DefaultCameraSocketOffset;
+
+	CameraBoom->TargetArmLength = FMath::FInterpTo(
+		CameraBoom->TargetArmLength,
+		DesiredArmLength,
+		DeltaSeconds,
+		LockOnCameraInterpSpeed
+	);
+
+	CameraBoom->SocketOffset = FMath::VInterpTo(
+		CameraBoom->SocketOffset,
+		DesiredSocketOffset,
+		DeltaSeconds,
+		LockOnCameraInterpSpeed
+	);
+}
+
+// 락온 마커 위젯을 생성해서 뷰포트에 올림
+void ATP_Character::EnsureLockOnWidget()
+{
+	if (LockOnWidgetInstance || !LockOnWidgetClass)
+	{
+		return;
+	}
+
+	if (!IsLocallyControlled())
+	{
+		return;
+	}
+
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (!PC)
+	{
+		return;
+	}
+
+	LockOnWidgetInstance = CreateWidget<UUserWidget>(PC, LockOnWidgetClass);
+	if (!LockOnWidgetInstance)
+	{
+		return;
+	}
+
+	LockOnWidgetInstance->AddToViewport(50);
+
+	// 위젯 중심이 화면 좌표 기준점이 되도록 설정
+	LockOnWidgetInstance->SetAlignmentInViewport(FVector2D(0.5f, 0.5f));
+
+	// 작은 마커 위젯 크기
+	LockOnWidgetInstance->SetDesiredSizeInViewport(FVector2D(40.f, 40.f));
+
+	LockOnWidgetInstance->SetVisibility(ESlateVisibility::Hidden);
+}
+
+// 락온 위젯의 위치를 플레이어의 위치로 업데이트한다.
+void ATP_Character::UpdateLockOnWidget()
+{
+	EnsureLockOnWidget();
+
+	if (!LockOnWidgetInstance)
+	{
+		return;
+	}
+
+	if (!(bLockOnEnabled && HasValidLockOnTarget()))
+	{
+		LockOnWidgetInstance->SetVisibility(ESlateVisibility::Hidden);
+		return;
+	}
+
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (!PC)
+	{
+		LockOnWidgetInstance->SetVisibility(ESlateVisibility::Hidden);
+		return;
+	}
+
+	const FVector WorldPos = LockOnTarget->GetActorLocation();
+
+	FVector2D ScreenPos;
+	const bool bProjected =
+		UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(PC, WorldPos, ScreenPos, false);
+
+	if (!bProjected)
+	{
+		LockOnWidgetInstance->SetVisibility(ESlateVisibility::Hidden);
+		return;
+	}
+
+	LockOnWidgetInstance->SetPositionInViewport(ScreenPos, false);
+	LockOnWidgetInstance->SetVisibility(ESlateVisibility::HitTestInvisible);
+}
 
 // 플레이어 세팅
 void ATP_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
