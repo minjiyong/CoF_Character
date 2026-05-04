@@ -161,6 +161,16 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Kallari")
 	FName Skill2A_ProjectileSpawnSocket = NAME_None;
 
+	// 2_A Kallari - 텔레포트 후 돌며 공격
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Kallari")
+	TObjectPtr<UAnimMontage> Skill2A_TeleportAttackMontage = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Kallari")
+	float Skill2A_TeleportAttackRadius = 270.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Kallari")
+	float Skill2A_TeleportOffsetFromMark = 60.f;
+
 
 	// 2_B 돌기
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|B")

@@ -819,6 +819,36 @@ void ATP_Character::Input_Skill2Started(const FInputActionValue&)
 
 	const double Now = GetWorld()->GetTimeSeconds();
 
+	// Kallari Skill2_A : 표식이 있으면 두 번째 입력으로 텔레포트 공격
+	if (Skill2Selected == ESkillVariant::A
+		&& Skill2A_Implementation == ESkill2AImplementation::KallariShurikenTeleport
+		&& Kallari_Skill2A
+		&& Kallari_Skill2A->HasTeleportMark())
+	{
+		if (const UCharacterMovementComponent* Move = GetCharacterMovement())
+		{
+			if (Move->IsFalling())
+				return;
+		}
+
+		StopJumping();
+
+		if (!CanSkillInput())
+			return;
+
+		SetMoveInputEnabled(false);
+		SetAttackInputEnabled(false);
+		SetGuardInputEnabled(false);
+		SetSkillInputEnabled(false);
+		SetJumpInputEnabled(false);
+
+		if (!Kallari_Skill2A->TeleportToMarkAndAttack())
+		{
+			SetEveryInputEnabled(true);
+		}
+		return;
+	}
+
 	// 쿨다운 디버깅 메세지
 	if (Skill2Selected == ESkillVariant::A)
 	{
@@ -898,6 +928,12 @@ void ATP_Character::Skill2A_HitStart()
 	{
 		Terra_Skill2A->HitStart();
 	}
+
+	// Kallari Skill2_A : 텔레포트 후 단발성 sphere 공격
+	if (Skill2A_Implementation == ESkill2AImplementation::KallariShurikenTeleport && Kallari_Skill2A)
+	{
+		Kallari_Skill2A->HitStart();
+	}
 }
 
 void ATP_Character::Skill2A_ThrowProjectile()
@@ -906,6 +942,12 @@ void ATP_Character::Skill2A_ThrowProjectile()
 	{
 		Kallari_Skill2A->ThrowProjectile();
 	}
+}
+
+// 텔레포트 후 입력 잠금 해제용
+void ATP_Character::Skill2A_AttackEnd()
+{
+	SetEveryInputEnabled(true);
 }
 
 // ===== Skill2_B (wrapper) =====
@@ -1084,6 +1126,10 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	Skill2A_ProjectileSpawnForwardOffset = Data->Skill2A_ProjectileSpawnForwardOffset;
 	Skill2A_ProjectileSpawnZOffset = Data->Skill2A_ProjectileSpawnZOffset;
 	Skill2A_ProjectileSpawnSocket = Data->Skill2A_ProjectileSpawnSocket;
+
+	Skill2A_TeleportAttackMontage = Data->Skill2A_TeleportAttackMontage;
+	Skill2A_TeleportAttackRadius = Data->Skill2A_TeleportAttackRadius;
+	Skill2A_TeleportOffsetFromMark = Data->Skill2A_TeleportOffsetFromMark;
 
 	// 궁극기
 	UltSelected = Data->UltSelected;

@@ -35,4 +35,9 @@ public:
 public:
     void ThrowProjectile();
     void OnProjectileResolved(const FVector& InMarkLocation, const FVector& InMarkNormal);
+
+    bool HasTeleportMark() const { return bHasTeleportMark; }
+    bool TeleportToMarkAndAttack();
+
+    void HitStart();
 };

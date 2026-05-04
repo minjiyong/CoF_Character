@@ -105,3 +105,56 @@ void UKallari_Skill2A_ShurikenTeleport::OnProjectileResolved(const FVector& InMa
     TeleportMarkNormal = InMarkNormal;
     ActiveProjectile.Reset();
 }
+
+bool UKallari_Skill2A_ShurikenTeleport::TeleportToMarkAndAttack()
+{
+    ATP_Character* C = GetOwnerChar();
+    if (!C) return false;
+    if (!bHasTeleportMark) return false;
+
+    FVector Dest = TeleportMarkLocation;
+
+    const FVector SafeNormal = TeleportMarkNormal.GetSafeNormal();
+    if (!SafeNormal.IsNearlyZero())
+    {
+        Dest += SafeNormal * C->Skill2A_TeleportOffsetFromMark;
+    }
+
+    C->SetActorLocation(Dest, false, nullptr, ETeleportType::TeleportPhysics);
+
+    if (C->HasValidLockOnTarget())
+    {
+        FVector ToTarget = C->GetLockOnTarget()->GetActorLocation() - C->GetActorLocation();
+        ToTarget.Z = 0.f;
+
+        if (!ToTarget.IsNearlyZero())
+        {
+            C->SetActorRotation(ToTarget.Rotation());
+        }
+    }
+
+    bHasTeleportMark = false;
+    ActiveProjectile.Reset();
+
+    if (C->Skill2A_TeleportAttackMontage)
+    {
+        C->PlayAnimMontage(C->Skill2A_TeleportAttackMontage);
+        return true;
+    }
+
+    return false;
+}
+
+void UKallari_Skill2A_ShurikenTeleport::HitStart()
+{
+    ATP_Character* C = GetOwnerChar();
+    if (!C) return;
+    if (!C->CombatComp) return;
+
+    C->CombatComp->ConfigureAOEHit(
+        C->Skill2A_Damage * C->AttackMultiplier,
+        C->Skill2A_TeleportAttackRadius
+    );
+
+    C->CombatComp->BeginHitWindow_OneShot();
+}

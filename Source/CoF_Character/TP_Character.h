@@ -297,6 +297,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Skills|Skill2|A")
 	void Skill2A_ThrowProjectile();
 
+	UFUNCTION(BlueprintCallable, Category = "Skills|Skill2|A")
+	void Skill2A_AttackEnd();
+
 	TObjectPtr<UAnimMontage> Skill2MontageA = nullptr;
 
 	ESkill2AImplementation Skill2A_Implementation = ESkill2AImplementation::TerraShieldPush;
@@ -314,6 +317,10 @@ public:
 	float Skill2A_ProjectileSpawnForwardOffset = 0.f;
 	float Skill2A_ProjectileSpawnZOffset = 0.f;
 	FName Skill2A_ProjectileSpawnSocket = NAME_None;
+
+	TObjectPtr<UAnimMontage> Skill2A_TeleportAttackMontage = nullptr;
+	float Skill2A_TeleportAttackRadius = 0.f;
+	float Skill2A_TeleportOffsetFromMark = 0.f;
 
 
 	// 스킬 2_B 돌기
