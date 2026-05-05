@@ -40,6 +40,7 @@ class COF_CHARACTER_API ATP_Character : public ACharacter, public IHitReactInter
 	friend class UTerra_UltB_SelfShieldBuff;
 
 	// ===== Kallari Skills =====
+	friend class UKallari_Skill1A_DashSlash;
 	friend class AKallari_Skill2A_ShurikenProjectile;
 	friend class UKallari_Skill2A_ShurikenTeleport;
 	friend class UKallari_Skill2B_ShurikenExplosion;
@@ -252,6 +253,9 @@ public:
 	TObjectPtr<UTerra_UltB_SelfShieldBuff> Terra_UltB = nullptr;
 
 	UPROPERTY()
+	TObjectPtr<UKallari_Skill1A_DashSlash> Kallari_Skill1A = nullptr;
+
+	UPROPERTY()
 	TObjectPtr<UKallari_Skill2A_ShurikenTeleport> Kallari_Skill2A = nullptr;
 
 	UPROPERTY()
@@ -275,10 +279,14 @@ public:
 	void Skill1A_HitEnd();
 
 	TObjectPtr<UAnimMontage> Skill1MontageA = nullptr;
+
+	ESkill1AImplementation Skill1A_Implementation = ESkill1AImplementation::TerraDash;
+
 	float Skill1A_Damage = 0.f;
 	float Skill1A_DashDistance = 0.f;
 	float Skill1A_DashDuration = 0.f;			// 몇 초 동안 밀고 갈지
 	float Skill1A_Cooldown = 0.f;
+	float Skill1A_HitRadius = 80.f;
 
 
 	// 스킬1_B 도끼찍기

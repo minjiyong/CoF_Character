@@ -38,7 +38,8 @@
 #include "Skills/Terra/Terra_UltA_AllyShield.h"
 #include "Skills/Terra/Terra_UltB_SelfShieldBuff.h"
 
-// ===== Terra Skills =====
+// ===== Kallari Skills =====
+#include "Skills/Kallari/Kallari_Skill1A_DashSlash.h"
 #include "Skills/Kallari/Kallari_Skill2A_ShurikenTeleport.h"
 #include "Skills/Kallari/Kallari_Skill2B_ShurikenExplosion.h"
 
@@ -724,14 +725,36 @@ void ATP_Character::Input_Skill1Started(const FInputActionValue&)
 		return;
 
 	// 스킬 객체가 아직 없으면(초기화 전에 입력 들어오는 경우) 방어
-	if (!Terra_Skill1A || !Terra_Skill1B)
+	const bool bSkill1AReady =
+		(Skill1A_Implementation == ESkill1AImplementation::TerraDash && Terra_Skill1A) ||
+		(Skill1A_Implementation == ESkill1AImplementation::KallariDashSlash && Kallari_Skill1A);
+
+	const bool bSkill1BReady = (Terra_Skill1B != nullptr);
+
+	if ((Skill1Selected == ESkillVariant::A && !bSkill1AReady) ||
+		(Skill1Selected == ESkillVariant::B && !bSkill1BReady))
+	{
 		return;
+	}
 
 	// 쿨다운 디버깅 메세지
 	const double Now = GetWorld()->GetTimeSeconds();
 
-	if (Skill1Selected == ESkillVariant::A) {
-		if (Terra_Skill1A->IsInCooldown(Now)) {
+	if (Skill1Selected == ESkillVariant::A)
+	{
+		bool bInCooldown = false;
+
+		if (Skill1A_Implementation == ESkill1AImplementation::TerraDash && Terra_Skill1A)
+		{
+			bInCooldown = Terra_Skill1A->IsInCooldown(Now);
+		}
+		else if (Skill1A_Implementation == ESkill1AImplementation::KallariDashSlash && Kallari_Skill1A)
+		{
+			bInCooldown = Kallari_Skill1A->IsInCooldown(Now);
+		}
+
+		if (bInCooldown)
+		{
 			ScreenDbg(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
 			return;
 		}
@@ -769,29 +792,78 @@ void ATP_Character::Input_Skill1Started(const FInputActionValue&)
 	PlayAnimMontage(Montage);
 
 	// 쿨다운 시작 (런타임 상태는 스킬 객체가 관리)
-	if (Skill1Selected == ESkillVariant::A) Terra_Skill1A->StartCooldown(Now, Skill1A_Cooldown);
-	else if (Skill1Selected == ESkillVariant::B) Terra_Skill1B->StartCooldown(Now, Skill1B_Cooldown);
+	if (Skill1Selected == ESkillVariant::A)
+	{
+		if (Skill1A_Implementation == ESkill1AImplementation::TerraDash && Terra_Skill1A)
+		{
+			Terra_Skill1A->StartCooldown(Now, Skill1A_Cooldown);
+		}
+		else if (Skill1A_Implementation == ESkill1AImplementation::KallariDashSlash && Kallari_Skill1A)
+		{
+			Kallari_Skill1A->StartCooldown(Now, Skill1A_Cooldown);
+		}
+	}
+	else if (Skill1Selected == ESkillVariant::B)
+	{
+		Terra_Skill1B->StartCooldown(Now, Skill1B_Cooldown);
+	}
 }
 
 // ===== Skill1_A 돌진 (wrapper) =====
 void ATP_Character::Skill1A_HitStart()
 {
-	if (Terra_Skill1A) Terra_Skill1A->HitStart();
+	if (Skill1A_Implementation == ESkill1AImplementation::TerraDash && Terra_Skill1A)
+	{
+		Terra_Skill1A->HitStart();
+		return;
+	}
+
+	if (Skill1A_Implementation == ESkill1AImplementation::KallariDashSlash && Kallari_Skill1A)
+	{
+		Kallari_Skill1A->HitStart();
+	}
 }
 
 void ATP_Character::Skill1A_HitEnd()		//역시나 당장은 필요없는듯 기존 hitend 돌려쓰는중 나중에 필요하면 바꾸자.
 {
-	if (Terra_Skill1A) Terra_Skill1A->HitEnd();
+	if (Skill1A_Implementation == ESkill1AImplementation::TerraDash && Terra_Skill1A)
+	{
+		Terra_Skill1A->HitEnd();
+		return;
+	}
+
+	if (Skill1A_Implementation == ESkill1AImplementation::KallariDashSlash && Kallari_Skill1A)
+	{
+		Kallari_Skill1A->HitEnd();
+	}
 }
 
 void ATP_Character::Skill1A_DashStart()
 {
-	if (Terra_Skill1A) Terra_Skill1A->DashStart();
+	if (Skill1A_Implementation == ESkill1AImplementation::TerraDash && Terra_Skill1A)
+	{
+		Terra_Skill1A->DashStart();
+		return;
+	}
+
+	if (Skill1A_Implementation == ESkill1AImplementation::KallariDashSlash && Kallari_Skill1A)
+	{
+		Kallari_Skill1A->DashStart();
+	}
 }
 
 void ATP_Character::Skill1A_DashEnd()
 {
-	if (Terra_Skill1A) Terra_Skill1A->DashEnd();
+	if (Skill1A_Implementation == ESkill1AImplementation::TerraDash && Terra_Skill1A)
+	{
+		Terra_Skill1A->DashEnd();
+		return;
+	}
+
+	if (Skill1A_Implementation == ESkill1AImplementation::KallariDashSlash && Kallari_Skill1A)
+	{
+		Kallari_Skill1A->DashEnd();
+	}
 }
 
 // ===== skill1_B 적용 AOE(광역 공격) (wrapper) =====
@@ -1157,10 +1229,13 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	Skill1MontageA = Data->Skill1_Montage_A;
 	Skill1MontageB = Data->Skill1_Montage_B;
 
+	Skill1A_Implementation = Data->Skill1A_Implementation;
+
 	Skill1A_Damage = Data->Skill1A_Damage;
 	Skill1A_DashDistance = Data->Skill1A_DashDistance;
 	Skill1A_DashDuration = Data->Skill1A_DashDuration;
 	Skill1A_Cooldown = Data->Skill1A_Cooldown;
+	Skill1A_HitRadius = Data->Skill1A_HitRadius;
 
 	Skill1B_Damage = Data->Skill1B_Damage;
 	Skill1B_Radius = Data->Skill1B_Radius;
@@ -1172,19 +1247,15 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	Skill2MontageA = Data->Skill2_Montage_A;
 	Skill2MontageB = Data->Skill2_Montage_B;
 
+	Skill2A_Implementation = Data->Skill2A_Implementation;
+	Skill2B_Implementation = Data->Skill2B_Implementation;
+
 	Skill2A_Damage = Data->Skill2A_Damage;
 	Skill2A_Radius = Data->Skill2A_Radius;
 	Skill2A_ForwardOffset = Data->Skill2A_ForwardOffset;
 	Skill2A_HalfAngleDeg = Data->Skill2A_HalfAngleDeg;
 	Skill2A_Cooldown = Data->Skill2A_Cooldown;
 
-	Skill2B_DamagePerTick = Data->Skill2B_DamagePerTick;
-	Skill2B_Radius = Data->Skill2B_Radius;
-	Skill2B_TickInterval = Data->Skill2B_TickInterval;
-	Skill2B_Duration = Data->Skill2B_Duration;
-	Skill2B_Cooldown = Data->Skill2B_Cooldown;
-
-	Skill2A_Implementation = Data->Skill2A_Implementation;
 	Skill2A_ProjectileClass = Data->Skill2A_ProjectileClass;
 	Skill2A_ProjectileSpeed = Data->Skill2A_ProjectileSpeed;
 	Skill2A_ProjectileLifeSeconds = Data->Skill2A_ProjectileLifeSeconds;
@@ -1197,7 +1268,12 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	Skill2A_TeleportAttackRadius = Data->Skill2A_TeleportAttackRadius;
 	Skill2A_TeleportOffsetFromMark = Data->Skill2A_TeleportOffsetFromMark;
 
-	Skill2B_Implementation = Data->Skill2B_Implementation;
+	Skill2B_DamagePerTick = Data->Skill2B_DamagePerTick;
+	Skill2B_Radius = Data->Skill2B_Radius;
+	Skill2B_TickInterval = Data->Skill2B_TickInterval;
+	Skill2B_Duration = Data->Skill2B_Duration;
+	Skill2B_Cooldown = Data->Skill2B_Cooldown;
+
 	Skill2B_ProjectileClass = Data->Skill2B_ProjectileClass;
 	Skill2B_ProjectileSpeed = Data->Skill2B_ProjectileSpeed;
 	Skill2B_ProjectileLifeSeconds = Data->Skill2B_ProjectileLifeSeconds;
@@ -1237,6 +1313,7 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	if (!Terra_UltA) { Terra_UltA = NewObject<UTerra_UltA_AllyShield>(this); Terra_UltA->Init(this); }
 	if (!Terra_UltB) { Terra_UltB = NewObject<UTerra_UltB_SelfShieldBuff>(this); Terra_UltB->Init(this); }
 
+	if (!Kallari_Skill1A) { Kallari_Skill1A = NewObject<UKallari_Skill1A_DashSlash>(this); Kallari_Skill1A->Init(this); }
 	if (!Kallari_Skill2A) { Kallari_Skill2A = NewObject<UKallari_Skill2A_ShurikenTeleport>(this); Kallari_Skill2A->Init(this); }
 	if (!Kallari_Skill2B) { Kallari_Skill2B = NewObject<UKallari_Skill2B_ShurikenExplosion>(this); Kallari_Skill2B->Init(this); }
 
@@ -1249,6 +1326,7 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	if (!Terra_UltA) Terra_UltA->ResetRuntime();
 	if (!Terra_UltB) Terra_UltB->ResetRuntime();
 
+	if (Kallari_Skill1A) Kallari_Skill1A->ResetRuntime();
 	if (Kallari_Skill2A) Kallari_Skill2A->ResetRuntime();
 	if (Kallari_Skill2B) Kallari_Skill2B->ResetRuntime();
 }

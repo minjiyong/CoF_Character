@@ -82,6 +82,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1")
 	TObjectPtr<UAnimMontage> Skill1_Montage_B = nullptr;
 
+	// 1_A 중 어떤건지
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|A")
+	ESkill1AImplementation Skill1A_Implementation = ESkill1AImplementation::TerraDash;
 
 	// 1-A(돌진) 파라미터
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|A")
@@ -95,6 +98,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|A")
 	float Skill1A_Cooldown = 5.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|A")
+	float Skill1A_HitRadius = 80.f;
 	
 
 	// 1-B(도끼찍기) 파라미터: 지금은 광역기라 radius/damage만 있으면 됨
