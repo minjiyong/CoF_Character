@@ -969,7 +969,6 @@ void ATP_Character::Input_Skill2Started(const FInputActionValue&)
 		}
 		else if (Skill2B_Implementation == ESkill2BImplementation::KallariShurikenExplosion && Kallari_Skill2B)
 		{
-			Kallari_Skill2B->ThrowProjectile();
 			Kallari_Skill2B->StartCooldown(Now, Skill2B_Cooldown);
 		}
 	}
@@ -996,12 +995,6 @@ void ATP_Character::Skill2A_ThrowProjectile()
 	{
 		Kallari_Skill2A->ThrowProjectile();
 	}
-}
-
-// 텔레포트 후 입력 잠금 해제용
-void ATP_Character::Skill2A_AttackEnd()
-{
-	SetEveryInputEnabled(true);
 }
 
 // ===== Skill2_B (wrapper) =====

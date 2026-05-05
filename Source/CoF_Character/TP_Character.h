@@ -301,9 +301,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Skills|Skill2|A")
 	void Skill2A_ThrowProjectile();
 
-	UFUNCTION(BlueprintCallable, Category = "Skills|Skill2|A")
-	void Skill2A_AttackEnd();
-
 	TObjectPtr<UAnimMontage> Skill2MontageA = nullptr;
 
 	ESkill2AImplementation Skill2A_Implementation = ESkill2AImplementation::TerraShieldPush;
