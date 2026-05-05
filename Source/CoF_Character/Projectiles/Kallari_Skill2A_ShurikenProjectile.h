@@ -18,10 +18,11 @@ class COF_CHARACTER_API AKallari_Skill2A_ShurikenProjectile : public AActor
 public:
     AKallari_Skill2A_ShurikenProjectile();
 
+    // Skill2_A / Skill2_B 공용 투사체 초기화
     void InitProjectile(
         ATP_Character* InOwnerCharacter,
         UCombatComponent* InCombatComp,
-        UKallari_Skill2A_ShurikenTeleport* InOwningSkill,
+        UObject* InOwningSkill,
         float InDamage,
         float InInitialSpeed,
         float InLifeSeconds,
@@ -57,7 +58,7 @@ private:
 private:
     TWeakObjectPtr<ATP_Character> OwnerCharacter;
     TWeakObjectPtr<UCombatComponent> OwningCombatComp;
-    TWeakObjectPtr<UKallari_Skill2A_ShurikenTeleport> OwningSkill;
+    TWeakObjectPtr<UObject> OwningSkill;
 
     float Damage = 0.f;
     bool bResolved = false;

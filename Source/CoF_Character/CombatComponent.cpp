@@ -81,6 +81,14 @@ void UCombatComponent::ConfigureAOEForwardHit(float InDamage, float InRadius, fl
 	PendingHalfAngleDeg = InHalfAngleDeg;
 }
 
+void UCombatComponent::ConfigureAOELocationHit(const FVector& InCenter, float InDamage, float InRadius)
+{
+	HitQueryType = EHitQueryType::AOELocation;
+	PendingAOELocation = InCenter;
+	PendingDamage = InDamage;
+	PendingRadius = InRadius;
+}
+
 void UCombatComponent::ConfigureSpinHit(float InDamagePerTick, float InRadius, float InTickInterval, float InDuration)
 {
 	HitQueryType = EHitQueryType::SpinSweep;
@@ -117,6 +125,7 @@ void UCombatComponent::EndHitWindow()
 	DashHitActors.Reset();     // ±‚¡∏ dash
 	SpinLastHitTime.Reset();   // spin
 	SpinPrevLoc = FVector::ZeroVector;
+	PendingAOELocation = FVector::ZeroVector;
 }
 
 void UCombatComponent::ProcessHitQuery()
@@ -310,6 +319,46 @@ void UCombatComponent::ProcessHitQuery()
 
 		bHitAppliedThisSwing = true;
 		return;
+	}
+
+	else if (HitQueryType == EHitQueryType::AOELocation)
+	{
+		AActor* OwnerActor = GetOwner();
+		if (!OwnerActor || !World) return;
+
+		TArray<FOverlapResult> Overlaps;
+		FCollisionShape Shape = FCollisionShape::MakeSphere(PendingRadius);
+
+		FCollisionQueryParams Params(SCENE_QUERY_STAT(AOELocationHit), false, OwnerActor);
+		Params.AddIgnoredActor(OwnerActor);
+
+		const bool bHit = World->OverlapMultiByChannel(
+			Overlaps,
+			PendingAOELocation,
+			FQuat::Identity,
+			ECC_Pawn,
+			Shape,
+			Params
+		);
+
+		if (!bHit) return;
+
+		TSet<AActor*> HitActors;
+		for (const FOverlapResult& Overlap : Overlaps)
+		{
+			AActor* Target = Overlap.GetActor();
+			if (!Target || HitActors.Contains(Target)) continue;
+
+			HitActors.Add(Target);
+
+			FVector HitNormal = (Target->GetActorLocation() - PendingAOELocation).GetSafeNormal();
+			if (HitNormal.IsNearlyZero())
+			{
+				HitNormal = FVector::UpVector;
+			}
+
+			ApplyHitToActor(Target, PendingDamage, PendingAOELocation, HitNormal);
+		}
 	}
 
 	else if (HitQueryType == EHitQueryType::SpinSweep)

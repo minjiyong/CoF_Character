@@ -42,6 +42,7 @@ class COF_CHARACTER_API ATP_Character : public ACharacter, public IHitReactInter
 	// ===== Kallari Skills =====
 	friend class AKallari_Skill2A_ShurikenProjectile;
 	friend class UKallari_Skill2A_ShurikenTeleport;
+	friend class UKallari_Skill2B_ShurikenExplosion;
 
 public:
 	ATP_Character();
@@ -253,6 +254,9 @@ public:
 	UPROPERTY()
 	TObjectPtr<UKallari_Skill2A_ShurikenTeleport> Kallari_Skill2A = nullptr;
 
+	UPROPERTY()
+	TObjectPtr<UKallari_Skill2B_ShurikenExplosion> Kallari_Skill2B = nullptr;
+
 
 	// 스킬1 뭘 선택했는지
 	ESkillVariant Skill1Selected = ESkillVariant::None;
@@ -323,18 +327,39 @@ public:
 	float Skill2A_TeleportOffsetFromMark = 0.f;
 
 
-	// 스킬 2_B 돌기
+	// 스킬 2_B 돌기 / Kallari 수리검 던지고 폭발
 	UFUNCTION(BlueprintCallable, Category = "Skills|Skill2|B")
 	void Skill2B_HitStart();
 	UFUNCTION(BlueprintCallable, Category = "Skills|Skill2|B")
 	void Skill2B_SpinEnd();
 
+	UFUNCTION(BlueprintCallable, Category = "Skills|Skill2|B")
+	void Skill2B_ThrowProjectile();
+
+	UFUNCTION(BlueprintCallable, Category = "Skills|Skill2|B")
+	void Skill2B_ExplodeAtMark();
+
 	TObjectPtr<UAnimMontage> Skill2MontageB = nullptr;
+
+	ESkill2BImplementation Skill2B_Implementation = ESkill2BImplementation::TerraSpin;
+
 	float Skill2B_DamagePerTick = 0.f;
 	float Skill2B_Radius = 0.f;
 	float Skill2B_TickInterval = 0.f;
 	float Skill2B_Duration = 0.f;
 	float Skill2B_Cooldown = 0.f;
+
+	TSubclassOf<AKallari_Skill2A_ShurikenProjectile> Skill2B_ProjectileClass = nullptr;
+	float Skill2B_ProjectileSpeed = 0.f;
+	float Skill2B_ProjectileLifeSeconds = 0.f;
+	float Skill2B_ProjectileRadius = 0.f;
+	float Skill2B_ProjectileSpawnForwardOffset = 0.f;
+	float Skill2B_ProjectileSpawnZOffset = 0.f;
+	FName Skill2B_ProjectileSpawnSocket = NAME_None;
+
+	TObjectPtr<UAnimMontage> Skill2B_ExplosionMontage = nullptr;
+	float Skill2B_ExplosionDamage = 0.f;
+	float Skill2B_ExplosionRadius = 0.f;
 
 
 	// 궁극기

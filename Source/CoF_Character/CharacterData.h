@@ -123,13 +123,14 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A")
 	ESkill2AImplementation Skill2A_Implementation = ESkill2AImplementation::TerraShieldPush;
 
-	// 2_A 방패 밀쳐내기 (전방공격)
+	// 2_A 공용
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A")
 	float Skill2A_Damage = 20.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A")
 	float Skill2A_Cooldown = 6.f;
 
+	// 2_A Terra 방패 밀쳐내기 (전방공격)
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Terra")
 	float Skill2A_Radius = 220.f;              // 폭(구 반경)
 
@@ -172,22 +173,57 @@ public:
 	float Skill2A_TeleportOffsetFromMark = 60.f;
 
 
-	// 2_B 돌기
+	// 2_B 구현 타입
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|B")
-	float Skill2B_DamagePerTick = 8.f;
+	ESkill2BImplementation Skill2B_Implementation = ESkill2BImplementation::TerraSpin;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|B")
-	float Skill2B_Radius = 230.f;          // 몸통+칼 범위(튜닝)
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|B")
-	float Skill2B_TickInterval = 0.2f;     // 가렌 E 느낌 틱당 데미지(0.2~0.25)
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|B")
-	float Skill2B_Duration = 2.5f;         // duration 후 자동 종료
-
+	// 2_B 공용
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|B")
 	float Skill2B_Cooldown = 8.f;
 
+	// 2_B Terra - 회전 공격
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|B|Terra")
+	float Skill2B_DamagePerTick = 8.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|B|Terra")
+	float Skill2B_Radius = 180.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|B|Terra")
+	float Skill2B_TickInterval = 0.15f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|B|Terra")
+	float Skill2B_Duration = 1.2f;
+
+	// 2_B Kallari - 수리검 던지고 폭발
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|B|Kallari")
+	TSubclassOf<AKallari_Skill2A_ShurikenProjectile> Skill2B_ProjectileClass = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|B|Kallari")
+	float Skill2B_ProjectileSpeed = 2600.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|B|Kallari")
+	float Skill2B_ProjectileLifeSeconds = 1.8f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|B|Kallari")
+	float Skill2B_ProjectileRadius = 18.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|B|Kallari")
+	float Skill2B_ProjectileSpawnForwardOffset = 60.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|B|Kallari")
+	float Skill2B_ProjectileSpawnZOffset = 35.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|B|Kallari")
+	FName Skill2B_ProjectileSpawnSocket = NAME_None;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|B|Kallari")
+	TObjectPtr<UAnimMontage> Skill2B_ExplosionMontage = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|B|Kallari")
+	float Skill2B_ExplosionDamage = 24.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|B|Kallari")
+	float Skill2B_ExplosionRadius = 220.f;
 
 
 	// ===== Ultimate =====

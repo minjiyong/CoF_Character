@@ -14,6 +14,7 @@ enum class EHitQueryType : uint8
 	DashTrace,
 	SpinSweep,
 	AOEForward,
+	AOELocation,
 };
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -48,6 +49,9 @@ public:
 	
 	// 스킬 2_A 전방 광역(원뿔/부채꼴) 설정
 	void ConfigureAOEForwardHit(float InDamage, float InRadius, float InForwardOffset, float InHalfAngleDeg);
+
+	// Kallari 스킬 2_B 위치 기반 단발성 광역 공격 설정
+	void ConfigureAOELocationHit(const FVector& InCenter, float InDamage, float InRadius);
 
 	// 스킬 2_B 돌기
 	void ConfigureSpinHit(float InDamagePerTick, float InRadius, float InTickInterval, float InDuration);
@@ -96,4 +100,7 @@ private:
 	// 전방 AOE 전용 파라미터
 	float PendingForwardOffset = 0.f;
 	float PendingHalfAngleDeg = 0.f;
+
+	// 특정 위치 AOE 전용 파라미터
+	FVector PendingAOELocation = FVector::ZeroVector;
 };

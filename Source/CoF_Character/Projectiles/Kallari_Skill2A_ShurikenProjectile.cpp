@@ -4,6 +4,7 @@
 #include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Skills/Kallari/Kallari_Skill2A_ShurikenTeleport.h"
+#include "Skills/Kallari/Kallari_Skill2B_ShurikenExplosion.h"
 #include "TP_Character.h"
 
 AKallari_Skill2A_ShurikenProjectile::AKallari_Skill2A_ShurikenProjectile()
@@ -32,7 +33,7 @@ AKallari_Skill2A_ShurikenProjectile::AKallari_Skill2A_ShurikenProjectile()
 void AKallari_Skill2A_ShurikenProjectile::InitProjectile(
     ATP_Character* InOwnerCharacter,
     UCombatComponent* InCombatComp,
-    UKallari_Skill2A_ShurikenTeleport* InOwningSkill,
+    UObject* InOwningSkill,
     float InDamage,
     float InInitialSpeed,
     float InLifeSeconds,
@@ -82,6 +83,7 @@ void AKallari_Skill2A_ShurikenProjectile::LifeSpanExpired()
     Super::LifeSpanExpired();
 }
 
+// Àû°ú °ãÃÆÀ» ¶§ Ã³¸®
 void AKallari_Skill2A_ShurikenProjectile::HandleOverlap(
     UPrimitiveComponent* OverlappedComp,
     AActor* OtherActor,
@@ -136,9 +138,16 @@ void AKallari_Skill2A_ShurikenProjectile::ResolveAndDestroy(const FVector& MarkL
     if (bResolved) return;
     bResolved = true;
 
-    if (OwningSkill.IsValid())
+    if (UObject* SkillObj = OwningSkill.Get())
     {
-        OwningSkill->OnProjectileResolved(MarkLocation, MarkNormal);
+        if (UKallari_Skill2A_ShurikenTeleport* Skill2A = Cast<UKallari_Skill2A_ShurikenTeleport>(SkillObj))
+        {
+            Skill2A->OnProjectileResolved(MarkLocation, MarkNormal);
+        }
+        else if (UKallari_Skill2B_ShurikenExplosion* Skill2B = Cast<UKallari_Skill2B_ShurikenExplosion>(SkillObj))
+        {
+            Skill2B->OnProjectileResolved(MarkLocation, MarkNormal);
+        }
     }
 
     Destroy();

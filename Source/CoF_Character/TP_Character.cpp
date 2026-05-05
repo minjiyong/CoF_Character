@@ -40,6 +40,7 @@
 
 // ===== Terra Skills =====
 #include "Skills/Kallari/Kallari_Skill2A_ShurikenTeleport.h"
+#include "Skills/Kallari/Kallari_Skill2B_ShurikenExplosion.h"
 
 // Debug
 static void ScreenDbg(const FString& Msg, float Sec = 1.5f, FColor Color = FColor::Cyan)
@@ -810,9 +811,13 @@ void ATP_Character::Input_Skill2Started(const FInputActionValue&)
 		(Skill2A_Implementation == ESkill2AImplementation::TerraShieldPush && Terra_Skill2A) ||
 		(Skill2A_Implementation == ESkill2AImplementation::KallariShurikenTeleport && Kallari_Skill2A);
 
+	const bool bSkill2BReady =
+		(Skill2B_Implementation == ESkill2BImplementation::TerraSpin && Terra_Skill2B) ||
+		(Skill2B_Implementation == ESkill2BImplementation::KallariShurikenExplosion && Kallari_Skill2B);
+
 	// 스킬 객체 방어
 	if ((Skill2Selected == ESkillVariant::A && !bSkill2AReady) ||
-		(Skill2Selected == ESkillVariant::B && !Terra_Skill2B))
+		(Skill2Selected == ESkillVariant::B && !bSkill2BReady))
 	{
 		return;
 	}
@@ -849,6 +854,36 @@ void ATP_Character::Input_Skill2Started(const FInputActionValue&)
 		return;
 	}
 
+	// Kallari Skill2_B : 표식이 있으면 두 번째 입력으로 폭발 몽타주
+	if (Skill2Selected == ESkillVariant::B
+		&& Skill2B_Implementation == ESkill2BImplementation::KallariShurikenExplosion
+		&& Kallari_Skill2B
+		&& Kallari_Skill2B->HasExplosionMark())
+	{
+		if (const UCharacterMovementComponent* Move = GetCharacterMovement())
+		{
+			if (Move->IsFalling())
+				return;
+		}
+
+		StopJumping();
+
+		if (!CanSkillInput())
+			return;
+
+		SetMoveInputEnabled(false);
+		SetAttackInputEnabled(false);
+		SetGuardInputEnabled(false);
+		SetSkillInputEnabled(false);
+		SetJumpInputEnabled(false);
+
+		if (!Kallari_Skill2B->PlayExplosionMontage())
+		{
+			SetEveryInputEnabled(true);
+		}
+		return;
+	}
+
 	// 쿨다운 디버깅 메세지
 	if (Skill2Selected == ESkillVariant::A)
 	{
@@ -871,7 +906,18 @@ void ATP_Character::Input_Skill2Started(const FInputActionValue&)
 	}
 	else if (Skill2Selected == ESkillVariant::B)
 	{
-		if (Terra_Skill2B && Terra_Skill2B->IsInCooldown(Now))
+		bool bInCooldown = false;
+
+		if (Skill2B_Implementation == ESkill2BImplementation::TerraSpin && Terra_Skill2B)
+		{
+			bInCooldown = Terra_Skill2B->IsInCooldown(Now);
+		}
+		else if (Skill2B_Implementation == ESkill2BImplementation::KallariShurikenExplosion && Kallari_Skill2B)
+		{
+			bInCooldown = Kallari_Skill2B->IsInCooldown(Now);
+		}
+
+		if (bInCooldown)
 		{
 			ScreenDbg(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
 			return;
@@ -914,10 +960,18 @@ void ATP_Character::Input_Skill2Started(const FInputActionValue&)
 			Kallari_Skill2A->StartCooldown(Now, Skill2A_Cooldown);
 		}
 	}
-	else if (Skill2Selected == ESkillVariant::B && Terra_Skill2B)
+	else if (Skill2Selected == ESkillVariant::B)
 	{
-		Terra_Skill2B->BeginSpin(Now, Skill2B_Duration);
-		Terra_Skill2B->StartCooldown(Now, Skill2B_Cooldown);
+		if (Skill2B_Implementation == ESkill2BImplementation::TerraSpin && Terra_Skill2B)
+		{
+			Terra_Skill2B->BeginSpin(Now, Skill2B_Duration);
+			Terra_Skill2B->StartCooldown(Now, Skill2B_Cooldown);
+		}
+		else if (Skill2B_Implementation == ESkill2BImplementation::KallariShurikenExplosion && Kallari_Skill2B)
+		{
+			Kallari_Skill2B->ThrowProjectile();
+			Kallari_Skill2B->StartCooldown(Now, Skill2B_Cooldown);
+		}
 	}
 }
 
@@ -960,6 +1014,25 @@ void ATP_Character::Skill2B_SpinEnd()	// 돌기 시간 끝나면 End로
 {
 	if (Terra_Skill2B) Terra_Skill2B->SpinEnd();
 }
+
+// Kallari Skill2_B 1타 : 수리검을 던져 좌표를 남김
+void ATP_Character::Skill2B_ThrowProjectile()
+{
+	if (Skill2B_Implementation == ESkill2BImplementation::KallariShurikenExplosion && Kallari_Skill2B)
+	{
+		Kallari_Skill2B->ThrowProjectile();
+	}
+}
+
+// Kallari Skill2_B 2타 : 저장된 좌표에 폭발을 발생시킴
+void ATP_Character::Skill2B_ExplodeAtMark()
+{
+	if (Skill2B_Implementation == ESkill2BImplementation::KallariShurikenExplosion && Kallari_Skill2B)
+	{
+		Kallari_Skill2B->ExplodeAtMark();
+	}
+}
+
 
 // -------- 궁극기 ---------
 // input
@@ -1131,6 +1204,19 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	Skill2A_TeleportAttackRadius = Data->Skill2A_TeleportAttackRadius;
 	Skill2A_TeleportOffsetFromMark = Data->Skill2A_TeleportOffsetFromMark;
 
+	Skill2B_Implementation = Data->Skill2B_Implementation;
+	Skill2B_ProjectileClass = Data->Skill2B_ProjectileClass;
+	Skill2B_ProjectileSpeed = Data->Skill2B_ProjectileSpeed;
+	Skill2B_ProjectileLifeSeconds = Data->Skill2B_ProjectileLifeSeconds;
+	Skill2B_ProjectileRadius = Data->Skill2B_ProjectileRadius;
+	Skill2B_ProjectileSpawnForwardOffset = Data->Skill2B_ProjectileSpawnForwardOffset;
+	Skill2B_ProjectileSpawnZOffset = Data->Skill2B_ProjectileSpawnZOffset;
+	Skill2B_ProjectileSpawnSocket = Data->Skill2B_ProjectileSpawnSocket;
+
+	Skill2B_ExplosionMontage = Data->Skill2B_ExplosionMontage;
+	Skill2B_ExplosionDamage = Data->Skill2B_ExplosionDamage;
+	Skill2B_ExplosionRadius = Data->Skill2B_ExplosionRadius;
+
 	// 궁극기
 	UltSelected = Data->UltSelected;
 
@@ -1159,6 +1245,7 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	if (!Terra_UltB) { Terra_UltB = NewObject<UTerra_UltB_SelfShieldBuff>(this); Terra_UltB->Init(this); }
 
 	if (!Kallari_Skill2A) { Kallari_Skill2A = NewObject<UKallari_Skill2A_ShurikenTeleport>(this); Kallari_Skill2A->Init(this); }
+	if (!Kallari_Skill2B) { Kallari_Skill2B = NewObject<UKallari_Skill2B_ShurikenExplosion>(this); Kallari_Skill2B->Init(this); }
 
 	// ===== 런타임 상태 초기화 =====
 	// - 캐릭터 교체(슬롯 변경) 시, 이전 캐릭터의 쿨다운/타이머/맵 상태가 남으면 안 됨.
@@ -1170,6 +1257,7 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	if (!Terra_UltB) Terra_UltB->ResetRuntime();
 
 	if (Kallari_Skill2A) Kallari_Skill2A->ResetRuntime();
+	if (Kallari_Skill2B) Kallari_Skill2B->ResetRuntime();
 }
 
 // Character Select
