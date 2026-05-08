@@ -41,9 +41,11 @@ class COF_CHARACTER_API ATP_Character : public ACharacter, public IHitReactInter
 
 	// ===== Kallari Skills =====
 	friend class UKallari_Skill1A_DashSlash;
+	friend class UKallari_Skill1B_RisingDashSlash;
 	friend class AKallari_Skill2A_ShurikenProjectile;
 	friend class UKallari_Skill2A_ShurikenTeleport;
 	friend class UKallari_Skill2B_ShurikenExplosion;
+
 
 public:
 	ATP_Character();
@@ -256,6 +258,9 @@ public:
 	TObjectPtr<UKallari_Skill1A_DashSlash> Kallari_Skill1A = nullptr;
 
 	UPROPERTY()
+	TObjectPtr<UKallari_Skill1B_RisingDashSlash> Kallari_Skill1B = nullptr;
+
+	UPROPERTY()
 	TObjectPtr<UKallari_Skill2A_ShurikenTeleport> Kallari_Skill2A = nullptr;
 
 	UPROPERTY()
@@ -288,15 +293,33 @@ public:
 	float Skill1A_Cooldown = 0.f;
 	float Skill1A_HitRadius = 80.f;
 
-
-	// ½ºÅ³1_B µµ³¢Âï±â
+	// ½ºÅ³1_B µµ³¢Âï±â / À§·Î »ó½ÂÇÏ¸é¼­ µ¹Áø
 	UFUNCTION(BlueprintCallable, Category = "Skills|Skill1")
 	void Skill1B_ApplyAOE();
 
+	UFUNCTION(BlueprintCallable, Category = "Skills|Skill1|B")
+	void Skill1B_HitStart();
+
+	UFUNCTION(BlueprintCallable, Category = "Skills|Skill1|B")
+	void Skill1B_HitEnd();
+
+	UFUNCTION(BlueprintCallable, Category = "Skills|Skill1|B")
+	void Skill1B_DashStart();
+
+	UFUNCTION(BlueprintCallable, Category = "Skills|Skill1|B")
+	void Skill1B_DashEnd();
+
 	TObjectPtr<UAnimMontage> Skill1MontageB = nullptr;
+
+	ESkill1BImplementation Skill1B_Implementation = ESkill1BImplementation::TerraAxeSlam;
+
 	float Skill1B_Damage = 0.f;
 	float Skill1B_Radius = 0.f;
 	float Skill1B_Cooldown = 0.f;
+
+	float Skill1B_RisingDistance = 0.f;
+	float Skill1B_RisingDuration = 0.f;
+	float Skill1B_RisingHitRadius = 0.f;
 
 
 	// ½ºÅ³ 2

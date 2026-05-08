@@ -103,6 +103,10 @@ public:
 	float Skill1A_HitRadius = 80.f;
 	
 
+	// 1_B 중 어떤건지
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B")
+	ESkill1BImplementation Skill1B_Implementation = ESkill1BImplementation::TerraAxeSlam;
+
 	// 1-B(도끼찍기) 파라미터: 지금은 광역기라 radius/damage만 있으면 됨
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B")
 	float Skill1B_Damage = 30.f;
@@ -112,6 +116,16 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B")
 	float Skill1B_Cooldown = 5.f;
+
+	// 1-B Kallari - 위로 상승하는 돌진 공격
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B|Kallari")
+	float Skill1B_RisingDistance = 650.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B|Kallari")
+	float Skill1B_RisingDuration = 0.22f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B|Kallari")
+	float Skill1B_RisingHitRadius = 80.f;
 
 
 	// ------------ Skill 2 ------------

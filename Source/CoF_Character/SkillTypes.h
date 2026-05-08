@@ -39,6 +39,14 @@ enum class ESkill1AImplementation : uint8
 	KallariDashSlash UMETA(DisplayName = "KallariDashSlash")
 };
 
+// 스킬1_B 중 어떤것인지
+UENUM(BlueprintType)
+enum class ESkill1BImplementation : uint8
+{
+	TerraAxeSlam UMETA(DisplayName = "TerraAxeSlam"),
+	KallariRisingDashSlash UMETA(DisplayName = "KallariRisingDashSlash")
+};
+
 // 스킬2_A 중 어떤것인지
 UENUM(BlueprintType)
 enum class ESkill2AImplementation : uint8
