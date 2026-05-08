@@ -17,4 +17,5 @@ class COF_CHARACTER_API UKallari_Skill1B_RisingDashSlash : public UTerra_Skill1A
 public:
     void HitStart();
     void DashStart();
+    void DashEnd();
 };
