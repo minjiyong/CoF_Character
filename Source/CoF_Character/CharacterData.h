@@ -118,14 +118,15 @@ public:
 	float Skill1B_Cooldown = 5.f;
 
 	// 1-B Kallari - 위로 상승하는 돌진 공격
+	// 1-B Kallari - 공중제비 회피
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B|Kallari")
-	float Skill1B_RisingDistance = 650.f;
+	float Skill1B_BackflipDuration = 0.16f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B|Kallari")
-	float Skill1B_RisingDuration = 0.22f;
+	float Skill1B_BackwardDistance = 150.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B|Kallari")
-	float Skill1B_RisingHitRadius = 80.f;
+	float Skill1B_UpwardDistance = 150.f;
 
 
 	// ------------ Skill 2 ------------

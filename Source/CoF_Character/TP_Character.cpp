@@ -40,7 +40,7 @@
 
 // ===== Kallari Skills =====
 #include "Skills/Kallari/Kallari_Skill1A_DashSlash.h"
-#include "Skills/Kallari/Kallari_Skill1B_RisingDashSlash.h"
+#include "Skills/Kallari/Kallari_Skill1B_Backflip.h"
 #include "Skills/Kallari/Kallari_Skill2A_ShurikenTeleport.h"
 #include "Skills/Kallari/Kallari_Skill2B_ShurikenExplosion.h"
 
@@ -732,7 +732,7 @@ void ATP_Character::Input_Skill1Started(const FInputActionValue&)
 
 	const bool bSkill1BReady =
 		(Skill1B_Implementation == ESkill1BImplementation::TerraAxeSlam && Terra_Skill1B) ||
-		(Skill1B_Implementation == ESkill1BImplementation::KallariRisingDashSlash && Kallari_Skill1B);
+		(Skill1B_Implementation == ESkill1BImplementation::KallariBackflip && Kallari_Skill1B);
 
 	if ((Skill1Selected == ESkillVariant::A && !bSkill1AReady) ||
 		(Skill1Selected == ESkillVariant::B && !bSkill1BReady))
@@ -770,7 +770,7 @@ void ATP_Character::Input_Skill1Started(const FInputActionValue&)
 		{
 			bInCooldown = Terra_Skill1B->IsInCooldown(Now);
 		}
-		else if (Skill1B_Implementation == ESkill1BImplementation::KallariRisingDashSlash && Kallari_Skill1B)
+		else if (Skill1B_Implementation == ESkill1BImplementation::KallariBackflip && Kallari_Skill1B)
 		{
 			bInCooldown = Kallari_Skill1B->IsInCooldown(Now);
 		}
@@ -825,7 +825,7 @@ void ATP_Character::Input_Skill1Started(const FInputActionValue&)
 		{
 			Terra_Skill1B->StartCooldown(Now, Skill1B_Cooldown);
 		}
-		else if (Skill1B_Implementation == ESkill1BImplementation::KallariRisingDashSlash && Kallari_Skill1B)
+		else if (Skill1B_Implementation == ESkill1BImplementation::KallariBackflip && Kallari_Skill1B)
 		{
 			Kallari_Skill1B->StartCooldown(Now, Skill1B_Cooldown);
 		}
@@ -896,33 +896,17 @@ void ATP_Character::Skill1B_ApplyAOE()
 }
 
 // ===== skill1_B Kallari 돌진 공격 (wrapper) =====
-void ATP_Character::Skill1B_HitStart()
+void ATP_Character::Skill1B_BackflipStart()
 {
-	if (Skill1B_Implementation == ESkill1BImplementation::KallariRisingDashSlash && Kallari_Skill1B)
-	{
-		Kallari_Skill1B->HitStart();
-	}
-}
-
-void ATP_Character::Skill1B_HitEnd()
-{
-	if (Skill1B_Implementation == ESkill1BImplementation::KallariRisingDashSlash && Kallari_Skill1B)
-	{
-		Kallari_Skill1B->HitEnd();
-	}
-}
-
-void ATP_Character::Skill1B_DashStart()
-{
-	if (Skill1B_Implementation == ESkill1BImplementation::KallariRisingDashSlash && Kallari_Skill1B)
+	if (Skill1B_Implementation == ESkill1BImplementation::KallariBackflip && Kallari_Skill1B)
 	{
 		Kallari_Skill1B->DashStart();
 	}
 }
 
-void ATP_Character::Skill1B_DashEnd()
+void ATP_Character::Skill1B_BackflipEnd()
 {
-	if (Skill1B_Implementation == ESkill1BImplementation::KallariRisingDashSlash && Kallari_Skill1B)
+	if (Skill1B_Implementation == ESkill1BImplementation::KallariBackflip && Kallari_Skill1B)
 	{
 		Kallari_Skill1B->DashEnd();
 	}
@@ -1287,6 +1271,7 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	Skill1MontageB = Data->Skill1_Montage_B;
 
 	Skill1A_Implementation = Data->Skill1A_Implementation;
+	Skill1B_Implementation = Data->Skill1B_Implementation;
 
 	Skill1A_Damage = Data->Skill1A_Damage;
 	Skill1A_DashDistance = Data->Skill1A_DashDistance;
@@ -1298,10 +1283,9 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	Skill1B_Radius = Data->Skill1B_Radius;
 	Skill1B_Cooldown = Data->Skill1B_Cooldown;
 
-	Skill1B_Implementation = Data->Skill1B_Implementation;
-	Skill1B_RisingDistance = Data->Skill1B_RisingDistance;
-	Skill1B_RisingDuration = Data->Skill1B_RisingDuration;
-	Skill1B_RisingHitRadius = Data->Skill1B_RisingHitRadius;
+	Skill1B_BackflipDuration = Data->Skill1B_BackflipDuration;
+	Skill1B_BackwardDistance = Data->Skill1B_BackwardDistance;
+	Skill1B_UpwardDistance = Data->Skill1B_UpwardDistance;
 
 	// 스킬2
 	Skill2Selected = Data->Skill2Selected;
@@ -1376,7 +1360,7 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	if (!Terra_UltB) { Terra_UltB = NewObject<UTerra_UltB_SelfShieldBuff>(this); Terra_UltB->Init(this); }
 
 	if (!Kallari_Skill1A) { Kallari_Skill1A = NewObject<UKallari_Skill1A_DashSlash>(this); Kallari_Skill1A->Init(this); }
-	if (!Kallari_Skill1B) { Kallari_Skill1B = NewObject<UKallari_Skill1B_RisingDashSlash>(this); Kallari_Skill1B->Init(this); }
+	if (!Kallari_Skill1B) { Kallari_Skill1B = NewObject<UKallari_Skill1B_Backflip>(this); Kallari_Skill1B->Init(this); }
 	if (!Kallari_Skill2A) { Kallari_Skill2A = NewObject<UKallari_Skill2A_ShurikenTeleport>(this); Kallari_Skill2A->Init(this); }
 	if (!Kallari_Skill2B) { Kallari_Skill2B = NewObject<UKallari_Skill2B_ShurikenExplosion>(this); Kallari_Skill2B->Init(this); }
 

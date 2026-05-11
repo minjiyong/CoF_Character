@@ -35,30 +35,30 @@ enum class ESkillSlot : uint8
 UENUM(BlueprintType)
 enum class ESkill1AImplementation : uint8
 {
-	TerraDash UMETA(DisplayName = "TerraDash"),
-	KallariDashSlash UMETA(DisplayName = "KallariDashSlash")
+	TerraDash			UMETA(DisplayName = "TerraDash"),
+	KallariDashSlash	UMETA(DisplayName = "KallariDashSlash")
 };
 
 // 스킬1_B 중 어떤것인지
 UENUM(BlueprintType)
 enum class ESkill1BImplementation : uint8
 {
-	TerraAxeSlam UMETA(DisplayName = "TerraAxeSlam"),
-	KallariRisingDashSlash UMETA(DisplayName = "KallariRisingDashSlash")
+	TerraAxeSlam		UMETA(DisplayName = "TerraAxeSlam"),
+	KallariBackflip		UMETA(DisplayName = "KallariBackflip")
 };
 
 // 스킬2_A 중 어떤것인지
 UENUM(BlueprintType)
 enum class ESkill2AImplementation : uint8
 {
-	TerraShieldPush UMETA(DisplayName = "TerraShieldPush"),
-	KallariShurikenTeleport UMETA(DisplayName = "KallariShurikenTeleport")
+	TerraShieldPush				UMETA(DisplayName = "TerraShieldPush"),
+	KallariShurikenTeleport		UMETA(DisplayName = "KallariShurikenTeleport")
 };
 
 // 스킬2_B 중 어떤것인지
 UENUM(BlueprintType)
 enum class ESkill2BImplementation : uint8
 {
-	TerraSpin UMETA(DisplayName = "TerraSpin"),
-	KallariShurikenExplosion UMETA(DisplayName = "KallariShurikenExplosion")
+	TerraSpin					UMETA(DisplayName = "TerraSpin"),
+	KallariShurikenExplosion	UMETA(DisplayName = "KallariShurikenExplosion")
 };
