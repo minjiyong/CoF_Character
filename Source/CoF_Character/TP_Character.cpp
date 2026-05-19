@@ -467,6 +467,9 @@ void ATP_Character::Input_Move(const FInputActionValue& Value)
 
 void ATP_Character::Input_Look(const FInputActionValue& Value)
 {
+	if (bHitReactInputLocked)
+		return;
+	
 	const FVector2D Look = Value.Get<FVector2D>();
 
 	AddControllerYawInput(Look.X);
@@ -499,6 +502,9 @@ void ATP_Character::Input_JumpCompleted(const FInputActionValue& Value)
 
 void ATP_Character::Input_LockOnToggle(const FInputActionValue& Value)
 {
+	if (bHitReactInputLocked)
+		return;
+
 	if (bLockOnEnabled)
 	{
 		ClearLockOn();
@@ -687,6 +693,10 @@ void ATP_Character::Input_BlockCompleted(const FInputActionValue&)
 // 피격
 void ATP_Character::OnHitReact_Implementation(float DamageAmount, const FVector& HitPoint, const FVector& HitNormal)
 {
+	// 이미 피격 중이면 무시 (잠시 무적)
+	if (!bCanBeHit)
+		return;
+
 	// 1) 데미지 적용
 	if (HealthComp)
 	{
@@ -699,13 +709,27 @@ void ATP_Character::OnHitReact_Implementation(float DamageAmount, const FVector&
 	UAnimInstance* Anim = GetMesh() ? GetMesh()->GetAnimInstance() : nullptr;
 	if (!Anim) return;
 
-	// (선택) 이미 피격 몽타주가 돌고 있으면 재시작하지 않게
+	// 이미 피격 몽타주가 돌고 있으면 재시작하지 않게
 	if (Anim->Montage_IsPlaying(HitReactMontage))
 		return;
+
+	// 피격 중에는 입력 잠금 + 추가 피격 무시
+	bHitReacting = true;
+	bCanBeHit = false;
+	bHitReactInputLocked = true;
+	SetEveryInputEnabled(false);
 
 	// 추후 방향에 따라 섹션 선택(Front/Back/Left/Right) 으로 교체할지 생각해봐야함.
 	// 일단 단일 섹션이면 그냥 Play
 	PlayAnimMontage(HitReactMontage, HitReactPlayRate);
+}
+
+void ATP_Character::HitReactEnd()
+{
+	bHitReacting = false;
+	bCanBeHit = true;
+	bHitReactInputLocked = false;
+	SetEveryInputEnabled(true);
 }
 
 void ATP_Character::Debug_ForceHit()

@@ -182,6 +182,14 @@ public:
 	virtual void OnHitReact_Implementation(float DamageAmount, const FVector& HitPoint, const FVector& HitNormal) override;
 	void Debug_ForceHit();			// (더미 없이 테스트용) 강제 피격
 
+	// 피격 중 입력 잠금 / 무적 처리
+	bool bHitReacting = false;
+	bool bCanBeHit = true;
+	bool bHitReactInputLocked = false;
+
+	UFUNCTION(BlueprintCallable, Category = "Combat|HitReact")
+	void HitReactEnd();
+
 
 	// 기본 공격
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
