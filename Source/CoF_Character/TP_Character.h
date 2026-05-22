@@ -45,6 +45,7 @@ class COF_CHARACTER_API ATP_Character : public ACharacter, public IHitReactInter
 	friend class AKallari_Skill2A_ShurikenProjectile;
 	friend class UKallari_Skill2A_ShurikenTeleport;
 	friend class UKallari_Skill2B_ShurikenExplosion;
+	friend class UKallari_UltA_BlinkDash;
 
 
 public:
@@ -395,29 +396,56 @@ public:
 	// 궁극기
 	ESkillVariant UltSelected = ESkillVariant::None;
 
-	// 궁_A - 아군 쉴드
+	// 구현체
+	EUltimateAImplementation UltA_Implementation = EUltimateAImplementation::TerraAllyShield;
+	EUltimateBImplementation UltB_Implementation = EUltimateBImplementation::TerraSelfBuff;
+
+	// 궁_A
 	TObjectPtr<UAnimMontage> UltMontageA = nullptr;
 
+	// Terra
 	float UltA_Duration = 0.f;
 	float UltA_Cooldown = 0.f;
 	float UltA_Shield = 0.f;
 	float UltA_Radius = 0.f;
 
-	UFUNCTION(BlueprintCallable, Category = "Skills|Ult|A")
-	void UltA_ShieldStart();   // 몽타주 Notify에서 호출 (부여)
+	// Kallari
+	float UltA_Damage = 0.f;
+	float UltA_DashDistance = 0.f;
+	float UltA_DashDuration = 0.f;
+	float UltA_HitRadius = 0.f;
+
+	UPROPERTY()
+	TObjectPtr<UKallari_UltA_BlinkDash> Kallari_UltA = nullptr;
 
 	UFUNCTION(BlueprintCallable, Category = "Skills|Ult|A")
-	void UltA_ShieldEnd();     // 타이머에서 자동 호출 (제거)
+	void UltA_ShieldStart(); // Terra
 
-	// 궁_B - 자체 쉴드, 공격력 증가
+	UFUNCTION(BlueprintCallable, Category = "Skills|Ult|A")
+	void UltA_ShieldEnd();   // Terra
+
+	UFUNCTION(BlueprintCallable, Category = "Skills|Ult|A")
+	void UltA_BlinkHitStart(); // Kallari
+
+	UFUNCTION(BlueprintCallable, Category = "Skills|Ult|A")
+	void UltA_BlinkDashStart(); // Kallari
+
+	UFUNCTION(BlueprintCallable, Category = "Skills|Ult|A")
+	void UltA_BlinkDashEnd(); // Kallari
+
+	// 궁_B
 	TObjectPtr<UAnimMontage> UltMontageB = nullptr;
 
+	// Terra
 	float UltB_Duration = 0.f;
 	float UltB_Cooldown = 0.f;
 	float UltB_Shield = 0.f;
 	float UltB_AttackMultiplier = 1.f;
 
-	float AttackMultiplier = 1.0f;		// 공격력 배율(전체 공격에 적용)
+	// Kallari
+	float UltB_InvincibleDuration = 0.f;
+
+	float AttackMultiplier = 1.0f;
 
 	UFUNCTION(BlueprintCallable, Category = "Skills|Ult|B")
 	void UltB_BuffStart();

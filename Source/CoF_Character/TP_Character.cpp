@@ -43,6 +43,7 @@
 #include "Skills/Kallari/Kallari_Skill1B_Backflip.h"
 #include "Skills/Kallari/Kallari_Skill2A_ShurikenTeleport.h"
 #include "Skills/Kallari/Kallari_Skill2B_ShurikenExplosion.h"
+#include "Skills/Kallari/Kallari_UltA_BlinkDash.h"
 
 // Debug
 static void ScreenDbg(const FString& Msg, float Sec = 1.5f, FColor Color = FColor::Cyan)
@@ -1168,34 +1169,81 @@ void ATP_Character::Skill2B_ExplodeAtMark()
 // input
 void ATP_Character::Input_UltStarted(const FInputActionValue&)
 {
-	if (UltSelected == ESkillVariant::None) return;
-
-	if (!Terra_UltA || !Terra_UltB)
+	if (UltSelected == ESkillVariant::None)
 		return;
+
+	// 궁극기 객체/구현 준비 여부
+	// Terra 쪽은 기존 코드가 직접 처리되는 구조라면 true로 두고,
+	// Kallari 쪽은 실제 객체가 있어야만 준비된 것으로 본다.
+	const bool bUltAReady =
+		(UltA_Implementation == EUltimateAImplementation::TerraAllyShield) ||
+		(UltA_Implementation == EUltimateAImplementation::KallariBlinkDash && Kallari_UltA);
+
+	const bool bUltBReady =
+		(UltB_Implementation == EUltimateBImplementation::TerraSelfBuff) ||
+		(UltB_Implementation == EUltimateBImplementation::KallariInvincible);
+
+	if ((UltSelected == ESkillVariant::A && !bUltAReady) ||
+		(UltSelected == ESkillVariant::B && !bUltBReady))
+	{
+		return;
+	}
 
 	// 쿨다운 디버깅 메세지
 	const double Now = GetWorld()->GetTimeSeconds();
 
-	if (UltSelected == ESkillVariant::A) {
-		if (Terra_UltA->IsInCooldown(Now)) {
+	if (UltSelected == ESkillVariant::A)
+	{
+		bool bInCooldown = false;
+
+		if (UltA_Implementation == EUltimateAImplementation::TerraAllyShield)
+		{
+			// ===== 기존 Terra Ult A 쿨다운 체크 코드 그대로 유지 =====
+			// 예: 기존 Terra Ult A 쿨다운 검사 블록을 여기에 넣기
+		}
+		else if (UltA_Implementation == EUltimateAImplementation::KallariBlinkDash && Kallari_UltA)
+		{
+			bInCooldown = Kallari_UltA->IsInCooldown(Now);
+		}
+
+		if (bInCooldown)
+		{
 			ScreenDbg(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
 			return;
 		}
 	}
-	else if (UltSelected == ESkillVariant::B) {
-		if (Terra_UltB->IsInCooldown(Now)) {
+	else if (UltSelected == ESkillVariant::B)
+	{
+		bool bInCooldown = false;
+
+		if (UltB_Implementation == EUltimateBImplementation::TerraSelfBuff)
+		{
+			// ===== 기존 Terra Ult B 쿨다운 체크 코드 그대로 유지 =====
+			// 예: 기존 Terra Ult B 쿨다운 검사 블록을 여기에 넣기
+		}
+		else if (UltB_Implementation == EUltimateBImplementation::KallariInvincible)
+		{
+			// ===== 나중에 Kallari Ult B 쿨다운 체크 들어갈 자리 =====
+		}
+
+		if (bInCooldown)
+		{
 			ScreenDbg(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
 			return;
 		}
 	}
 
 	if (const UCharacterMovementComponent* Move = GetCharacterMovement())
+	{
 		if (Move->IsFalling())
 			return;
+	}
 
-	if (!CanSkillInput()) return;
+	StopJumping();
 
-	// 캐스팅 동안 입력 잠금
+	if (!CanSkillInput())
+		return;
+
 	SetMoveInputEnabled(false);
 	SetAttackInputEnabled(false);
 	SetGuardInputEnabled(false);
@@ -1210,12 +1258,34 @@ void ATP_Character::Input_UltStarted(const FInputActionValue&)
 
 	PlayAnimMontage(Montage);
 
-	// 쿨다운 시작 (런타임 상태는 스킬 객체가 관리)
-	if (UltSelected == ESkillVariant::A) Terra_UltA->StartCooldown(Now, UltA_Cooldown);
-	else if (UltSelected == ESkillVariant::B) Terra_UltB->StartCooldown(Now, UltB_Cooldown);
+	// 쿨다운 시작 (런타임 상태는 구현체가 관리)
+	if (UltSelected == ESkillVariant::A)
+	{
+		if (UltA_Implementation == EUltimateAImplementation::TerraAllyShield)
+		{
+			// ===== 기존 Terra Ult A 쿨다운 시작 코드 그대로 유지 =====
+			// 예: 기존 Terra Ult A StartCooldown / 타이머 시작 블록을 여기에 넣기
+		}
+		else if (UltA_Implementation == EUltimateAImplementation::KallariBlinkDash && Kallari_UltA)
+		{
+			Kallari_UltA->StartCooldown(Now, UltA_Cooldown);
+		}
+	}
+	else if (UltSelected == ESkillVariant::B)
+	{
+		if (UltB_Implementation == EUltimateBImplementation::TerraSelfBuff)
+		{
+			// ===== 기존 Terra Ult B 쿨다운 시작 코드 그대로 유지 =====
+			// 예: 기존 Terra Ult B StartCooldown / 타이머 시작 블록을 여기에 넣기
+		}
+		else if (UltB_Implementation == EUltimateBImplementation::KallariInvincible)
+		{
+			// ===== 나중에 Kallari Ult B StartCooldown 들어갈 자리 =====
+		}
+	}
 }
 
-// ===== UltA (wrapper) =====
+// ===== UltA Terra =====
 void ATP_Character::UltA_ShieldStart()
 {
 	if (Terra_UltA) Terra_UltA->ShieldStart();
@@ -1224,6 +1294,31 @@ void ATP_Character::UltA_ShieldStart()
 void ATP_Character::UltA_ShieldEnd()
 {
 	if (Terra_UltA) Terra_UltA->ShieldEnd();
+}
+
+// ===== UltA Kallari =====
+void ATP_Character::UltA_BlinkHitStart()
+{
+	if (UltA_Implementation == EUltimateAImplementation::KallariBlinkDash && Kallari_UltA)
+	{
+		Kallari_UltA->HitStart();
+	}
+}
+
+void ATP_Character::UltA_BlinkDashStart()
+{
+	if (UltA_Implementation == EUltimateAImplementation::KallariBlinkDash && Kallari_UltA)
+	{
+		Kallari_UltA->DashStart();
+	}
+}
+
+void ATP_Character::UltA_BlinkDashEnd()
+{
+	if (UltA_Implementation == EUltimateAImplementation::KallariBlinkDash && Kallari_UltA)
+	{
+		Kallari_UltA->DashEnd();
+	}
 }
 
 // ===== UltB (wrapper) =====
@@ -1236,6 +1331,8 @@ void ATP_Character::UltB_BuffEnd()
 {
 	if (Terra_UltB) Terra_UltB->BuffEnd();
 }
+
+
 
 // Character Settings 
 void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
@@ -1359,18 +1456,25 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	// 궁극기
 	UltSelected = Data->UltSelected;
 
+	UltA_Implementation = Data->UltA_Implementation;
 	UltMontageA = Data->Ult_Montage_A;
-	UltMontageB = Data->Ult_Montage_B;
-
 	UltA_Duration = Data->UltA_Duration;
 	UltA_Cooldown = Data->UltA_Cooldown;
 	UltA_Shield = Data->UltA_Shield;
 	UltA_Radius = Data->UltA_Radius;
 
+	UltA_Damage = Data->UltA_Damage;
+	UltA_DashDistance = Data->UltA_DashDistance;
+	UltA_DashDuration = Data->UltA_DashDuration;
+	UltA_HitRadius = Data->UltA_HitRadius;
+
+	UltB_Implementation = Data->UltB_Implementation;
+	UltMontageB = Data->Ult_Montage_B;
 	UltB_Duration = Data->UltB_Duration;
 	UltB_Cooldown = Data->UltB_Cooldown;
 	UltB_Shield = Data->UltB_Shield;
 	UltB_AttackMultiplier = Data->UltB_AttackMultiplier;
+	UltB_InvincibleDuration = Data->UltB_InvincibleDuration;
 
 	// ===== Terra Skill Objects init =====
 	// - 캐릭터가 Terra든 Gideon이든, 일단은 Terra 구현이 연결돼 있어도
@@ -1387,6 +1491,7 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	if (!Kallari_Skill1B) { Kallari_Skill1B = NewObject<UKallari_Skill1B_Backflip>(this); Kallari_Skill1B->Init(this); }
 	if (!Kallari_Skill2A) { Kallari_Skill2A = NewObject<UKallari_Skill2A_ShurikenTeleport>(this); Kallari_Skill2A->Init(this); }
 	if (!Kallari_Skill2B) { Kallari_Skill2B = NewObject<UKallari_Skill2B_ShurikenExplosion>(this); Kallari_Skill2B->Init(this); }
+	if (!Kallari_UltA) { Kallari_UltA = NewObject<UKallari_UltA_BlinkDash>(this); Kallari_UltA->Init(this); }
 
 	// ===== 런타임 상태 초기화 =====
 	// - 캐릭터 교체(슬롯 변경) 시, 이전 캐릭터의 쿨다운/타이머/맵 상태가 남으면 안 됨.
@@ -1401,6 +1506,7 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	if (Kallari_Skill1B) Kallari_Skill1B->ResetRuntime();
 	if (Kallari_Skill2A) Kallari_Skill2A->ResetRuntime();
 	if (Kallari_Skill2B) Kallari_Skill2B->ResetRuntime();
+	if (Kallari_UltA) Kallari_UltA->ResetRuntime();
 }
 
 // Character Select

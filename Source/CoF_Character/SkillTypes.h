@@ -62,3 +62,19 @@ enum class ESkill2BImplementation : uint8
 	TerraSpin					UMETA(DisplayName = "TerraSpin"),
 	KallariShurikenExplosion	UMETA(DisplayName = "KallariShurikenExplosion")
 };
+
+// 궁극기 A 중 어떤 것인지
+UENUM(BlueprintType)
+enum class EUltimateAImplementation : uint8
+{
+	TerraAllyShield UMETA(DisplayName = "TerraAllyShield"),
+	KallariBlinkDash UMETA(DisplayName = "KallariBlinkDash")
+};
+
+// 궁극기 B 중 어떤 것인지
+UENUM(BlueprintType)
+enum class EUltimateBImplementation : uint8
+{
+	TerraSelfBuff UMETA(DisplayName = "TerraSelfBuff"),
+	KallariInvincible UMETA(DisplayName = "KallariInvincible")
+};
