@@ -270,12 +270,13 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|A")
 	EUltimateAImplementation UltA_Implementation = EUltimateAImplementation::TerraAllyShield;
 
+	// ===== Ult_A : 공용 =====
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|A")
+	float UltA_Cooldown = 30.f;
+
 	// ===== Ult_A : Terra =====
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|A|Terra")
 	float UltA_Duration = 8.f;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|A|Terra")
-	float UltA_Cooldown = 30.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|A|Terra")
 	float UltA_Shield = 200.f;
@@ -301,12 +302,13 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|B")
 	EUltimateBImplementation UltB_Implementation = EUltimateBImplementation::TerraSelfBuff;
 
+	// ===== Ult_B : 공용 =====
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|B")
+	float UltB_Cooldown = 30.f;
+
 	// ===== Ult_B : Terra =====
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|B|Terra")
 	float UltB_Duration = 8.f;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|B|Terra")
-	float UltB_Cooldown = 30.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|B|Terra")
 	float UltB_Shield = 200.f;
