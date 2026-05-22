@@ -2,16 +2,12 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
-
 #include "SkillTypes.h"
-
 #include "CharacterData.generated.h"
-
 
 class USkeletalMesh;
 class UAnimInstance;
 class UAnimMontage;
-
 class AKallari_Skill2A_ShurikenProjectile;
 
 UCLASS(BlueprintType)
@@ -21,6 +17,7 @@ class COF_CHARACTER_API UCharacterData : public UPrimaryDataAsset
 
 public:
 	// ===== Visual / Animation =====
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Visual")
 	TObjectPtr<USkeletalMesh> Mesh = nullptr;
 
@@ -28,6 +25,7 @@ public:
 	TSubclassOf<UAnimInstance> AnimClass;
 
 	// ===== Stats =====
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stats")
 	float MaxHp = 100.f;
 
@@ -35,6 +33,7 @@ public:
 	float MaxWalkSpeed = 500.f;
 
 	// ===== Attack =====
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attack")
 	float Damage = 10.f;
 
@@ -42,35 +41,35 @@ public:
 	EPrimaryAttackHitType PrimaryAttackHitType = EPrimaryAttackHitType::LineTrace;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attack")
-	float TraceRange = 800.f;		// (Trace 기반)
+	float TraceRange = 800.f; // (Trace 기반)
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attack", meta = (ClampMin = "0.0"))
-	float PrimaryAttackSphereRadius = 120.f;	// (Sphere 기반)
+	float PrimaryAttackSphereRadius = 120.f; // (Sphere 기반)
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attack", meta = (ClampMin = "0.0"))
-	float PrimaryAttackForwardOffset = 50.f;	// 전방 부채꼴 범위로 제한 - 앞으로 얼마나
+	float PrimaryAttackForwardOffset = 50.f; // 전방 부채꼴 범위로 제한 - 앞으로 얼마나
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attack", meta = (ClampMin = "0.0", ClampMax = "180.0"))
-	float PrimaryAttackHalfAngleDeg = 60.f;		// 전방 부채꼴 범위로 제한 - 각도
-
+	float PrimaryAttackHalfAngleDeg = 60.f; // 전방 부채꼴 범위로 제한 - 각도
 
 	// Combat Animation - 기본 콤보 공격
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Anim")
 	TObjectPtr<UAnimMontage> PrimaryComboMontage;
 
 	// ===== HitReact =====
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|HitReact")
 	TObjectPtr<UAnimMontage> HitReactMontage = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|HitReact")
 	float HitReactPlayRate = 1.0f;
 
-	// Blocking Animation 방패 들기 
+	// Blocking Animation 방패 들기
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Anim")
 	TObjectPtr<UAnimMontage> BlockHoldMontage = nullptr;
 
-
 	// ------------ Skill 1 ------------
+
 	// 어떤 걸 선택했는지
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1")
 	ESkillVariant Skill1Selected = ESkillVariant::None;
@@ -82,11 +81,13 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1")
 	TObjectPtr<UAnimMontage> Skill1_Montage_B = nullptr;
 
+	// ===== Skill1_A =====
+
 	// 1_A 중 어떤건지
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|A")
 	ESkill1AImplementation Skill1A_Implementation = ESkill1AImplementation::TerraDash;
 
-	// 1-A(돌진) 파라미터
+	// 1-A 공용
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|A")
 	float Skill1A_Damage = 20.f;
 
@@ -94,20 +95,22 @@ public:
 	float Skill1A_DashDistance = 800.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|A")
-	float Skill1A_DashDuration = 0.25f;   // 몇 초 동안 밀고 갈지
+	float Skill1A_DashDuration = 0.25f; // 몇 초 동안 밀고 갈지
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|A")
 	float Skill1A_Cooldown = 5.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|A")
 	float Skill1A_HitRadius = 80.f;
-	
+
+	// ===== Skill1_B =====
 
 	// 1_B 중 어떤건지
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B")
 	ESkill1BImplementation Skill1B_Implementation = ESkill1BImplementation::TerraAxeSlam;
 
 	// 1-B(도끼찍기) 파라미터: 지금은 광역기라 radius/damage만 있으면 됨
+	// 1-B 공용
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B")
 	float Skill1B_Damage = 30.f;
 
@@ -117,7 +120,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B")
 	float Skill1B_Cooldown = 5.f;
 
-	// 1-B Kallari - 위로 상승하는 돌진 공격
 	// 1-B Kallari - 공중제비 회피
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B|Kallari")
 	float Skill1B_BackflipDuration = 0.16f;
@@ -128,17 +130,20 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B|Kallari")
 	float Skill1B_UpwardDistance = 150.f;
 
-
 	// ------------ Skill 2 ------------
+
 	// 어떤 걸 선택했는지
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2")
 	ESkillVariant Skill2Selected = ESkillVariant::None;
 
+	// 각각의 몽타주
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2")
 	TObjectPtr<UAnimMontage> Skill2_Montage_A = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2")
 	TObjectPtr<UAnimMontage> Skill2_Montage_B = nullptr;
+
+	// ===== Skill2_A =====
 
 	// 2_A 중 어떤건지
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A")
@@ -153,13 +158,13 @@ public:
 
 	// 2_A Terra 방패 밀쳐내기 (전방공격)
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Terra")
-	float Skill2A_Radius = 220.f;              // 폭(구 반경)
+	float Skill2A_Radius = 220.f; // 폭(구 반경)
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Terra")
-	float Skill2A_ForwardOffset = 150.f;        // 전방 중심 오프셋
+	float Skill2A_ForwardOffset = 150.f; // 전방 중심 오프셋
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Terra")
-	float Skill2A_HalfAngleDeg = 60.f;          // 부채꼴 반각(총 120도)
+	float Skill2A_HalfAngleDeg = 60.f; // 부채꼴 반각(총 120도)
 
 	// 2_A Kallari - 수리검 던지고 텔레포트
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Kallari")
@@ -193,6 +198,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Kallari")
 	float Skill2A_TeleportOffsetFromMark = 60.f;
 
+	// ===== Skill2_B =====
 
 	// 2_B 구현 타입
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|B")
@@ -246,12 +252,13 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|B|Kallari")
 	float Skill2B_ExplosionRadius = 220.f;
 
-
 	// ===== Ultimate =====
+
 	// 어떤 걸 선택했는지
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult")
 	ESkillVariant UltSelected = ESkillVariant::None;
 
+	// 각각의 몽타주
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult")
 	TObjectPtr<UAnimMontage> Ult_Montage_A = nullptr;
 
@@ -259,6 +266,7 @@ public:
 	TObjectPtr<UAnimMontage> Ult_Montage_B = nullptr;
 
 	// ===== Ult_A =====
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|A")
 	EUltimateAImplementation UltA_Implementation = EUltimateAImplementation::TerraAllyShield;
 
@@ -289,6 +297,7 @@ public:
 	float UltA_HitRadius = 120.f;
 
 	// ===== Ult_B =====
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|B")
 	EUltimateBImplementation UltB_Implementation = EUltimateBImplementation::TerraSelfBuff;
 

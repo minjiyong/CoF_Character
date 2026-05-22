@@ -47,12 +47,12 @@ class COF_CHARACTER_API ATP_Character : public ACharacter, public IHitReactInter
 	friend class UKallari_Skill2B_ShurikenExplosion;
 	friend class UKallari_UltA_BlinkDash;
 
-
 public:
 	ATP_Character();
 
 	virtual void BeginPlay() override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual void Tick(float DeltaSeconds) override;
 
 	// ===== Camera (템플릿 구조) =====
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
@@ -61,11 +61,10 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	UCameraComponent* FollowCamera;
 
-	// ===== HealthComponent =====
+	// ===== Core Components =====
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UHealthComponent* HealthComp;
 
-	// ===== CombatComponent =====
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UCombatComponent* CombatComp;
 
@@ -83,23 +82,22 @@ public:
 	UInputAction* JumpAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-	UInputAction* LockOnAction;			// 락온(좌 컨트롤)
+	UInputAction* LockOnAction; // 락온(좌 컨트롤)
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
-	UInputAction* AttackAction;			// 기본 공격(좌클릭)
+	UInputAction* AttackAction; // 기본 공격(좌클릭)
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
-	UInputAction* BlockAction;			// 우클릭 방패 들기
+	UInputAction* BlockAction; // 우클릭 방패 들기
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
-	UInputAction* Skill1Action;			// 스킬1
+	UInputAction* Skill1Action; // 스킬1
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
-	UInputAction* Skill2Action;			// 스킬2
+	UInputAction* Skill2Action; // 스킬2
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
-	UInputAction* UltAction;			// 궁극기
-
+	UInputAction* UltAction; // 궁극기
 
 	// ===== Character Data =====
 	UFUNCTION(BlueprintCallable, Category = "Character")
@@ -108,34 +106,32 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character")
 	TObjectPtr<UCharacterData> DefaultCharacterData;
 
-
 	// ===== Input callbacks =====
 	void Input_Move(const FInputActionValue& Value);
 	void Input_Look(const FInputActionValue& Value);
+
 	void Input_JumpStarted(const FInputActionValue& Value);
 	void Input_JumpCompleted(const FInputActionValue& Value);
+
 	void Input_LockOnToggle(const FInputActionValue& Value);
 
-	void Input_AttackStarted(const FInputActionValue& Value);		// 기본 공격(좌클릭)
-
-	void Input_BlockStarted(const FInputActionValue& Value);		// 우클릭 방패 들기
+	void Input_AttackStarted(const FInputActionValue& Value); // 기본 공격(좌클릭)
+	void Input_BlockStarted(const FInputActionValue& Value);  // 우클릭 방패 들기
 	void Input_BlockCompleted(const FInputActionValue& Value);
 
-	void Input_Skill1Started(const FInputActionValue& Value);		// 스킬1
-	void Input_Skill2Started(const FInputActionValue& Value);		// 스킬2
-	void Input_UltStarted(const FInputActionValue& Value);			// 궁극기
-
+	void Input_Skill1Started(const FInputActionValue& Value); // 스킬1
+	void Input_Skill2Started(const FInputActionValue& Value); // 스킬2
+	void Input_UltStarted(const FInputActionValue& Value);    // 궁극기
 
 	// ===== Animation =====
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat|Anim")
-	TObjectPtr<UAnimMontage> PrimaryComboMontage = nullptr;			// 기본 좌클릭 콤보 공격
+	TObjectPtr<UAnimMontage> PrimaryComboMontage = nullptr; // 기본 좌클릭 콤보 공격
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Anim")
-	TObjectPtr<UAnimMontage> BlockHoldMontage = nullptr;			// 우클릭 방패 들기
+	TObjectPtr<UAnimMontage> BlockHoldMontage = nullptr; // 우클릭 방패 들기
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat|HitReact")
-	TObjectPtr<UAnimMontage> HitReactMontage = nullptr;				// 피격 애니메이션
-
+	TObjectPtr<UAnimMontage> HitReactMontage = nullptr; // 피격 애니메이션
 
 	// ======= 입력 잠금 =======
 	bool bCanMoveInput = true;
@@ -144,7 +140,7 @@ public:
 	bool bCanSkillInput = true;
 	bool bCanJumpInput = true;
 
-	bool bJumpAccepted = false;		// 점프 중인지 판단
+	bool bJumpAccepted = false; // 점프 중인지 판단
 
 	bool CanMoveInput() const;
 	bool CanAttackInput() const;
@@ -159,29 +155,25 @@ public:
 	void SetJumpInputEnabled(bool bEnable);
 	void SetEveryInputEnabled(bool bEnable);
 
-
 	// ===== 락온 시스템 ======
-	virtual void Tick(float DeltaSeconds) override;
-
 	bool HasValidLockOnTarget() const;
 	void RefreshBossLockOnTarget();
 	void ClearLockOn();
 	void UpdateLockOnRotation(float DeltaSeconds);
-
-	void UpdateLockOnCamera(float DeltaSeconds);   // 락온 중 카메라 보정
-	void EnsureLockOnWidget();                     // 락온 UI 생성
-	void UpdateLockOnWidget();                     // 락온 UI 위치 갱신
+	void UpdateLockOnCamera(float DeltaSeconds); // 락온 중 카메라 보정
+	void EnsureLockOnWidget();                   // 락온 UI 생성
+	void UpdateLockOnWidget();                   // 락온 UI 위치 갱신
 
 	UFUNCTION(BlueprintCallable, Category = "LockOn")
 	AActor* GetLockOnTarget() const { return LockOnTarget; }
-
 
 	// 피격
 	float HitReactPlayRate = 1.0f;
 
 	// HitReactInterface 구현
 	virtual void OnHitReact_Implementation(float DamageAmount, const FVector& HitPoint, const FVector& HitNormal) override;
-	void Debug_ForceHit();			// (더미 없이 테스트용) 강제 피격
+
+	void Debug_ForceHit(); // (더미 없이 테스트용) 강제 피격
 
 	// 피격 중 입력 잠금 / 무적 처리
 	bool bHitReacting = false;
@@ -191,8 +183,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|HitReact")
 	void HitReactEnd();
 
-
-	// 기본 공격
+	// ===== 기본 공격 =====
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	EPrimaryAttackHitType PrimaryAttackHitType = EPrimaryAttackHitType::LineTrace;
 
@@ -208,8 +199,7 @@ public:
 	// 콤보 상태
 	bool bComboWindowOpen = false;
 	bool bComboQueued = false;
-
-	bool bAttackPressed = false;		// 콤보를 받는 타이밍(SaveAttack 이후) 에 버튼이 눌렸는가
+	bool bAttackPressed = false; // 콤보를 받는 타이밍(SaveAttack 이후) 에 버튼이 눌렸는가
 
 	// 현재 콤보 단계(0=A, 1=B)
 	int32 ComboIndex = 0;
@@ -223,10 +213,10 @@ public:
 	void ComboWindowClose();
 
 	UFUNCTION(BlueprintCallable, Category = "Combat|Combo")
-	void SaveAttack();   // SaveAttack notify에서 호출
+	void SaveAttack(); // SaveAttack notify에서 호출
 
 	UFUNCTION(BlueprintCallable, Category = "Combat|Combo")
-	void ResetCombo();        // ResetCombo notify에서 호출
+	void ResetCombo(); // ResetCombo notify에서 호출
 
 	// 공격이 실제로 닿는 순간
 	UFUNCTION(BlueprintCallable, Category = "Combat|Hit")
@@ -236,15 +226,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Hit")
 	void HitEnd();
 
-
 	// 우클릭 방패 들기
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat|Defense")
 	bool bBlocking = false;
 
-
-	// ===== Terra Skill Logic Objects =====
+	// ===== Terra / Kallari Skill Logic Objects =====
 	// - AnimNotify / BP가 기존에 ATP_Character의 UFUNCTION들을 직접 호출하고 있으므로,
-	//   UFUNCTION 시그니처는 그대로 유지하고, 내부 구현만 Terra_* 객체로 위임한다.
+	// UFUNCTION 시그니처는 그대로 유지하고, 내부 구현만 Terra_* / Kallari_* 객체로 위임한다.
 	UPROPERTY()
 	TObjectPtr<UTerra_Skill1A_Dash> Terra_Skill1A = nullptr;
 
@@ -275,30 +263,33 @@ public:
 	UPROPERTY()
 	TObjectPtr<UKallari_Skill2B_ShurikenExplosion> Kallari_Skill2B = nullptr;
 
+	UPROPERTY()
+	TObjectPtr<UKallari_UltA_BlinkDash> Kallari_UltA = nullptr;
+
+	// ===== Skill 1 =====
 
 	// 스킬1 뭘 선택했는지
 	ESkillVariant Skill1Selected = ESkillVariant::None;
 
-	// 스킬1_A 돌진 (UFUNCTION은 유지, 내부 구현은 Terra_Skill1A로 위임)
+	// 스킬1_A 돌진 (UFUNCTION은 유지, 내부 구현은 Terra_Skill1A / Kallari_Skill1A로 위임)
 	UFUNCTION(BlueprintCallable, Category = "Skills|Skill1|A")
-	void Skill1A_DashStart();			// 실제 돌진 시, 상태를 fly로 만듬(바닥 충돌 때문에)
+	void Skill1A_DashStart(); // 실제 돌진 시, 상태를 fly로 만듬(바닥 충돌 때문에)
 
 	UFUNCTION(BlueprintCallable, Category = "Skills|Skill1|A")
 	void Skill1A_DashEnd();
 
 	UFUNCTION(BlueprintCallable)
-	void Skill1A_HitStart();			// 실제 히트 호출
+	void Skill1A_HitStart(); // 실제 히트 호출
 
 	UFUNCTION(BlueprintCallable)
 	void Skill1A_HitEnd();
 
 	TObjectPtr<UAnimMontage> Skill1MontageA = nullptr;
-
 	ESkill1AImplementation Skill1A_Implementation = ESkill1AImplementation::TerraDash;
 
 	float Skill1A_Damage = 0.f;
 	float Skill1A_DashDistance = 0.f;
-	float Skill1A_DashDuration = 0.f;			// 몇 초 동안 밀고 갈지
+	float Skill1A_DashDuration = 0.f; // 몇 초 동안 밀고 갈지
 	float Skill1A_Cooldown = 0.f;
 	float Skill1A_HitRadius = 80.f;
 
@@ -313,7 +304,6 @@ public:
 	void Skill1B_BackflipEnd();
 
 	TObjectPtr<UAnimMontage> Skill1MontageB = nullptr;
-
 	ESkill1BImplementation Skill1B_Implementation = ESkill1BImplementation::TerraAxeSlam;
 
 	float Skill1B_Damage = 0.f;
@@ -324,11 +314,12 @@ public:
 	float Skill1B_BackwardDistance = 0.f;
 	float Skill1B_UpwardDistance = 0.f;
 
+	// ===== Skill 2 =====
 
-	// 스킬 2
+	// 스킬2 뭘 선택했는지
 	ESkillVariant Skill2Selected = ESkillVariant::None;
 
-	// 스킬 2_A 방패 밀쳐내기 전방 광역 공격 / Kallari 수리검 순간이동
+	// 스킬 2_A 방패 밀쳐내기 / Kallari 수리검 텔포
 	UFUNCTION(BlueprintCallable, Category = "Skills|Skill2|A")
 	void Skill2A_HitStart();
 
@@ -336,7 +327,6 @@ public:
 	void Skill2A_ThrowProjectile();
 
 	TObjectPtr<UAnimMontage> Skill2MontageA = nullptr;
-
 	ESkill2AImplementation Skill2A_Implementation = ESkill2AImplementation::TerraShieldPush;
 
 	float Skill2A_Damage = 0.f;
@@ -357,10 +347,10 @@ public:
 	float Skill2A_TeleportAttackRadius = 0.f;
 	float Skill2A_TeleportOffsetFromMark = 0.f;
 
-
 	// 스킬 2_B 돌기 / Kallari 수리검 던지고 폭발
 	UFUNCTION(BlueprintCallable, Category = "Skills|Skill2|B")
 	void Skill2B_HitStart();
+
 	UFUNCTION(BlueprintCallable, Category = "Skills|Skill2|B")
 	void Skill2B_SpinEnd();
 
@@ -371,7 +361,6 @@ public:
 	void Skill2B_ExplodeAtMark();
 
 	TObjectPtr<UAnimMontage> Skill2MontageB = nullptr;
-
 	ESkill2BImplementation Skill2B_Implementation = ESkill2BImplementation::TerraSpin;
 
 	float Skill2B_DamagePerTick = 0.f;
@@ -392,8 +381,7 @@ public:
 	float Skill2B_ExplosionDamage = 0.f;
 	float Skill2B_ExplosionRadius = 0.f;
 
-
-	// 궁극기
+	// ===== Ultimate =====
 	ESkillVariant UltSelected = ESkillVariant::None;
 
 	// 구현체
@@ -415,14 +403,11 @@ public:
 	float UltA_DashDuration = 0.f;
 	float UltA_HitRadius = 0.f;
 
-	UPROPERTY()
-	TObjectPtr<UKallari_UltA_BlinkDash> Kallari_UltA = nullptr;
-
 	UFUNCTION(BlueprintCallable, Category = "Skills|Ult|A")
 	void UltA_ShieldStart(); // Terra
 
 	UFUNCTION(BlueprintCallable, Category = "Skills|Ult|A")
-	void UltA_ShieldEnd();   // Terra
+	void UltA_ShieldEnd(); // Terra
 
 	UFUNCTION(BlueprintCallable, Category = "Skills|Ult|A")
 	void UltA_BlinkHitStart(); // Kallari
@@ -453,8 +438,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Skills|Ult|B")
 	void UltB_BuffEnd();
 
-
-	// 락온 관련 멤버 변수들 
+	// ===== 락온 관련 멤버 변수들 =====
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "LockOn")
 	FName BossLockOnTag = TEXT("BOSS");
 
@@ -492,7 +476,6 @@ public:
 	float DefaultCameraArmLength = 0.f;
 	FVector DefaultCameraSocketOffset = FVector::ZeroVector;
 
-
 	// ===== 캐릭터 선택(런타임 교체) =====
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character|Switch")
 	TArray<TObjectPtr<UCharacterData>> CharacterSlots; // 0~4 => 1~5키
@@ -501,7 +484,6 @@ public:
 	int32 CurrentSlotIndex = -1;
 
 	void SelectCharacterSlot(int32 Index);
-
 	void SelectSlot1();
 	void SelectSlot2();
 	void SelectSlot3();
