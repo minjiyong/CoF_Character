@@ -1,18 +1,40 @@
 #include "Skills/Terra/Terra_Skill1A_Dash.h"
 
-#include "TP_Character.h"
 #include "CombatComponent.h"
+#include "Engine/World.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "TP_Character.h"
+
+void UTerra_Skill1A_Dash::ResetRuntime()
+{
+	if (ATP_Character* C = GetOwnerChar())
+	{
+		if (UWorld* World = C->GetWorld())
+		{
+			World->GetTimerManager().ClearTimer(DashMoveTimerHandle);
+		}
+	}
+
+	NextAvailableTime = 0.0;
+	bDashMoving = false;
+	DashStartLocation = FVector::ZeroVector;
+	DashTargetLocation = FVector::ZeroVector;
+	DashStartTime = 0.0;
+	DashMoveDuration = 0.f;
+}
 
 void UTerra_Skill1A_Dash::HitStart()
 {
 	ATP_Character* C = GetOwnerChar();
 	if (!C) return;
-
 	if (!C->CombatComp) return;
 
-	// 마지막 radius, 나중에 캐릭터데이터에 추가해서 캐싱하기
-	C->CombatComp->ConfigureDashHit(C->Skill1A_Damage * C->AttackMultiplier, C->Skill1A_DashDuration, 80.f);
+	C->CombatComp->ConfigureDashHit(
+		C->Skill1A_Damage * C->AttackMultiplier,
+		C->Skill1A_DashDuration,
+		C->Skill1A_HitRadius
+	);
+
 	C->CombatComp->BeginHitWindow_OneShot();
 }
 
@@ -20,19 +42,26 @@ void UTerra_Skill1A_Dash::HitEnd()
 {
 	ATP_Character* C = GetOwnerChar();
 	if (!C) return;
-
 	if (!C->CombatComp) return;
 
 	C->CombatComp->EndHitWindow();
 }
 
-void UTerra_Skill1A_Dash::DashStart()
+void UTerra_Skill1A_Dash::BeginDashMoveToOffset(
+	const FVector& WorldOffset,
+	float InDuration,
+	EMovementMode InStartMode,
+	EMovementMode InEndMode,
+	bool bInUseSweep)
 {
 	ATP_Character* C = GetOwnerChar();
 	if (!C) return;
 
 	UCharacterMovementComponent* MoveComp = C->GetCharacterMovement();
 	if (!MoveComp || bDashMoving) return;
+
+	UWorld* World = C->GetWorld();
+	if (!World) return;
 
 	bDashMoving = true;
 
@@ -44,36 +73,107 @@ void UTerra_Skill1A_Dash::DashStart()
 	bSavedOrientRotationToMovement = MoveComp->bOrientRotationToMovement;
 	bSavedUseControllerRotationYaw = C->bUseControllerRotationYaw;
 
-	// 대쉬 동안 마찰/감속 제거
+	// dash 동안 마찰/감속 제거
 	MoveComp->GroundFriction = 0.f;
 	MoveComp->BrakingFrictionFactor = 0.f;
 	MoveComp->BrakingDecelerationWalking = 0.f;
 	MoveComp->BrakingDecelerationFlying = 0.f;
-
 	MoveComp->bOrientRotationToMovement = false;
 	C->bUseControllerRotationYaw = false;
 
-	// 비행 모드로 바꿔서 바닥 마찰/충돌 영향 최소화
-	MoveComp->SetMovementMode(MOVE_Flying);
+	MoveComp->StopMovementImmediately();
+	MoveComp->SetMovementMode(InStartMode);
 
-	const FVector Dir = C->GetActorForwardVector().GetSafeNormal2D();
-	const float Speed = (C->Skill1A_DashDuration > 0.f) ? (C->Skill1A_DashDistance / C->Skill1A_DashDuration) : 0.f;
+	DashStartMovementMode = InStartMode;
+	DashEndMovementMode = InEndMode;
+	bDashUseSweep = bInUseSweep;
 
-	MoveComp->Velocity = Dir * Speed;
+	DashStartLocation = C->GetActorLocation();
+	DashTargetLocation = DashStartLocation + WorldOffset;
+	DashMoveDuration = FMath::Max(InDuration, 0.01f);
+	DashStartTime = World->GetTimeSeconds();
+
+	World->GetTimerManager().ClearTimer(DashMoveTimerHandle);
+	World->GetTimerManager().SetTimer(
+		DashMoveTimerHandle,
+		this,
+		&UTerra_Skill1A_Dash::UpdateDashMove,
+		0.005f,
+		true
+	);
+
+	UpdateDashMove();
 }
 
-void UTerra_Skill1A_Dash::DashEnd()
+void UTerra_Skill1A_Dash::UpdateDashMove()
+{
+	ATP_Character* C = GetOwnerChar();
+	if (!C)
+	{
+		FinishDashMove(false);
+		return;
+	}
+
+	UWorld* World = C->GetWorld();
+	if (!World || !bDashMoving)
+	{
+		FinishDashMove(false);
+		return;
+	}
+
+	const float Alpha = FMath::Clamp(
+		static_cast<float>((World->GetTimeSeconds() - DashStartTime) / DashMoveDuration),
+		0.f,
+		1.f
+	);
+
+	const FVector NewLocation = FMath::Lerp(DashStartLocation, DashTargetLocation, Alpha);
+
+	FHitResult SweepHit;
+	C->SetActorLocation(NewLocation, bDashUseSweep, &SweepHit);
+
+	// 벽에 막히면 현재 위치에서 종료
+	if (SweepHit.bBlockingHit)
+	{
+		FinishDashMove(false);
+		return;
+	}
+
+	// 목표 거리 도달
+	if (Alpha >= 1.f - KINDA_SMALL_NUMBER)
+	{
+		FinishDashMove(true);
+	}
+}
+
+void UTerra_Skill1A_Dash::FinishDashMove(bool bForceToTarget)
 {
 	ATP_Character* C = GetOwnerChar();
 	if (!C) return;
 
+	UWorld* World = C->GetWorld();
+	if (World)
+	{
+		World->GetTimerManager().ClearTimer(DashMoveTimerHandle);
+	}
+
 	UCharacterMovementComponent* MoveComp = C->GetCharacterMovement();
-	if (!MoveComp || !bDashMoving) return;
+	if (!MoveComp)
+	{
+		bDashMoving = false;
+		return;
+	}
+
+	if (bForceToTarget)
+	{
+		FHitResult SweepHit;
+		C->SetActorLocation(DashTargetLocation, bDashUseSweep, &SweepHit);
+	}
 
 	bDashMoving = false;
 
 	MoveComp->StopMovementImmediately();
-	MoveComp->SetMovementMode(MOVE_Walking);
+	MoveComp->SetMovementMode(DashEndMovementMode);
 
 	// 복구
 	MoveComp->GroundFriction = SavedGroundFriction;
@@ -82,4 +182,28 @@ void UTerra_Skill1A_Dash::DashEnd()
 	MoveComp->BrakingDecelerationFlying = SavedBrakingDecelerationFlying;
 	MoveComp->bOrientRotationToMovement = bSavedOrientRotationToMovement;
 	C->bUseControllerRotationYaw = bSavedUseControllerRotationYaw;
+	MoveComp->UpdateComponentVelocity();
+}
+
+void UTerra_Skill1A_Dash::DashStart()
+{
+	ATP_Character* C = GetOwnerChar();
+	if (!C) return;
+
+	const FVector ForwardOffset =
+		C->GetActorForwardVector().GetSafeNormal2D() * C->Skill1A_DashDistance;
+
+	BeginDashMoveToOffset(
+		ForwardOffset,
+		C->Skill1A_DashDuration,
+		MOVE_Flying,
+		MOVE_Walking,
+		true
+	);
+}
+
+void UTerra_Skill1A_Dash::DashEnd()
+{
+	// notify가 살짝 빠르거나 늦어도 최종 목표 지점에서 정리
+	FinishDashMove(true);
 }
