@@ -44,6 +44,7 @@
 #include "Skills/Kallari/Kallari_Skill2A_ShurikenTeleport.h"
 #include "Skills/Kallari/Kallari_Skill2B_ShurikenExplosion.h"
 #include "Skills/Kallari/Kallari_UltA_BlinkDash.h"
+#include "Skills/Kallari/Kallari_UltB_Invincible.h"
 
 // Debug
 static void ScreenDbg(const FString& Msg, float Sec = 1.5f, FColor Color = FColor::Cyan)
@@ -1172,16 +1173,13 @@ void ATP_Character::Input_UltStarted(const FInputActionValue&)
 	if (UltSelected == ESkillVariant::None)
 		return;
 
-	// 궁극기 객체/구현 준비 여부
-	// Terra 쪽은 기존 코드가 직접 처리되는 구조라면 true로 두고,
-	// Kallari 쪽은 실제 객체가 있어야만 준비된 것으로 본다.
 	const bool bUltAReady =
-		(UltA_Implementation == EUltimateAImplementation::TerraAllyShield) ||
+		(UltA_Implementation == EUltimateAImplementation::TerraAllyShield && Terra_UltA) ||
 		(UltA_Implementation == EUltimateAImplementation::KallariBlinkDash && Kallari_UltA);
 
 	const bool bUltBReady =
-		(UltB_Implementation == EUltimateBImplementation::TerraSelfBuff) ||
-		(UltB_Implementation == EUltimateBImplementation::KallariInvincible);
+		(UltB_Implementation == EUltimateBImplementation::TerraSelfBuff && Terra_UltB) ||
+		(UltB_Implementation == EUltimateBImplementation::KallariInvincible && Kallari_UltB);
 
 	if ((UltSelected == ESkillVariant::A && !bUltAReady) ||
 		(UltSelected == ESkillVariant::B && !bUltBReady))
@@ -1189,17 +1187,16 @@ void ATP_Character::Input_UltStarted(const FInputActionValue&)
 		return;
 	}
 
-	// 쿨다운 디버깅 메세지
 	const double Now = GetWorld()->GetTimeSeconds();
 
+	// 쿨다운 디버깅 메세지
 	if (UltSelected == ESkillVariant::A)
 	{
 		bool bInCooldown = false;
 
-		if (UltA_Implementation == EUltimateAImplementation::TerraAllyShield)
+		if (UltA_Implementation == EUltimateAImplementation::TerraAllyShield && Terra_UltA)
 		{
-			// ===== 기존 Terra Ult A 쿨다운 체크 코드 그대로 유지 =====
-			// 예: 기존 Terra Ult A 쿨다운 검사 블록을 여기에 넣기
+			bInCooldown = Terra_UltA->IsInCooldown(Now);
 		}
 		else if (UltA_Implementation == EUltimateAImplementation::KallariBlinkDash && Kallari_UltA)
 		{
@@ -1216,14 +1213,13 @@ void ATP_Character::Input_UltStarted(const FInputActionValue&)
 	{
 		bool bInCooldown = false;
 
-		if (UltB_Implementation == EUltimateBImplementation::TerraSelfBuff)
+		if (UltB_Implementation == EUltimateBImplementation::TerraSelfBuff && Terra_UltB)
 		{
-			// ===== 기존 Terra Ult B 쿨다운 체크 코드 그대로 유지 =====
-			// 예: 기존 Terra Ult B 쿨다운 검사 블록을 여기에 넣기
+			bInCooldown = Terra_UltB->IsInCooldown(Now);
 		}
-		else if (UltB_Implementation == EUltimateBImplementation::KallariInvincible)
+		else if (UltB_Implementation == EUltimateBImplementation::KallariInvincible && Kallari_UltB)
 		{
-			// ===== 나중에 Kallari Ult B 쿨다운 체크 들어갈 자리 =====
+			bInCooldown = Kallari_UltB->IsInCooldown(Now);
 		}
 
 		if (bInCooldown)
@@ -1254,17 +1250,20 @@ void ATP_Character::Input_UltStarted(const FInputActionValue&)
 	if (UltSelected == ESkillVariant::A) Montage = UltMontageA;
 	else if (UltSelected == ESkillVariant::B) Montage = UltMontageB;
 
-	if (!Montage) return;
+	if (!Montage)
+	{
+		SetEveryInputEnabled(true);
+		return;
+	}
 
 	PlayAnimMontage(Montage);
 
-	// 쿨다운 시작 (런타임 상태는 구현체가 관리)
+	// 쿨다운 시작 (런타임 상태는 스킬 객체가 관리)
 	if (UltSelected == ESkillVariant::A)
 	{
-		if (UltA_Implementation == EUltimateAImplementation::TerraAllyShield)
+		if (UltA_Implementation == EUltimateAImplementation::TerraAllyShield && Terra_UltA)
 		{
-			// ===== 기존 Terra Ult A 쿨다운 시작 코드 그대로 유지 =====
-			// 예: 기존 Terra Ult A StartCooldown / 타이머 시작 블록을 여기에 넣기
+			Terra_UltA->StartCooldown(Now, UltA_Cooldown);
 		}
 		else if (UltA_Implementation == EUltimateAImplementation::KallariBlinkDash && Kallari_UltA)
 		{
@@ -1273,14 +1272,13 @@ void ATP_Character::Input_UltStarted(const FInputActionValue&)
 	}
 	else if (UltSelected == ESkillVariant::B)
 	{
-		if (UltB_Implementation == EUltimateBImplementation::TerraSelfBuff)
+		if (UltB_Implementation == EUltimateBImplementation::TerraSelfBuff && Terra_UltB)
 		{
-			// ===== 기존 Terra Ult B 쿨다운 시작 코드 그대로 유지 =====
-			// 예: 기존 Terra Ult B StartCooldown / 타이머 시작 블록을 여기에 넣기
+			Terra_UltB->StartCooldown(Now, UltB_Cooldown);
 		}
-		else if (UltB_Implementation == EUltimateBImplementation::KallariInvincible)
+		else if (UltB_Implementation == EUltimateBImplementation::KallariInvincible && Kallari_UltB)
 		{
-			// ===== 나중에 Kallari Ult B StartCooldown 들어갈 자리 =====
+			Kallari_UltB->StartCooldown(Now, UltB_Cooldown);
 		}
 	}
 }
@@ -1324,12 +1322,30 @@ void ATP_Character::UltA_BlinkDashEnd()
 // ===== UltB (wrapper) =====
 void ATP_Character::UltB_BuffStart()
 {
-	if (Terra_UltB) Terra_UltB->BuffStart();
+	if (UltB_Implementation == EUltimateBImplementation::TerraSelfBuff && Terra_UltB)
+	{
+		Terra_UltB->BuffStart();
+		return;
+	}
+
+	if (UltB_Implementation == EUltimateBImplementation::KallariInvincible && Kallari_UltB)
+	{
+		Kallari_UltB->BuffStart();
+	}
 }
 
 void ATP_Character::UltB_BuffEnd()
 {
-	if (Terra_UltB) Terra_UltB->BuffEnd();
+	if (UltB_Implementation == EUltimateBImplementation::TerraSelfBuff && Terra_UltB)
+	{
+		Terra_UltB->BuffEnd();
+		return;
+	}
+
+	if (UltB_Implementation == EUltimateBImplementation::KallariInvincible && Kallari_UltB)
+	{
+		Kallari_UltB->BuffEnd();
+	}
 }
 
 
@@ -1473,6 +1489,7 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	UltB_Cooldown = Data->UltB_Cooldown;
 	UltB_Shield = Data->UltB_Shield;
 	UltB_AttackMultiplier = Data->UltB_AttackMultiplier;
+
 	UltB_InvincibleDuration = Data->UltB_InvincibleDuration;
 
 	// ===== Terra Skill Objects init =====
@@ -1491,6 +1508,7 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	if (!Kallari_Skill2A) { Kallari_Skill2A = NewObject<UKallari_Skill2A_ShurikenTeleport>(this); Kallari_Skill2A->Init(this); }
 	if (!Kallari_Skill2B) { Kallari_Skill2B = NewObject<UKallari_Skill2B_ShurikenExplosion>(this); Kallari_Skill2B->Init(this); }
 	if (!Kallari_UltA) { Kallari_UltA = NewObject<UKallari_UltA_BlinkDash>(this); Kallari_UltA->Init(this); }
+	if (!Kallari_UltB) { Kallari_UltB = NewObject<UKallari_UltB_Invincible>(this); Kallari_UltB->Init(this); }
 
 	// ===== 런타임 상태 초기화 =====
 	// - 캐릭터 교체(슬롯 변경) 시, 이전 캐릭터의 쿨다운/타이머/맵 상태가 남으면 안 됨.
@@ -1506,6 +1524,7 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	if (Kallari_Skill2A) Kallari_Skill2A->ResetRuntime();
 	if (Kallari_Skill2B) Kallari_Skill2B->ResetRuntime();
 	if (Kallari_UltA) Kallari_UltA->ResetRuntime();
+	if (Kallari_UltB) Kallari_UltB->ResetRuntime();
 }
 
 // Character Select

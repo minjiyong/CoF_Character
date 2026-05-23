@@ -46,6 +46,7 @@ class COF_CHARACTER_API ATP_Character : public ACharacter, public IHitReactInter
 	friend class UKallari_Skill2A_ShurikenTeleport;
 	friend class UKallari_Skill2B_ShurikenExplosion;
 	friend class UKallari_UltA_BlinkDash;
+	friend class UKallari_UltB_Invincible;
 
 public:
 	ATP_Character();
@@ -265,6 +266,9 @@ public:
 
 	UPROPERTY()
 	TObjectPtr<UKallari_UltA_BlinkDash> Kallari_UltA = nullptr;
+
+	UPROPERTY()
+	TObjectPtr<UKallari_UltB_Invincible> Kallari_UltB = nullptr;
 
 	// ===== Skill 1 =====
 
