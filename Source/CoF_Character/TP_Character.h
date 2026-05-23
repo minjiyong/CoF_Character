@@ -312,7 +312,6 @@ public:
 
 	float Skill1B_BackflipDuration = 0.f;
 	float Skill1B_BackwardDistance = 0.f;
-	float Skill1B_UpwardDistance = 0.f;
 
 	// ===== Skill 2 =====
 

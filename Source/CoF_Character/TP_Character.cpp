@@ -1406,7 +1406,6 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 
 	Skill1B_BackflipDuration = Data->Skill1B_BackflipDuration;
 	Skill1B_BackwardDistance = Data->Skill1B_BackwardDistance;
-	Skill1B_UpwardDistance = Data->Skill1B_UpwardDistance;
 
 	// ½ºÅ³2
 	Skill2Selected = Data->Skill2Selected;

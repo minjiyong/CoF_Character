@@ -127,9 +127,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B|Kallari")
 	float Skill1B_BackwardDistance = 150.f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B|Kallari")
-	float Skill1B_UpwardDistance = 150.f;
-
 	// ------------ Skill 2 ------------
 
 	// 어떤 걸 선택했는지

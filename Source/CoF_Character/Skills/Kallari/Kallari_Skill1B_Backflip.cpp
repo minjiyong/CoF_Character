@@ -7,14 +7,12 @@ void UKallari_Skill1B_Backflip::DashStart()
 	ATP_Character* C = GetOwnerChar();
 	if (!C) return;
 
+	// 뒤 방향으로만, 실제 목표 거리만큼 이동
 	const FVector BackOffset =
 		-C->GetActorForwardVector().GetSafeNormal2D() * C->Skill1B_BackwardDistance;
 
-	const FVector UpOffset =
-		FVector::UpVector * C->Skill1B_UpwardDistance;
-
 	BeginDashMoveToOffset(
-		BackOffset + UpOffset,
+		BackOffset,
 		C->Skill1B_BackflipDuration,
 		MOVE_Falling,
 		MOVE_Falling,
@@ -24,6 +22,6 @@ void UKallari_Skill1B_Backflip::DashStart()
 
 void UKallari_Skill1B_Backflip::DashEnd()
 {
-	// 공중제비 끝 지점까지 정확히 간 뒤 Falling 유지
+	// 백플립 끝 지점까지 정확히 간 뒤 Falling 유지
 	FinishDashMove(true);
 }
