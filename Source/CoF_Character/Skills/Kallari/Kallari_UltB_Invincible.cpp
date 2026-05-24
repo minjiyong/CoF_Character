@@ -23,6 +23,9 @@ void UKallari_UltB_Invincible::BuffStart()
 	// 피격 무시
 	C->bCanBeHit = false;
 
+	// 함수 호출 - BP에 
+	C->BP_UltBVisualStart();
+
 	// 무적 종료 타이머
 	if (UWorld* W = GetWorld())
 	{
@@ -51,6 +54,9 @@ void UKallari_UltB_Invincible::BuffEnd()
 
 	// 다시 피격 가능
 	C->bCanBeHit = true;
+
+	// 함수 호출 - BP에 
+	C->BP_UltBVisualEnd();
 
 	if (UWorld* W = GetWorld())
 	{

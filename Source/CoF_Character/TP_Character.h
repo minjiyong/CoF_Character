@@ -431,6 +431,7 @@ public:
 	float UltB_AttackMultiplier = 1.f;
 
 	// Kallari
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Skills|Ult|B|Kallari")
 	float UltB_InvincibleDuration = 0.f;
 
 	float AttackMultiplier = 1.0f;
@@ -440,6 +441,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Skills|Ult|B")
 	void UltB_BuffEnd();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Skills|Ult|B|Visual")
+	void BP_UltBVisualStart();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Skills|Ult|B|Visual")
+	void BP_UltBVisualEnd();
 
 	// ===== 락온 관련 멤버 변수들 =====
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "LockOn")
