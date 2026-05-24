@@ -7,97 +7,84 @@
 
 void UKallari_Skill2B_ShurikenExplosion::ThrowProjectile()
 {
-    ATP_Character* C = GetOwnerChar();
-    if (!C) return;
-    if (!C->GetWorld()) return;
-    if (!C->CombatComp) return;
+	ATP_Character* C = GetOwnerChar();
+	if (!C) return;
+	if (!C->GetWorld()) return;
+	if (!C->CombatComp) return;
 
-    TSubclassOf<AKallari_Skill2A_ShurikenProjectile> SpawnClass = C->Skill2B_ProjectileClass;
-    if (!SpawnClass)
-    {
-        SpawnClass = AKallari_Skill2A_ShurikenProjectile::StaticClass();
-    }
+	TSubclassOf<AKallari_Skill2A_ShurikenProjectile> SpawnClass = C->Skill2B_ProjectileClass;
+	if (!SpawnClass)
+	{
+		SpawnClass = AKallari_Skill2A_ShurikenProjectile::StaticClass();
+	}
 
-    FVector SpawnLocation =
-        C->GetActorLocation()
-        + C->GetActorForwardVector() * C->Skill2B_ProjectileSpawnForwardOffset
-        + FVector::UpVector * C->Skill2B_ProjectileSpawnZOffset;
+	FVector SpawnLocation = C->GetActorLocation()
+		+ C->GetActorForwardVector() * C->Skill2B_ProjectileSpawnForwardOffset
+		+ FVector::UpVector * C->Skill2B_ProjectileSpawnZOffset;
 
-    if (C->GetMesh()
-        && C->Skill2B_ProjectileSpawnSocket != NAME_None
-        && C->GetMesh()->DoesSocketExist(C->Skill2B_ProjectileSpawnSocket))
-    {
-        SpawnLocation = C->GetMesh()->GetSocketLocation(C->Skill2B_ProjectileSpawnSocket);
-    }
+	if (C->GetMesh()
+		&& C->Skill2B_ProjectileSpawnSocket != NAME_None
+		&& C->GetMesh()->DoesSocketExist(C->Skill2B_ProjectileSpawnSocket))
+	{
+		SpawnLocation = C->GetMesh()->GetSocketLocation(C->Skill2B_ProjectileSpawnSocket);
+	}
 
-    FRotator SpawnRotation = C->GetActorRotation();
+	FRotator SpawnRotation = C->GetActorRotation();
 
-    if (C->HasValidLockOnTarget())
-    {
-        AActor* LockTarget = C->GetLockOnTarget();
+	// 락온 대상이 있으면 원래대로 대상에게 발사
+	if (C->HasValidLockOnTarget())
+	{
+		AActor* LockTarget = C->GetLockOnTarget();
 
-        FVector TargetOrigin, TargetExtent;
-        LockTarget->GetActorBounds(true, TargetOrigin, TargetExtent);
+		FVector TargetOrigin, TargetExtent;
+		LockTarget->GetActorBounds(true, TargetOrigin, TargetExtent);
 
-        FVector ShootDir = (TargetOrigin - SpawnLocation);
-        ShootDir.Z = 0.f;
-        ShootDir = ShootDir.GetSafeNormal();
-        if (!ShootDir.IsNearlyZero())
-        {
-            SpawnRotation = ShootDir.Rotation();
-        }
-    }
-    else if (APlayerController* PC = Cast<APlayerController>(C->GetController()))
-    {
-        FVector CamLoc;
-        FRotator CamRot;
-        PC->GetPlayerViewPoint(CamLoc, CamRot);
+		const FVector ShootDir = (TargetOrigin - SpawnLocation).GetSafeNormal();
+		if (!ShootDir.IsNearlyZero())
+		{
+			SpawnRotation = ShootDir.Rotation();
+		}
+	}
+	// 락온이 없으면 지면 수평 발사
+	else
+	{
+		FVector HorizontalDir = C->GetActorForwardVector();
+		HorizontalDir.Z = 0.f;
+		HorizontalDir = HorizontalDir.GetSafeNormal();
 
-        const FVector TraceStart = CamLoc;
-        const FVector TraceEnd = TraceStart + CamRot.Vector() * 10000.f;
+		if (!HorizontalDir.IsNearlyZero())
+		{
+			SpawnRotation = HorizontalDir.Rotation();
+		}
+	}
 
-        FHitResult Hit;
-        FCollisionQueryParams Params(SCENE_QUERY_STAT(KallariSkill2B_AimTrace), false, C);
-        Params.AddIgnoredActor(C);
+	FActorSpawnParameters Params;
+	Params.Owner = C;
+	Params.Instigator = C;
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-        FVector TargetPoint = TraceEnd;
-        if (C->GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Visibility, Params))
-        {
-            TargetPoint = Hit.ImpactPoint;
-        }
+	AKallari_Skill2A_ShurikenProjectile* Projectile =
+		C->GetWorld()->SpawnActor<AKallari_Skill2A_ShurikenProjectile>(
+			SpawnClass,
+			SpawnLocation,
+			SpawnRotation,
+			Params
+		);
 
-        FVector ShootDir = (TargetPoint - SpawnLocation);
-        ShootDir.Z = 0.f;
-        ShootDir = ShootDir.GetSafeNormal();
-        if (!ShootDir.IsNearlyZero())
-        {
-            SpawnRotation = ShootDir.Rotation();
-        }
-    }
+	if (!Projectile) return;
 
-    FActorSpawnParameters Params;
-    Params.Owner = C;
-    Params.Instigator = C;
-    Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	Projectile->InitProjectile(
+		C,
+		C->CombatComp,
+		this,
+		C->Skill2B_ExplosionDamage * C->AttackMultiplier,
+		C->Skill2B_ProjectileSpeed,
+		C->Skill2B_ProjectileLifeSeconds,
+		C->Skill2B_ProjectileRadius
+	);
 
-    AKallari_Skill2A_ShurikenProjectile* Projectile =
-        C->GetWorld()->SpawnActor<AKallari_Skill2A_ShurikenProjectile>(
-            SpawnClass, SpawnLocation, SpawnRotation, Params);
-
-    if (!Projectile) return;
-
-    Projectile->InitProjectile(
-        C,
-        C->CombatComp,
-        this,
-        C->Skill2B_ExplosionDamage * C->AttackMultiplier,
-        C->Skill2B_ProjectileSpeed,
-        C->Skill2B_ProjectileLifeSeconds,
-        C->Skill2B_ProjectileRadius
-    );
-
-    ActiveProjectile = Projectile;
-    bHasExplosionMark = false;
+	ActiveProjectile = Projectile;
+	bHasExplosionMark = false;
 }
 
 void UKallari_Skill2B_ShurikenExplosion::OnProjectileResolved(const FVector& InMarkLocation, const FVector& InMarkNormal)

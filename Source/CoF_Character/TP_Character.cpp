@@ -690,6 +690,35 @@ void ATP_Character::PrimaryAttack_ThrowProjectile()
 		}
 	}
 
+	// 락온 대상이 있으면 대상에게 발사
+	if (HasValidLockOnTarget())
+	{
+		AActor* LockTarget = GetLockOnTarget();
+		if (IsValid(LockTarget))
+		{
+			FVector TargetOrigin, TargetExtent;
+			LockTarget->GetActorBounds(true, TargetOrigin, TargetExtent);
+
+			const FVector ShootDir = (TargetOrigin - SpawnLocation).GetSafeNormal();
+			if (!ShootDir.IsNearlyZero())
+			{
+				SpawnRotation = ShootDir.Rotation();
+			}
+		}
+	}
+	// 락온이 없으면 지면 수평 발사
+	else
+	{
+		FVector HorizontalDir = GetActorForwardVector();
+		HorizontalDir.Z = 0.f;
+		HorizontalDir = HorizontalDir.GetSafeNormal();
+
+		if (!HorizontalDir.IsNearlyZero())
+		{
+			SpawnRotation = HorizontalDir.Rotation();
+		}
+	}
+
 	FActorSpawnParameters Params;
 	Params.Owner = this;
 	Params.Instigator = this;
@@ -708,7 +737,7 @@ void ATP_Character::PrimaryAttack_ThrowProjectile()
 	Projectile->InitProjectile(
 		this,
 		CombatComp,
-		nullptr,                  // 기본 평타는 OwningSkill 불필요
+		nullptr, // 기본 평타는 OwningSkill 불필요
 		CombatComp->Damage,
 		PrimaryProjectileSpeed,
 		PrimaryProjectileLifeSeconds,
