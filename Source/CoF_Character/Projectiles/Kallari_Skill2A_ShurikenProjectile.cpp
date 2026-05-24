@@ -7,6 +7,8 @@
 #include "Skills/Kallari/Kallari_Skill2B_ShurikenExplosion.h"
 #include "TP_Character.h"
 
+#include "DrawDebugHelpers.h"
+
 AKallari_Skill2A_ShurikenProjectile::AKallari_Skill2A_ShurikenProjectile()
 {
     PrimaryActorTick.bCanEverTick = false;
@@ -18,8 +20,9 @@ AKallari_Skill2A_ShurikenProjectile::AKallari_Skill2A_ShurikenProjectile()
     Collision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     Collision->SetCollisionObjectType(ECC_WorldDynamic);
     Collision->SetCollisionResponseToAllChannels(ECR_Ignore);
+
     Collision->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
-    Collision->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Block);
+    Collision->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
     Collision->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 
     ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
@@ -55,6 +58,18 @@ void AKallari_Skill2A_ShurikenProjectile::InitProjectile(
     ProjectileMovement->Velocity = GetActorForwardVector() * InInitialSpeed;
 
     SetLifeSpan(InLifeSeconds);
+
+#if !(UE_BUILD_SHIPPING)
+    if (UWorld* World = GetWorld())
+    {
+        DrawDebugSphere(World, GetActorLocation(), InRadius, 16, FColor::Green, false, 2.0f, 0, 1.5f);
+    }
+
+    if (GEngine)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("[Projectile Init] Damage=%.1f Speed=%.1f Radius=%.1f"), InDamage, InInitialSpeed, InRadius));
+    }
+#endif
 }
 
 void AKallari_Skill2A_ShurikenProjectile::BeginPlay()
@@ -108,6 +123,19 @@ void AKallari_Skill2A_ShurikenProjectile::HandleOverlap(
         {
             HitNormal = -GetActorForwardVector();
         }
+
+#if !(UE_BUILD_SHIPPING)
+        if (UWorld* World = GetWorld())
+        {
+            DrawDebugSphere(World, HitPoint, Collision ? Collision->GetScaledSphereRadius() : 24.f, 16, FColor::Red, false, 2.0f, 0, 2.0f);
+            DrawDebugLine(World, HitPoint, HitPoint + HitNormal * 80.f, FColor::Yellow, false, 2.0f, 0, 2.0f);
+        }
+
+        if (GEngine)
+        {
+            GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, FString::Printf(TEXT("[Projectile Hit] Target=%s Damage=%.1f"), *GetNameSafe(OtherActor), Damage));
+        }
+#endif
 
         OwningCombatComp->ApplyHitToActor(OtherActor, Damage, HitPoint, HitNormal);
         ResolveAndDestroy(HitPoint, HitNormal);

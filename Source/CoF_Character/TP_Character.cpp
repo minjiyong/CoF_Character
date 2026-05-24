@@ -49,6 +49,9 @@
 // ===== Gideon Skills =====
 #include "Projectiles/Kallari_Skill2A_ShurikenProjectile.h"		// 평타 Kallari 투사체 재사용
 
+
+#include "DrawDebugHelpers.h"
+
 // Debug
 static void ScreenDbg(const FString& Msg, float Sec = 1.5f, FColor Color = FColor::Cyan)
 {
@@ -743,6 +746,16 @@ void ATP_Character::PrimaryAttack_ThrowProjectile()
 		PrimaryProjectileLifeSeconds,
 		PrimaryProjectileRadius
 	);
+
+#if !(UE_BUILD_SHIPPING)
+	DrawDebugSphere(World, SpawnLocation, PrimaryProjectileRadius, 16, FColor::Cyan, false, 1.5f, 0, 1.5f);
+	DrawDebugLine(World, SpawnLocation, SpawnLocation + SpawnRotation.Vector() * 200.f, FColor::Blue, false, 1.5f, 0, 1.5f);
+
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Cyan, FString::Printf(TEXT("[PrimaryProjectile] Damage=%.1f Speed=%.1f Radius=%.1f"), CombatComp->Damage, PrimaryProjectileSpeed, PrimaryProjectileRadius));
+	}
+#endif
 }
 
 // --------- 우클릭 방패 들기 ---------
