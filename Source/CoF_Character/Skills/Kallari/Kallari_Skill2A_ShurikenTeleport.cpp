@@ -32,6 +32,7 @@ void UKallari_Skill2A_ShurikenTeleport::ThrowProjectile()
 
     FRotator SpawnRotation = C->GetActorRotation();
 
+    // 락온 대상이 있으면 대상에게 발사
     if (C->HasValidLockOnTarget())
     {
         AActor* LockTarget = C->GetLockOnTarget();
@@ -45,29 +46,17 @@ void UKallari_Skill2A_ShurikenTeleport::ThrowProjectile()
             SpawnRotation = ShootDir.Rotation();
         }
     }
-    else if (APlayerController* PC = Cast<APlayerController>(C->GetController()))
+
+    // 락온이 없으면 지면 수평 발사
+    else
     {
-        FVector CamLoc;
-        FRotator CamRot;
-        PC->GetPlayerViewPoint(CamLoc, CamRot);
+        FVector HorizontalDir = C->GetActorForwardVector();
+        HorizontalDir.Z = 0.f;
+        HorizontalDir = HorizontalDir.GetSafeNormal();
 
-        const FVector TraceStart = CamLoc;
-        const FVector TraceEnd = TraceStart + CamRot.Vector() * 10000.f;
-
-        FHitResult Hit;
-        FCollisionQueryParams Params(SCENE_QUERY_STAT(KallariSkill2A_AimTrace), false, C);
-        Params.AddIgnoredActor(C);
-
-        FVector TargetPoint = TraceEnd;
-        if (C->GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Visibility, Params))
+        if (!HorizontalDir.IsNearlyZero())
         {
-            TargetPoint = Hit.ImpactPoint;
-        }
-
-        const FVector ShootDir = (TargetPoint - SpawnLocation).GetSafeNormal();
-        if (!ShootDir.IsNearlyZero())
-        {
-            SpawnRotation = ShootDir.Rotation();
+            SpawnRotation = HorizontalDir.Rotation();
         }
     }
 

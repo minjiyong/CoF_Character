@@ -39,7 +39,9 @@ void UKallari_Skill2B_ShurikenExplosion::ThrowProjectile()
         FVector TargetOrigin, TargetExtent;
         LockTarget->GetActorBounds(true, TargetOrigin, TargetExtent);
 
-        const FVector ShootDir = (TargetOrigin - SpawnLocation).GetSafeNormal();
+        FVector ShootDir = (TargetOrigin - SpawnLocation);
+        ShootDir.Z = 0.f;
+        ShootDir = ShootDir.GetSafeNormal();
         if (!ShootDir.IsNearlyZero())
         {
             SpawnRotation = ShootDir.Rotation();
@@ -64,7 +66,9 @@ void UKallari_Skill2B_ShurikenExplosion::ThrowProjectile()
             TargetPoint = Hit.ImpactPoint;
         }
 
-        const FVector ShootDir = (TargetPoint - SpawnLocation).GetSafeNormal();
+        FVector ShootDir = (TargetPoint - SpawnLocation);
+        ShootDir.Z = 0.f;
+        ShootDir = ShootDir.GetSafeNormal();
         if (!ShootDir.IsNearlyZero())
         {
             SpawnRotation = ShootDir.Rotation();
