@@ -52,6 +52,31 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attack", meta = (ClampMin = "0.0", ClampMax = "180.0"))
 	float PrimaryAttackHalfAngleDeg = 60.f; // 전방 부채꼴 범위로 제한 - 각도
 
+	//Primary Attack : Projectile - '수'
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attack|Projectile")
+	TSubclassOf<AKallari_Skill2A_ShurikenProjectile> PrimaryProjectileClass = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attack|Projectile")
+	float PrimaryProjectileSpeed = 2200.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attack|Projectile")
+	float PrimaryProjectileLifeSeconds = 2.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attack|Projectile")
+	float PrimaryProjectileRadius = 18.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attack|Projectile")
+	float PrimaryProjectileSpawnForwardOffset = 0.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attack|Projectile")
+	float PrimaryProjectileSpawnZOffset = 0.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attack|Projectile")
+	FName PrimaryProjectileSocketA = NAME_None;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attack|Projectile")
+	FName PrimaryProjectileSocketB = NAME_None;
+
 	// Combat Animation - 기본 콤보 공격
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Anim")
 	TObjectPtr<UAnimMontage> PrimaryComboMontage;

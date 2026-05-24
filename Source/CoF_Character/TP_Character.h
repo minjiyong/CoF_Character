@@ -197,6 +197,15 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	float PrimaryAttackHalfAngleDeg = 60.f;
 
+	TSubclassOf<AKallari_Skill2A_ShurikenProjectile> PrimaryProjectileClass = nullptr;
+	float PrimaryProjectileSpeed = 0.f;
+	float PrimaryProjectileLifeSeconds = 0.f;
+	float PrimaryProjectileRadius = 0.f;
+	float PrimaryProjectileSpawnForwardOffset = 0.f;
+	float PrimaryProjectileSpawnZOffset = 0.f;
+	FName PrimaryProjectileSocketA = NAME_None;
+	FName PrimaryProjectileSocketB = NAME_None;
+
 	// 콤보 상태
 	bool bComboWindowOpen = false;
 	bool bComboQueued = false;
@@ -226,6 +235,10 @@ public:
 	// 기본공격은 단발 공격이라 사용X 일단 만들어둠
 	UFUNCTION(BlueprintCallable, Category = "Combat|Hit")
 	void HitEnd();
+
+	// 투사체 평타의 경우
+	UFUNCTION(BlueprintCallable, Category = "Combat|Hit")
+	void PrimaryAttack_ThrowProjectile();
 
 	// 우클릭 방패 들기
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat|Defense")

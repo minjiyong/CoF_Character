@@ -10,7 +10,8 @@ UENUM(BlueprintType)
 enum class EPrimaryAttackHitType : uint8
 {
 	LineTrace UMETA(DisplayName = "LineTrace"),
-	Sphere    UMETA(DisplayName = "Sphere")
+	Sphere    UMETA(DisplayName = "Sphere"),
+	Projectile UMETA(DisplayName = "Projectile")
 };
 
 // 스킬 데이터 - A/B 2가지 중 선택

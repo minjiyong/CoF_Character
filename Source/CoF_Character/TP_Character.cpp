@@ -30,7 +30,7 @@
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimMontage.h"
 
-// ===== Terra Skills (logic separated) =====
+// ===== Terra Skills =====
 #include "Skills/Terra/Terra_Skill1A_Dash.h"
 #include "Skills/Terra/Terra_Skill1B_SlamAOE.h"
 #include "Skills/Terra/Terra_Skill2A_ShieldPush.h"
@@ -45,6 +45,9 @@
 #include "Skills/Kallari/Kallari_Skill2B_ShurikenExplosion.h"
 #include "Skills/Kallari/Kallari_UltA_BlinkDash.h"
 #include "Skills/Kallari/Kallari_UltB_Invincible.h"
+
+// ===== Gideon Skills =====
+#include "Projectiles/Kallari_Skill2A_ShurikenProjectile.h"		// 평타 Kallari 투사체 재사용
 
 // Debug
 static void ScreenDbg(const FString& Msg, float Sec = 1.5f, FColor Color = FColor::Cyan)
@@ -628,6 +631,10 @@ void ATP_Character::HitStart()
 
 	switch (PrimaryAttackHitType)
 	{
+	case EPrimaryAttackHitType::Projectile:
+		PrimaryAttack_ThrowProjectile();
+		return;
+
 	case EPrimaryAttackHitType::Sphere:
 		CombatComp->ConfigureAOEForwardHit(
 			CombatComp->Damage,
@@ -653,6 +660,60 @@ void ATP_Character::HitEnd()
 	{
 		CombatComp->EndHitWindow();
 	}
+}
+
+// 투사체 평타
+void ATP_Character::PrimaryAttack_ThrowProjectile()
+{
+	if (!CombatComp) return;
+	if (!PrimaryProjectileClass) return;
+
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	const bool bSecondCombo = (ComboIndex == 1);
+	const FName SpawnSocket = bSecondCombo ? PrimaryProjectileSocketB : PrimaryProjectileSocketA;
+
+	FVector SpawnLocation =
+		GetActorLocation()
+		+ GetActorForwardVector() * PrimaryProjectileSpawnForwardOffset
+		+ FVector(0.f, 0.f, PrimaryProjectileSpawnZOffset);
+
+	FRotator SpawnRotation = GetActorRotation();
+
+	if (USkeletalMeshComponent* MeshComp = GetMesh())
+	{
+		if (SpawnSocket != NAME_None && MeshComp->DoesSocketExist(SpawnSocket))
+		{
+			SpawnLocation = MeshComp->GetSocketLocation(SpawnSocket);
+			SpawnRotation = MeshComp->GetSocketRotation(SpawnSocket);
+		}
+	}
+
+	FActorSpawnParameters Params;
+	Params.Owner = this;
+	Params.Instigator = this;
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	AKallari_Skill2A_ShurikenProjectile* Projectile =
+		World->SpawnActor<AKallari_Skill2A_ShurikenProjectile>(
+			PrimaryProjectileClass,
+			SpawnLocation,
+			SpawnRotation,
+			Params
+		);
+
+	if (!Projectile) return;
+
+	Projectile->InitProjectile(
+		this,
+		CombatComp,
+		nullptr,                  // 기본 평타는 OwningSkill 불필요
+		CombatComp->Damage,
+		PrimaryProjectileSpeed,
+		PrimaryProjectileLifeSeconds,
+		PrimaryProjectileRadius
+	);
 }
 
 // --------- 우클릭 방패 들기 ---------
@@ -1393,6 +1454,15 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	PrimaryAttackSphereRadius = Data->PrimaryAttackSphereRadius;
 	PrimaryAttackForwardOffset = Data->PrimaryAttackForwardOffset;
 	PrimaryAttackHalfAngleDeg = Data->PrimaryAttackHalfAngleDeg;
+
+	PrimaryProjectileClass = Data->PrimaryProjectileClass;
+	PrimaryProjectileSpeed = Data->PrimaryProjectileSpeed;
+	PrimaryProjectileLifeSeconds = Data->PrimaryProjectileLifeSeconds;
+	PrimaryProjectileRadius = Data->PrimaryProjectileRadius;
+	PrimaryProjectileSpawnForwardOffset = Data->PrimaryProjectileSpawnForwardOffset;
+	PrimaryProjectileSpawnZOffset = Data->PrimaryProjectileSpawnZOffset;
+	PrimaryProjectileSocketA = Data->PrimaryProjectileSocketA;
+	PrimaryProjectileSocketB = Data->PrimaryProjectileSocketB;
 
 	// Blocking Animation Montage
 	BlockHoldMontage = Data->BlockHoldMontage;
