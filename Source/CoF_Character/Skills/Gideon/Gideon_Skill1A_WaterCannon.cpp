@@ -11,7 +11,8 @@ void UGideon_Skill1A_WaterCannon::HitStart()
 
 	C->CombatComp->ConfigureTraceHit(
 		C->Skill1A_Damage * C->AttackMultiplier,
-		C->Skill1A_Range
+		C->Skill1A_Range,
+		C->Skill1A_StartSocket
 	);
 
 	C->CombatComp->BeginHitWindow_OneShot();

@@ -1543,6 +1543,7 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	Skill1A_HitRadius = Data->Skill1A_HitRadius;
 
 	Skill1A_Range = Data->Skill1A_Range;
+	Skill1A_StartSocket = Data->Skill1A_StartSocket;
 
 	Skill1B_Damage = Data->Skill1B_Damage;
 	Skill1B_Radius = Data->Skill1B_Radius;

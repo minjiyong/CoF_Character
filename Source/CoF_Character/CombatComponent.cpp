@@ -10,6 +10,7 @@
 #include "CollisionShape.h"
 
 #include "HitReactInterface.h"
+#include "TP_Character.h"
 
 
 UCombatComponent::UCombatComponent()
@@ -34,11 +35,12 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 }
 
 
-void UCombatComponent::ConfigureTraceHit(float InDamage, float InRange)
+void UCombatComponent::ConfigureTraceHit(float InDamage, float InRange, FName InStartSocket)
 {
 	HitQueryType = EHitQueryType::TraceForward;
 	PendingDamage = InDamage;
 	PendingRange = InRange;
+	PendingTraceStartSocket = InStartSocket;
 }
 
 void UCombatComponent::ConfigureAOEHit(float InDamage, float InRadius)
@@ -126,6 +128,7 @@ void UCombatComponent::EndHitWindow()
 	SpinLastHitTime.Reset();   // spin
 	SpinPrevLoc = FVector::ZeroVector;
 	PendingAOELocation = FVector::ZeroVector;
+	PendingTraceStartSocket = NAME_None;
 }
 
 void UCombatComponent::ProcessHitQuery()
@@ -445,27 +448,63 @@ bool UCombatComponent::DoLineTraceWithRange(FHitResult& OutHit, float InRange) c
 	AActor* Owner = GetOwner();
 	if (!Owner) return false;
 
+	UWorld* World = Owner->GetWorld();
+	if (!World) return false;
+
 	ACharacter* Char = Cast<ACharacter>(Owner);
-	APlayerController* PC = Char ? Cast<APlayerController>(Char->GetController()) : nullptr;
-	if (!PC) return false;
+	ATP_Character* TPChar = Cast<ATP_Character>(Owner);
 
-	// 카메라 기반 트레이스: 화면 중앙 기준
-	FVector CamLoc;
-	FRotator CamRot;
-	PC->GetPlayerViewPoint(CamLoc, CamRot);
+	FVector Start = Owner->GetActorLocation();
+	if (Char && Char->GetMesh())
+	{
+		if (PendingTraceStartSocket != NAME_None && Char->GetMesh()->DoesSocketExist(PendingTraceStartSocket))
+		{
+			Start = Char->GetMesh()->GetSocketLocation(PendingTraceStartSocket);
+		}
+	}
 
-	const FVector Start = CamLoc;
-	const FVector End = Start + CamRot.Vector() * InRange;
+	FVector Dir = Owner->GetActorForwardVector();
+
+	// 락온 대상이 있으면 대상 중심으로
+	if (TPChar && TPChar->HasValidLockOnTarget())
+	{
+		if (AActor* LockTarget = TPChar->GetLockOnTarget())
+		{
+			FVector TargetOrigin, TargetExtent;
+			LockTarget->GetActorBounds(true, TargetOrigin, TargetExtent);
+
+			const FVector ToTarget = (TargetOrigin - Start).GetSafeNormal();
+			if (!ToTarget.IsNearlyZero())
+			{
+				Dir = ToTarget;
+			}
+		}
+	}
+	else
+	{
+		// 락온이 없으면 캐릭터 전방 기준
+		Dir = Owner->GetActorForwardVector().GetSafeNormal();
+	}
+
+	const FVector End = Start + Dir * InRange;
 
 	FCollisionQueryParams Params(SCENE_QUERY_STAT(LocalAttackTrace), false, Owner);
-	const bool bHit = Owner->GetWorld()->LineTraceSingleByChannel(
-		OutHit, Start, End, ECC_Visibility, Params);
+
+	const bool bHit = World->LineTraceSingleByChannel(
+		OutHit,
+		Start,
+		End,
+		ECC_Visibility,
+		Params
+	);
 
 	if (bDrawDebug)
 	{
-		DrawDebugLine(Owner->GetWorld(), Start, End, bHit ? FColor::Red : FColor::Green, false, 1.5f, 0, 2.f);
+		DrawDebugLine(World, Start, End, bHit ? FColor::Red : FColor::Green, false, 1.5f, 0, 2.f);
 		if (bHit)
-			DrawDebugPoint(Owner->GetWorld(), OutHit.ImpactPoint, 12.f, FColor::Red, false, 1.5f);
+		{
+			DrawDebugPoint(World, OutHit.ImpactPoint, 12.f, FColor::Red, false, 1.5f);
+		}
 	}
 
 	return bHit;

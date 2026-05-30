@@ -38,8 +38,8 @@ public:
 	void BeginHitWindow_OneShot();
 	void EndHitWindow();
 
-	// 콤보/기본공격용: 라인트레이스 판정으로 설정
-	void ConfigureTraceHit(float InDamage, float InRange);
+	// 콤보/기본공격용: 라인트레이스 판정으로 설정 - 이제는 기본공격은 AOE로 받기 때문에 Gideon 스킬1A용
+	void ConfigureTraceHit(float InDamage, float InRange, FName InStartSocket = NAME_None);
 
 	// 스킬 1_A 돌진용
 	void ConfigureDashHit(float InDamage, float InDuration, float InRadius);			// duration으로 기간 동안 반복 판정
@@ -81,6 +81,9 @@ private:
 	float PendingRange = 0.f;
 	
 	float PendingRadius = 0.f; // 기본공격은 x
+
+	// Gideon TraceHit Socket
+	FName PendingTraceStartSocket = NAME_None;
 
 	// Dash 전용
 	double DashEndTime = 0.0;

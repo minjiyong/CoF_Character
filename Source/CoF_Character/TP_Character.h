@@ -317,6 +317,7 @@ public:
 	float Skill1A_HitRadius = 80.f;
 
 	float Skill1A_Range = 0.f;
+	FName Skill1A_StartSocket = NAME_None;
 
 	// 스킬1_B 도끼찍기 / 위로 상승하면서 돌진
 	UFUNCTION(BlueprintCallable, Category = "Skills|Skill1")
