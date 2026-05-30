@@ -128,6 +128,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|A")
 	float Skill1A_HitRadius = 80.f;
 
+	// Skill1_A : Gideon
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|A|Gideon")
+	float Skill1A_Range = 1400.f;
+
 	// ===== Skill1_B =====
 
 	// 1_B 중 어떤건지

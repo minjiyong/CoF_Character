@@ -48,6 +48,7 @@
 
 // ===== Gideon Skills =====
 #include "Projectiles/Kallari_Skill2A_ShurikenProjectile.h"		// 평타 Kallari 투사체 재사용
+#include "Skills/Gideon/Gideon_Skill1A_WaterCannon.h"
 
 
 #include "DrawDebugHelpers.h"
@@ -857,7 +858,8 @@ void ATP_Character::Input_Skill1Started(const FInputActionValue&)
 	// 스킬 객체가 아직 없으면(초기화 전에 입력 들어오는 경우) 방어
 	const bool bSkill1AReady =
 		(Skill1A_Implementation == ESkill1AImplementation::TerraDash && Terra_Skill1A) ||
-		(Skill1A_Implementation == ESkill1AImplementation::KallariDashSlash && Kallari_Skill1A);
+		(Skill1A_Implementation == ESkill1AImplementation::KallariDashSlash && Kallari_Skill1A) ||
+		(Skill1A_Implementation == ESkill1AImplementation::GideonWaterCannon && Gideon_Skill1A);
 
 	const bool bSkill1BReady =
 		(Skill1B_Implementation == ESkill1BImplementation::TerraAxeSlam && Terra_Skill1B) ||
@@ -883,6 +885,10 @@ void ATP_Character::Input_Skill1Started(const FInputActionValue&)
 		else if (Skill1A_Implementation == ESkill1AImplementation::KallariDashSlash && Kallari_Skill1A)
 		{
 			bInCooldown = Kallari_Skill1A->IsInCooldown(Now);
+		}
+		else if (Skill1A_Implementation == ESkill1AImplementation::GideonWaterCannon && Gideon_Skill1A)
+		{
+			bInCooldown = Gideon_Skill1A->IsInCooldown(Now);
 		}
 
 		if (bInCooldown)
@@ -967,12 +973,16 @@ void ATP_Character::Skill1A_HitStart()
 	if (Skill1A_Implementation == ESkill1AImplementation::TerraDash && Terra_Skill1A)
 	{
 		Terra_Skill1A->HitStart();
-		return;
 	}
 
-	if (Skill1A_Implementation == ESkill1AImplementation::KallariDashSlash && Kallari_Skill1A)
+	else if (Skill1A_Implementation == ESkill1AImplementation::KallariDashSlash && Kallari_Skill1A)
 	{
 		Kallari_Skill1A->HitStart();
+	}
+
+	else if (Skill1A_Implementation == ESkill1AImplementation::GideonWaterCannon && Gideon_Skill1A)
+	{
+		Gideon_Skill1A->HitStart();
 	}
 }
 
@@ -981,12 +991,16 @@ void ATP_Character::Skill1A_HitEnd()		//역시나 당장은 필요없는듯 기존 hitend 돌�
 	if (Skill1A_Implementation == ESkill1AImplementation::TerraDash && Terra_Skill1A)
 	{
 		Terra_Skill1A->HitEnd();
-		return;
 	}
 
-	if (Skill1A_Implementation == ESkill1AImplementation::KallariDashSlash && Kallari_Skill1A)
+	else if (Skill1A_Implementation == ESkill1AImplementation::KallariDashSlash && Kallari_Skill1A)
 	{
 		Kallari_Skill1A->HitEnd();
+	}
+
+	else if (Skill1A_Implementation == ESkill1AImplementation::GideonWaterCannon && Gideon_Skill1A)
+	{
+		Gideon_Skill1A->HitEnd();
 	}
 }
 
@@ -1528,6 +1542,8 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	Skill1A_Cooldown = Data->Skill1A_Cooldown;
 	Skill1A_HitRadius = Data->Skill1A_HitRadius;
 
+	Skill1A_Range = Data->Skill1A_Range;
+
 	Skill1B_Damage = Data->Skill1B_Damage;
 	Skill1B_Radius = Data->Skill1B_Radius;
 	Skill1B_Cooldown = Data->Skill1B_Cooldown;
@@ -1622,6 +1638,8 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	if (!Kallari_UltA) { Kallari_UltA = NewObject<UKallari_UltA_BlinkDash>(this); Kallari_UltA->Init(this); }
 	if (!Kallari_UltB) { Kallari_UltB = NewObject<UKallari_UltB_Invincible>(this); Kallari_UltB->Init(this); }
 
+	if (!Gideon_Skill1A) { Gideon_Skill1A = NewObject<UGideon_Skill1A_WaterCannon>(this); Gideon_Skill1A->Init(this); }
+
 	// ===== 런타임 상태 초기화 =====
 	// - 캐릭터 교체(슬롯 변경) 시, 이전 캐릭터의 쿨다운/타이머/맵 상태가 남으면 안 됨.
 	if (!Terra_Skill1A) Terra_Skill1A->ResetRuntime();
@@ -1637,6 +1655,8 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	if (Kallari_Skill2B) Kallari_Skill2B->ResetRuntime();
 	if (Kallari_UltA) Kallari_UltA->ResetRuntime();
 	if (Kallari_UltB) Kallari_UltB->ResetRuntime();
+
+	if (Gideon_Skill1A) Gideon_Skill1A->ResetRuntime();
 }
 
 // Character Select

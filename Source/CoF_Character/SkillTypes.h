@@ -37,7 +37,8 @@ UENUM(BlueprintType)
 enum class ESkill1AImplementation : uint8
 {
 	TerraDash			UMETA(DisplayName = "TerraDash"),
-	KallariDashSlash	UMETA(DisplayName = "KallariDashSlash")
+	KallariDashSlash	UMETA(DisplayName = "KallariDashSlash"),
+	GideonWaterCannon	UMETA(DisplayName = "GideonWaterCannon")
 };
 
 // 스킬1_B 중 어떤것인지

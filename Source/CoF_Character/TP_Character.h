@@ -48,6 +48,9 @@ class COF_CHARACTER_API ATP_Character : public ACharacter, public IHitReactInter
 	friend class UKallari_UltA_BlinkDash;
 	friend class UKallari_UltB_Invincible;
 
+	// ===== Gideon Skills =====
+	friend class UGideon_Skill1A_WaterCannon;
+
 public:
 	ATP_Character();
 
@@ -244,7 +247,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat|Defense")
 	bool bBlocking = false;
 
-	// ===== Terra / Kallari Skill Logic Objects =====
+	// ===== Terra / Kallari / Gideon Skill Logic Objects =====
 	// - AnimNotify / BP가 기존에 ATP_Character의 UFUNCTION들을 직접 호출하고 있으므로,
 	// UFUNCTION 시그니처는 그대로 유지하고, 내부 구현만 Terra_* / Kallari_* 객체로 위임한다.
 	UPROPERTY()
@@ -283,6 +286,9 @@ public:
 	UPROPERTY()
 	TObjectPtr<UKallari_UltB_Invincible> Kallari_UltB = nullptr;
 
+	UPROPERTY()
+	TObjectPtr<UGideon_Skill1A_WaterCannon> Gideon_Skill1A = nullptr;
+
 	// ===== Skill 1 =====
 
 	// 스킬1 뭘 선택했는지
@@ -309,6 +315,8 @@ public:
 	float Skill1A_DashDuration = 0.f; // 몇 초 동안 밀고 갈지
 	float Skill1A_Cooldown = 0.f;
 	float Skill1A_HitRadius = 80.f;
+
+	float Skill1A_Range = 0.f;
 
 	// 스킬1_B 도끼찍기 / 위로 상승하면서 돌진
 	UFUNCTION(BlueprintCallable, Category = "Skills|Skill1")
