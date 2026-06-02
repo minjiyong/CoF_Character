@@ -159,6 +159,28 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B|Kallari")
 	float Skill1B_BackwardDistance = 150.f;
 
+	// Skill1_B : Gideon
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B|Gideon")
+	TSubclassOf<AKallari_Skill2A_ShurikenProjectile> Skill1B_ProjectileClass = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B|Gideon")
+	float Skill1B_ProjectileSpeed = 1400.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B|Gideon")
+	float Skill1B_ProjectileLifeSeconds = 2.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B|Gideon")
+	float Skill1B_ProjectileRadius = 36.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B|Gideon")
+	float Skill1B_ProjectileSpawnForwardOffset = 0.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B|Gideon")
+	float Skill1B_ProjectileSpawnZOffset = 0.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B|Gideon")
+	FName Skill1B_StartSocket = NAME_None;
+
 	// ------------ Skill 2 ------------
 
 	// 어떤 걸 선택했는지

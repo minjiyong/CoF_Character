@@ -50,6 +50,7 @@ class COF_CHARACTER_API ATP_Character : public ACharacter, public IHitReactInter
 
 	// ===== Gideon Skills =====
 	friend class UGideon_Skill1A_WaterCannon;
+	friend class UGideon_Skill1B_WaterBomb;
 
 public:
 	ATP_Character();
@@ -289,6 +290,9 @@ public:
 	UPROPERTY()
 	TObjectPtr<UGideon_Skill1A_WaterCannon> Gideon_Skill1A = nullptr;
 
+	UPROPERTY()
+	TObjectPtr<UGideon_Skill1B_WaterBomb> Gideon_Skill1B = nullptr;
+
 	// ===== Skill 1 =====
 
 	// 스킬1 뭘 선택했는지
@@ -319,7 +323,7 @@ public:
 	float Skill1A_Range = 0.f;
 	FName Skill1A_StartSocket = NAME_None;
 
-	// 스킬1_B 도끼찍기 / 위로 상승하면서 돌진
+	// 스킬1_B 도끼찍기 / 위로 상승하면서 돌진 / 물폭탄 던지기
 	UFUNCTION(BlueprintCallable, Category = "Skills|Skill1")
 	void Skill1B_ApplyAOE();
 
@@ -328,6 +332,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Skills|Skill1|B")
 	void Skill1B_BackflipEnd();
+
+	UFUNCTION(BlueprintCallable, Category = "Skills|Skill1|B")
+	void Skill1B_ThrowProjectile();
 
 	TObjectPtr<UAnimMontage> Skill1MontageB = nullptr;
 	ESkill1BImplementation Skill1B_Implementation = ESkill1BImplementation::TerraAxeSlam;
@@ -338,6 +345,14 @@ public:
 
 	float Skill1B_BackflipDuration = 0.f;
 	float Skill1B_BackwardDistance = 0.f;
+
+	TSubclassOf<AKallari_Skill2A_ShurikenProjectile> Skill1B_ProjectileClass = nullptr;
+	float Skill1B_ProjectileSpeed = 0.f;
+	float Skill1B_ProjectileLifeSeconds = 0.f;
+	float Skill1B_ProjectileRadius = 0.f;
+	float Skill1B_ProjectileSpawnForwardOffset = 0.f;
+	float Skill1B_ProjectileSpawnZOffset = 0.f;
+	FName Skill1B_StartSocket = NAME_None;
 
 	// ===== Skill 2 =====
 

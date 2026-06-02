@@ -5,6 +5,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Skills/Kallari/Kallari_Skill2A_ShurikenTeleport.h"
 #include "Skills/Kallari/Kallari_Skill2B_ShurikenExplosion.h"
+#include "Skills/Gideon/Gideon_Skill1B_WaterBomb.h"
 #include "TP_Character.h"
 
 #include "DrawDebugHelpers.h"
@@ -138,6 +139,12 @@ void AKallari_Skill2A_ShurikenProjectile::HandleOverlap(
 #endif
 
         OwningCombatComp->ApplyHitToActor(OtherActor, Damage, HitPoint, HitNormal);
+
+        if (UGideon_Skill1B_WaterBomb* WaterBombSkill = Cast<UGideon_Skill1B_WaterBomb>(OwningSkill))
+        {
+            WaterBombSkill->ExplodeAtLocation(HitPoint);
+        }
+
         ResolveAndDestroy(HitPoint, HitNormal);
     }
 }
@@ -156,6 +163,18 @@ void AKallari_Skill2A_ShurikenProjectile::HandleProjectileStop(const FHitResult&
     if (MarkNormal.IsNearlyZero())
     {
         MarkNormal = FVector::UpVector;
+    }
+
+    if (UGideon_Skill1B_WaterBomb* WaterBombSkill = Cast<UGideon_Skill1B_WaterBomb>(OwningSkill))
+    {
+        FVector ExplosionLocation = GetActorLocation();
+
+        if (ImpactResult.bBlockingHit)
+        {
+            ExplosionLocation = FVector(ImpactResult.ImpactPoint);
+        }
+
+        WaterBombSkill->ExplodeAtLocation(ExplosionLocation);
     }
 
     ResolveAndDestroy(MarkLocation, MarkNormal);

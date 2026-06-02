@@ -46,7 +46,8 @@ UENUM(BlueprintType)
 enum class ESkill1BImplementation : uint8
 {
 	TerraAxeSlam		UMETA(DisplayName = "TerraAxeSlam"),
-	KallariBackflip		UMETA(DisplayName = "KallariBackflip")
+	KallariBackflip		UMETA(DisplayName = "KallariBackflip"),
+	GideonWaterBomb UMETA(DisplayName = "GideonWaterBomb")
 };
 
 // 스킬2_A 중 어떤것인지

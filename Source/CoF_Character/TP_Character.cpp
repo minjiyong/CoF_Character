@@ -49,6 +49,7 @@
 // ===== Gideon Skills =====
 #include "Projectiles/Kallari_Skill2A_ShurikenProjectile.h"		// 평타 Kallari 투사체 재사용
 #include "Skills/Gideon/Gideon_Skill1A_WaterCannon.h"
+#include "Skills/Gideon/Gideon_Skill1B_WaterBomb.h"
 
 
 #include "DrawDebugHelpers.h"
@@ -863,7 +864,8 @@ void ATP_Character::Input_Skill1Started(const FInputActionValue&)
 
 	const bool bSkill1BReady =
 		(Skill1B_Implementation == ESkill1BImplementation::TerraAxeSlam && Terra_Skill1B) ||
-		(Skill1B_Implementation == ESkill1BImplementation::KallariBackflip && Kallari_Skill1B);
+		(Skill1B_Implementation == ESkill1BImplementation::KallariBackflip && Kallari_Skill1B) ||
+		(Skill1B_Implementation == ESkill1BImplementation::GideonWaterBomb && Gideon_Skill1B);
 
 	if ((Skill1Selected == ESkillVariant::A && !bSkill1AReady) ||
 		(Skill1Selected == ESkillVariant::B && !bSkill1BReady))
@@ -909,6 +911,10 @@ void ATP_Character::Input_Skill1Started(const FInputActionValue&)
 		{
 			bInCooldown = Kallari_Skill1B->IsInCooldown(Now);
 		}
+		else if (Skill1B_Implementation == ESkill1BImplementation::GideonWaterBomb && Gideon_Skill1B)
+		{
+			bInCooldown = Gideon_Skill1B->IsInCooldown(Now);
+		}
 
 		if (bInCooldown)
 		{
@@ -953,6 +959,10 @@ void ATP_Character::Input_Skill1Started(const FInputActionValue&)
 		{
 			Kallari_Skill1A->StartCooldown(Now, Skill1A_Cooldown);
 		}
+		else if (Skill1A_Implementation == ESkill1AImplementation::GideonWaterCannon && Gideon_Skill1A)
+		{
+			Gideon_Skill1A->StartCooldown(Now, Skill1A_Cooldown);
+		}
 	}
 	else if (Skill1Selected == ESkillVariant::B)
 	{
@@ -963,6 +973,10 @@ void ATP_Character::Input_Skill1Started(const FInputActionValue&)
 		else if (Skill1B_Implementation == ESkill1BImplementation::KallariBackflip && Kallari_Skill1B)
 		{
 			Kallari_Skill1B->StartCooldown(Now, Skill1B_Cooldown);
+		}
+		else if (Skill1B_Implementation == ESkill1BImplementation::GideonWaterBomb && Gideon_Skill1B)
+		{
+			Gideon_Skill1B->StartCooldown(Now, Skill1B_Cooldown);
 		}
 	}
 }
@@ -1052,6 +1066,15 @@ void ATP_Character::Skill1B_BackflipEnd()
 	if (Skill1B_Implementation == ESkill1BImplementation::KallariBackflip && Kallari_Skill1B)
 	{
 		Kallari_Skill1B->DashEnd();
+	}
+}
+
+// ===== skill1_B Gideon 물폭탄 공격 (wrapper) =====
+void ATP_Character::Skill1B_ThrowProjectile()
+{
+	if (Skill1B_Implementation == ESkill1BImplementation::GideonWaterBomb && Gideon_Skill1B)
+	{
+		Gideon_Skill1B->ThrowProjectile();
 	}
 }
 
@@ -1552,6 +1575,14 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	Skill1B_BackflipDuration = Data->Skill1B_BackflipDuration;
 	Skill1B_BackwardDistance = Data->Skill1B_BackwardDistance;
 
+	Skill1B_ProjectileClass = Data->Skill1B_ProjectileClass;
+	Skill1B_ProjectileSpeed = Data->Skill1B_ProjectileSpeed;
+	Skill1B_ProjectileLifeSeconds = Data->Skill1B_ProjectileLifeSeconds;
+	Skill1B_ProjectileRadius = Data->Skill1B_ProjectileRadius;
+	Skill1B_ProjectileSpawnForwardOffset = Data->Skill1B_ProjectileSpawnForwardOffset;
+	Skill1B_ProjectileSpawnZOffset = Data->Skill1B_ProjectileSpawnZOffset;
+	Skill1B_StartSocket = Data->Skill1B_StartSocket;
+
 	// 스킬2
 	Skill2Selected = Data->Skill2Selected;
 
@@ -1640,6 +1671,8 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	if (!Kallari_UltB) { Kallari_UltB = NewObject<UKallari_UltB_Invincible>(this); Kallari_UltB->Init(this); }
 
 	if (!Gideon_Skill1A) { Gideon_Skill1A = NewObject<UGideon_Skill1A_WaterCannon>(this); Gideon_Skill1A->Init(this); }
+	if (!Gideon_Skill1B) { Gideon_Skill1B = NewObject<UGideon_Skill1B_WaterBomb>(this); Gideon_Skill1B->Init(this); }
+	
 
 	// ===== 런타임 상태 초기화 =====
 	// - 캐릭터 교체(슬롯 변경) 시, 이전 캐릭터의 쿨다운/타이머/맵 상태가 남으면 안 됨.
@@ -1658,6 +1691,7 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	if (Kallari_UltB) Kallari_UltB->ResetRuntime();
 
 	if (Gideon_Skill1A) Gideon_Skill1A->ResetRuntime();
+	if (Gideon_Skill1B) Gideon_Skill1B->ResetRuntime();
 }
 
 // Character Select
