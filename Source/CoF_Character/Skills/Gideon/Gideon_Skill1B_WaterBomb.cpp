@@ -4,7 +4,7 @@
 #include "DrawDebugHelpers.h"
 #include "Engine/OverlapResult.h"
 #include "Engine/World.h"
-#include "Projectiles/Kallari_Skill2A_ShurikenProjectile.h"
+#include "Projectiles/CoF_CommonProjectile.h"
 #include "TP_Character.h"
 
 void UGideon_Skill1B_WaterBomb::ThrowProjectile()
@@ -16,10 +16,10 @@ void UGideon_Skill1B_WaterBomb::ThrowProjectile()
 	UWorld* World = C->GetWorld();
 	if (!World) return;
 
-	TSubclassOf<AKallari_Skill2A_ShurikenProjectile> SpawnClass = C->Skill1B_ProjectileClass;
+	TSubclassOf<ACoF_CommonProjectile> SpawnClass = C->Skill1B_ProjectileClass;
 	if (!SpawnClass)
 	{
-		SpawnClass = AKallari_Skill2A_ShurikenProjectile::StaticClass();
+		SpawnClass = ACoF_CommonProjectile::StaticClass();
 	}
 
 	FVector SpawnLocation =
@@ -35,26 +35,67 @@ void UGideon_Skill1B_WaterBomb::ThrowProjectile()
 		}
 	}
 
-	// 몸체 전방 기준 + 위쪽 힘을 조금 줘서 포물선 발사
-	FVector Forward = C->GetActorForwardVector();
-	Forward.Z = 0.f;
-	Forward = Forward.GetSafeNormal();
+	const float ForwardSpeed = FMath::Max(C->Skill1B_ProjectileForwardSpeed, 1.f);
+	const float UpwardSpeed = C->Skill1B_ProjectileUpwardSpeed;
+	const float GravityScale = C->Skill1B_ProjectileGravityScale;
+	const float LockOnExtraUpward = C->Skill1B_ProjectileLockOnExtraUpwardSpeed;
 
-	if (Forward.IsNearlyZero())
+	FVector LaunchVelocity = FVector::ZeroVector;
+
+	// 락온 대상이 있으면: 손 소켓 -> 락온 대상 중심으로 포물선 연결
+	if (C->HasValidLockOnTarget())
 	{
-		Forward = FVector::ForwardVector;
+		if (AActor* LockTarget = C->GetLockOnTarget())
+		{
+			FVector TargetOrigin, TargetExtent;
+			LockTarget->GetActorBounds(true, TargetOrigin, TargetExtent);
+
+			FVector Delta = TargetOrigin - SpawnLocation;
+			FVector Horizontal = Delta;
+			Horizontal.Z = 0.f;
+
+			FVector HorizontalDir = Horizontal.GetSafeNormal();
+			if (HorizontalDir.IsNearlyZero())
+			{
+				HorizontalDir = C->GetActorForwardVector().GetSafeNormal2D();
+			}
+
+			const float HorizontalDist = FMath::Max(Horizontal.Size(), 1.f);
+			const float Gravity = FMath::Abs(World->GetGravityZ()) * GravityScale;
+
+			// 전방 속도로 비행 시간 계산
+			const float FlightTime = HorizontalDist / ForwardSpeed;
+
+			// 목표점에 닿게 하는 수직 속도 + 상향 보정
+			float VerticalSpeed = 0.f;
+			if (FlightTime > KINDA_SMALL_NUMBER)
+			{
+				VerticalSpeed =
+					(Delta.Z + 0.5f * Gravity * FlightTime * FlightTime) / FlightTime
+					+ LockOnExtraUpward;
+			}
+			else
+			{
+				VerticalSpeed = UpwardSpeed + LockOnExtraUpward;
+			}
+
+			LaunchVelocity = HorizontalDir * ForwardSpeed + FVector::UpVector * VerticalSpeed;
+		}
 	}
+	else
+	{
+		// 락온이 없으면: 몸체 전방 + 위쪽 힘
+		FVector Forward = C->GetActorForwardVector();
+		Forward.Z = 0.f;
+		Forward = Forward.GetSafeNormal();
 
-	const FVector Up = FVector::UpVector;
+		if (Forward.IsNearlyZero())
+		{
+			Forward = FVector::ForwardVector;
+		}
 
-	// 조절 포인트
-	const float ForwardSpeed = C->Skill1B_ProjectileSpeed;
-	const float UpwardSpeed = C->Skill1B_ProjectileSpeed * 0.45f;
-	const float GravityScale = 1.0f;
-
-	const FVector LaunchVelocity =
-		Forward * ForwardSpeed +
-		Up * UpwardSpeed;
+		LaunchVelocity = Forward * ForwardSpeed + FVector::UpVector * UpwardSpeed;
+	}
 
 	FRotator SpawnRotation = LaunchVelocity.Rotation();
 
@@ -63,8 +104,8 @@ void UGideon_Skill1B_WaterBomb::ThrowProjectile()
 	Params.Instigator = C;
 	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	AKallari_Skill2A_ShurikenProjectile* Projectile =
-		World->SpawnActor<AKallari_Skill2A_ShurikenProjectile>(
+	ACoF_CommonProjectile* Projectile =
+		World->SpawnActor<ACoF_CommonProjectile>(
 			SpawnClass,
 			SpawnLocation,
 			SpawnRotation,
@@ -73,7 +114,6 @@ void UGideon_Skill1B_WaterBomb::ThrowProjectile()
 
 	if (!Projectile) return;
 
-	// 직접 충돌 데미지는 0, 폭발 데미지만 사용
 	Projectile->InitProjectileArc(
 		C,
 		C->CombatComp,

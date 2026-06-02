@@ -42,7 +42,6 @@ class COF_CHARACTER_API ATP_Character : public ACharacter, public IHitReactInter
 	// ===== Kallari Skills =====
 	friend class UKallari_Skill1A_DashSlash;
 	friend class UKallari_Skill1B_Backflip;
-	friend class AKallari_Skill2A_ShurikenProjectile;
 	friend class UKallari_Skill2A_ShurikenTeleport;
 	friend class UKallari_Skill2B_ShurikenExplosion;
 	friend class UKallari_UltA_BlinkDash;
@@ -51,6 +50,9 @@ class COF_CHARACTER_API ATP_Character : public ACharacter, public IHitReactInter
 	// ===== Gideon Skills =====
 	friend class UGideon_Skill1A_WaterCannon;
 	friend class UGideon_Skill1B_WaterBomb;
+
+
+	friend class ACoF_CommonProjectile;
 
 public:
 	ATP_Character();
@@ -201,7 +203,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	float PrimaryAttackHalfAngleDeg = 60.f;
 
-	TSubclassOf<AKallari_Skill2A_ShurikenProjectile> PrimaryProjectileClass = nullptr;
+	TSubclassOf<ACoF_CommonProjectile> PrimaryProjectileClass = nullptr;
 	float PrimaryProjectileSpeed = 0.f;
 	float PrimaryProjectileLifeSeconds = 0.f;
 	float PrimaryProjectileRadius = 0.f;
@@ -346,8 +348,11 @@ public:
 	float Skill1B_BackflipDuration = 0.f;
 	float Skill1B_BackwardDistance = 0.f;
 
-	TSubclassOf<AKallari_Skill2A_ShurikenProjectile> Skill1B_ProjectileClass = nullptr;
-	float Skill1B_ProjectileSpeed = 0.f;
+	TSubclassOf<ACoF_CommonProjectile> Skill1B_ProjectileClass = nullptr;
+	float Skill1B_ProjectileForwardSpeed = 0.f;
+	float Skill1B_ProjectileUpwardSpeed = 0.f;
+	float Skill1B_ProjectileGravityScale = 1.0f;
+	float Skill1B_ProjectileLockOnExtraUpwardSpeed = 0.f;
 	float Skill1B_ProjectileLifeSeconds = 0.f;
 	float Skill1B_ProjectileRadius = 0.f;
 	float Skill1B_ProjectileSpawnForwardOffset = 0.f;
@@ -375,7 +380,7 @@ public:
 	float Skill2A_HalfAngleDeg = 0.f;
 	float Skill2A_Cooldown = 0.f;
 
-	TSubclassOf<AKallari_Skill2A_ShurikenProjectile> Skill2A_ProjectileClass = nullptr;
+	TSubclassOf<ACoF_CommonProjectile> Skill2A_ProjectileClass = nullptr;
 	float Skill2A_ProjectileSpeed = 0.f;
 	float Skill2A_ProjectileLifeSeconds = 0.f;
 	float Skill2A_ProjectileRadius = 0.f;
@@ -409,7 +414,7 @@ public:
 	float Skill2B_Duration = 0.f;
 	float Skill2B_Cooldown = 0.f;
 
-	TSubclassOf<AKallari_Skill2A_ShurikenProjectile> Skill2B_ProjectileClass = nullptr;
+	TSubclassOf<ACoF_CommonProjectile> Skill2B_ProjectileClass = nullptr;
 	float Skill2B_ProjectileSpeed = 0.f;
 	float Skill2B_ProjectileLifeSeconds = 0.f;
 	float Skill2B_ProjectileRadius = 0.f;

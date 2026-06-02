@@ -4,7 +4,7 @@
 #include "Skills/CoF_SkillBase.h"
 #include "Kallari_Skill2A_ShurikenTeleport.generated.h"
 
-class AKallari_Skill2A_ShurikenProjectile;
+class ACoF_CommonProjectile;
 
 UCLASS()
 class COF_CHARACTER_API UKallari_Skill2A_ShurikenTeleport : public UCoF_SkillBase
@@ -18,7 +18,7 @@ public:
     FVector TeleportMarkLocation = FVector::ZeroVector;
     FVector TeleportMarkNormal = FVector::UpVector;
 
-    TWeakObjectPtr<AKallari_Skill2A_ShurikenProjectile> ActiveProjectile;
+    TWeakObjectPtr<ACoF_CommonProjectile> ActiveProjectile;
 
     void ResetRuntime()
     {

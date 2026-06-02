@@ -1,4 +1,4 @@
-#include "Projectiles/Kallari_Skill2A_ShurikenProjectile.h"
+#include "Projectiles/CoF_CommonProjectile.h"
 
 #include "CombatComponent.h"
 #include "Components/SphereComponent.h"
@@ -10,7 +10,7 @@
 
 #include "DrawDebugHelpers.h"
 
-AKallari_Skill2A_ShurikenProjectile::AKallari_Skill2A_ShurikenProjectile()
+ACoF_CommonProjectile::ACoF_CommonProjectile()
 {
     PrimaryActorTick.bCanEverTick = false;
 
@@ -34,7 +34,7 @@ AKallari_Skill2A_ShurikenProjectile::AKallari_Skill2A_ShurikenProjectile()
     ProjectileMovement->bShouldBounce = false;
 }
 
-void AKallari_Skill2A_ShurikenProjectile::InitProjectile(
+void ACoF_CommonProjectile::InitProjectile(
     ATP_Character* InOwnerCharacter,
     UCombatComponent* InCombatComp,
     UObject* InOwningSkill,
@@ -74,7 +74,7 @@ void AKallari_Skill2A_ShurikenProjectile::InitProjectile(
 #endif
 }
 
-void AKallari_Skill2A_ShurikenProjectile::InitProjectileArc(
+void ACoF_CommonProjectile::InitProjectileArc(
     ATP_Character* InOwnerCharacter,
     UCombatComponent* InCombatComp,
     UObject* InOwningSkill,
@@ -116,22 +116,22 @@ void AKallari_Skill2A_ShurikenProjectile::InitProjectileArc(
 #endif
 }
 
-void AKallari_Skill2A_ShurikenProjectile::BeginPlay()
+void ACoF_CommonProjectile::BeginPlay()
 {
     Super::BeginPlay();
 
     if (Collision)
     {
-        Collision->OnComponentBeginOverlap.AddDynamic(this, &AKallari_Skill2A_ShurikenProjectile::HandleOverlap);
+        Collision->OnComponentBeginOverlap.AddDynamic(this, &ACoF_CommonProjectile::HandleOverlap);
     }
 
     if (ProjectileMovement)
     {
-        ProjectileMovement->OnProjectileStop.AddDynamic(this, &AKallari_Skill2A_ShurikenProjectile::HandleProjectileStop);
+        ProjectileMovement->OnProjectileStop.AddDynamic(this, &ACoF_CommonProjectile::HandleProjectileStop);
     }
 }
 
-void AKallari_Skill2A_ShurikenProjectile::LifeSpanExpired()
+void ACoF_CommonProjectile::LifeSpanExpired()
 {
     if (!bResolved)
     {
@@ -142,7 +142,7 @@ void AKallari_Skill2A_ShurikenProjectile::LifeSpanExpired()
     Super::LifeSpanExpired();
 }
 
-void AKallari_Skill2A_ShurikenProjectile::HandleOverlap(
+void ACoF_CommonProjectile::HandleOverlap(
     UPrimitiveComponent* OverlappedComp,
     AActor* OtherActor,
     UPrimitiveComponent* OtherComp,
@@ -191,7 +191,7 @@ void AKallari_Skill2A_ShurikenProjectile::HandleOverlap(
     }
 }
 
-void AKallari_Skill2A_ShurikenProjectile::HandleProjectileStop(const FHitResult& ImpactResult)
+void ACoF_CommonProjectile::HandleProjectileStop(const FHitResult& ImpactResult)
 {
     if (bResolved) return;
 
@@ -222,7 +222,7 @@ void AKallari_Skill2A_ShurikenProjectile::HandleProjectileStop(const FHitResult&
     ResolveAndDestroy(MarkLocation, MarkNormal);
 }
 
-void AKallari_Skill2A_ShurikenProjectile::ResolveAndDestroy(const FVector& MarkLocation, const FVector& MarkNormal)
+void ACoF_CommonProjectile::ResolveAndDestroy(const FVector& MarkLocation, const FVector& MarkNormal)
 {
     if (bResolved) return;
     bResolved = true;

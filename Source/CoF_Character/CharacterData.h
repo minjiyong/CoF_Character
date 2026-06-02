@@ -8,7 +8,7 @@
 class USkeletalMesh;
 class UAnimInstance;
 class UAnimMontage;
-class AKallari_Skill2A_ShurikenProjectile;
+class ACoF_CommonProjectile;
 
 UCLASS(BlueprintType)
 class COF_CHARACTER_API UCharacterData : public UPrimaryDataAsset
@@ -54,7 +54,7 @@ public:
 
 	//Primary Attack : Projectile - '수'
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attack|Projectile")
-	TSubclassOf<AKallari_Skill2A_ShurikenProjectile> PrimaryProjectileClass = nullptr;
+	TSubclassOf<ACoF_CommonProjectile> PrimaryProjectileClass = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attack|Projectile")
 	float PrimaryProjectileSpeed = 2200.f;
@@ -161,10 +161,19 @@ public:
 
 	// Skill1_B : Gideon
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B|Gideon")
-	TSubclassOf<AKallari_Skill2A_ShurikenProjectile> Skill1B_ProjectileClass = nullptr;
+	TSubclassOf<ACoF_CommonProjectile> Skill1B_ProjectileClass = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B|Gideon")
-	float Skill1B_ProjectileSpeed = 1400.f;
+	float Skill1B_ProjectileForwardSpeed = 1400.f;   // 전방 힘
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B|Gideon")
+	float Skill1B_ProjectileUpwardSpeed = 650.f;     // 위쪽 힘
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B|Gideon")
+	float Skill1B_ProjectileGravityScale = 1.0f;     // 자유낙하 중력 배율
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B|Gideon")
+	float Skill1B_ProjectileLockOnExtraUpwardSpeed = 450.f; // 락온 시 추가 상향 힘
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B|Gideon")
 	float Skill1B_ProjectileLifeSeconds = 2.0f;
@@ -219,7 +228,7 @@ public:
 
 	// 2_A Kallari - 수리검 던지고 텔레포트
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Kallari")
-	TSubclassOf<AKallari_Skill2A_ShurikenProjectile> Skill2A_ProjectileClass = nullptr;
+	TSubclassOf<ACoF_CommonProjectile> Skill2A_ProjectileClass = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Kallari")
 	float Skill2A_ProjectileSpeed = 2600.f;
@@ -274,7 +283,7 @@ public:
 
 	// 2_B Kallari - 수리검 던지고 폭발
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|B|Kallari")
-	TSubclassOf<AKallari_Skill2A_ShurikenProjectile> Skill2B_ProjectileClass = nullptr;
+	TSubclassOf<ACoF_CommonProjectile> Skill2B_ProjectileClass = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|B|Kallari")
 	float Skill2B_ProjectileSpeed = 2600.f;

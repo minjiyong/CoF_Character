@@ -2,7 +2,7 @@
 
 #include "CombatComponent.h"
 #include "GameFramework/PlayerController.h"
-#include "Projectiles/Kallari_Skill2A_ShurikenProjectile.h"
+#include "Projectiles/CoF_CommonProjectile.h"
 #include "TP_Character.h"
 
 void UKallari_Skill2B_ShurikenExplosion::ThrowProjectile()
@@ -12,10 +12,10 @@ void UKallari_Skill2B_ShurikenExplosion::ThrowProjectile()
 	if (!C->GetWorld()) return;
 	if (!C->CombatComp) return;
 
-	TSubclassOf<AKallari_Skill2A_ShurikenProjectile> SpawnClass = C->Skill2B_ProjectileClass;
+	TSubclassOf<ACoF_CommonProjectile> SpawnClass = C->Skill2B_ProjectileClass;
 	if (!SpawnClass)
 	{
-		SpawnClass = AKallari_Skill2A_ShurikenProjectile::StaticClass();
+		SpawnClass = ACoF_CommonProjectile::StaticClass();
 	}
 
 	FVector SpawnLocation = C->GetActorLocation()
@@ -63,8 +63,8 @@ void UKallari_Skill2B_ShurikenExplosion::ThrowProjectile()
 	Params.Instigator = C;
 	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	AKallari_Skill2A_ShurikenProjectile* Projectile =
-		C->GetWorld()->SpawnActor<AKallari_Skill2A_ShurikenProjectile>(
+	ACoF_CommonProjectile* Projectile =
+		C->GetWorld()->SpawnActor<ACoF_CommonProjectile>(
 			SpawnClass,
 			SpawnLocation,
 			SpawnRotation,

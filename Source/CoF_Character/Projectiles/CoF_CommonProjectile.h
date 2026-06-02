@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Kallari_Skill2A_ShurikenProjectile.generated.h"
+#include "CoF_CommonProjectile.generated.h"
 
 class ATP_Character;
 class UCombatComponent;
@@ -10,12 +10,12 @@ class USphereComponent;
 class UProjectileMovementComponent;
 
 UCLASS()
-class COF_CHARACTER_API AKallari_Skill2A_ShurikenProjectile : public AActor
+class COF_CHARACTER_API ACoF_CommonProjectile : public AActor
 {
     GENERATED_BODY()
 
 public:
-    AKallari_Skill2A_ShurikenProjectile();
+    ACoF_CommonProjectile();
 
     void InitProjectile(
         ATP_Character* InOwnerCharacter,

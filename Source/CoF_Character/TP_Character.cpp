@@ -47,7 +47,7 @@
 #include "Skills/Kallari/Kallari_UltB_Invincible.h"
 
 // ===== Gideon Skills =====
-#include "Projectiles/Kallari_Skill2A_ShurikenProjectile.h"		// 평타 Kallari 투사체 재사용
+#include "Projectiles/CoF_CommonProjectile.h"		// 평타 Kallari 투사체 재사용
 #include "Skills/Gideon/Gideon_Skill1A_WaterCannon.h"
 #include "Skills/Gideon/Gideon_Skill1B_WaterBomb.h"
 
@@ -729,8 +729,8 @@ void ATP_Character::PrimaryAttack_ThrowProjectile()
 	Params.Instigator = this;
 	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	AKallari_Skill2A_ShurikenProjectile* Projectile =
-		World->SpawnActor<AKallari_Skill2A_ShurikenProjectile>(
+	ACoF_CommonProjectile* Projectile =
+		World->SpawnActor<ACoF_CommonProjectile>(
 			PrimaryProjectileClass,
 			SpawnLocation,
 			SpawnRotation,
@@ -1576,7 +1576,10 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	Skill1B_BackwardDistance = Data->Skill1B_BackwardDistance;
 
 	Skill1B_ProjectileClass = Data->Skill1B_ProjectileClass;
-	Skill1B_ProjectileSpeed = Data->Skill1B_ProjectileSpeed;
+	Skill1B_ProjectileForwardSpeed = Data->Skill1B_ProjectileForwardSpeed;
+	Skill1B_ProjectileUpwardSpeed = Data->Skill1B_ProjectileUpwardSpeed;
+	Skill1B_ProjectileGravityScale = Data->Skill1B_ProjectileGravityScale;
+	Skill1B_ProjectileLockOnExtraUpwardSpeed = Data->Skill1B_ProjectileLockOnExtraUpwardSpeed;
 	Skill1B_ProjectileLifeSeconds = Data->Skill1B_ProjectileLifeSeconds;
 	Skill1B_ProjectileRadius = Data->Skill1B_ProjectileRadius;
 	Skill1B_ProjectileSpawnForwardOffset = Data->Skill1B_ProjectileSpawnForwardOffset;

@@ -4,7 +4,7 @@
 #include "Skills/CoF_SkillBase.h"
 #include "Gideon_Skill1B_WaterBomb.generated.h"
 
-class AKallari_Skill2A_ShurikenProjectile;
+class ACoF_CommonProjectile;
 
 UCLASS()
 class COF_CHARACTER_API UGideon_Skill1B_WaterBomb : public UCoF_SkillBase
@@ -16,7 +16,7 @@ public:
 	bool bExplosionConsumed = false;
 
 	UPROPERTY()
-	TObjectPtr<AKallari_Skill2A_ShurikenProjectile> ActiveProjectile = nullptr;
+	TObjectPtr<ACoF_CommonProjectile> ActiveProjectile = nullptr;
 
 	void ResetRuntime()
 	{
