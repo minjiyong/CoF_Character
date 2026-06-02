@@ -35,13 +35,28 @@ void UGideon_Skill1B_WaterBomb::ThrowProjectile()
 		}
 	}
 
+	// 몸체 전방 기준 + 위쪽 힘을 조금 줘서 포물선 발사
 	FVector Forward = C->GetActorForwardVector();
 	Forward.Z = 0.f;
 	Forward = Forward.GetSafeNormal();
 
-	FRotator SpawnRotation = Forward.IsNearlyZero()
-		? C->GetActorRotation()
-		: Forward.Rotation();
+	if (Forward.IsNearlyZero())
+	{
+		Forward = FVector::ForwardVector;
+	}
+
+	const FVector Up = FVector::UpVector;
+
+	// 조절 포인트
+	const float ForwardSpeed = C->Skill1B_ProjectileSpeed;
+	const float UpwardSpeed = C->Skill1B_ProjectileSpeed * 0.45f;
+	const float GravityScale = 1.0f;
+
+	const FVector LaunchVelocity =
+		Forward * ForwardSpeed +
+		Up * UpwardSpeed;
+
+	FRotator SpawnRotation = LaunchVelocity.Rotation();
 
 	FActorSpawnParameters Params;
 	Params.Owner = C;
@@ -59,14 +74,15 @@ void UGideon_Skill1B_WaterBomb::ThrowProjectile()
 	if (!Projectile) return;
 
 	// 직접 충돌 데미지는 0, 폭발 데미지만 사용
-	Projectile->InitProjectile(
+	Projectile->InitProjectileArc(
 		C,
 		C->CombatComp,
 		this,
 		0.f,
-		C->Skill1B_ProjectileSpeed,
+		LaunchVelocity,
 		C->Skill1B_ProjectileLifeSeconds,
-		C->Skill1B_ProjectileRadius
+		C->Skill1B_ProjectileRadius,
+		GravityScale
 	);
 
 	ActiveProjectile = Projectile;

@@ -4,11 +4,10 @@
 #include "GameFramework/Actor.h"
 #include "Kallari_Skill2A_ShurikenProjectile.generated.h"
 
+class ATP_Character;
+class UCombatComponent;
 class USphereComponent;
 class UProjectileMovementComponent;
-class UCombatComponent;
-class ATP_Character;
-class UKallari_Skill2A_ShurikenTeleport;
 
 UCLASS()
 class COF_CHARACTER_API AKallari_Skill2A_ShurikenProjectile : public AActor
@@ -18,7 +17,6 @@ class COF_CHARACTER_API AKallari_Skill2A_ShurikenProjectile : public AActor
 public:
     AKallari_Skill2A_ShurikenProjectile();
 
-    // Skill2_A / Skill2_B 공용 투사체 초기화
     void InitProjectile(
         ATP_Character* InOwnerCharacter,
         UCombatComponent* InCombatComp,
@@ -26,18 +24,22 @@ public:
         float InDamage,
         float InInitialSpeed,
         float InLifeSeconds,
-        float InRadius
-    );
+        float InRadius);
+
+    // 포물선 발사용 - 기존 직선 발사와 분리
+    void InitProjectileArc(
+        ATP_Character* InOwnerCharacter,
+        UCombatComponent* InCombatComp,
+        UObject* InOwningSkill,
+        float InDamage,
+        const FVector& InLaunchVelocity,
+        float InLifeSeconds,
+        float InRadius,
+        float InGravityScale = 1.0f);
 
 protected:
     virtual void BeginPlay() override;
     virtual void LifeSpanExpired() override;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-    TObjectPtr<USphereComponent> Collision = nullptr;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-    TObjectPtr<UProjectileMovementComponent> ProjectileMovement = nullptr;
 
     UFUNCTION()
     void HandleOverlap(
@@ -46,16 +48,20 @@ protected:
         UPrimitiveComponent* OtherComp,
         int32 OtherBodyIndex,
         bool bFromSweep,
-        const FHitResult& SweepResult
-    );
+        const FHitResult& SweepResult);
 
     UFUNCTION()
     void HandleProjectileStop(const FHitResult& ImpactResult);
 
-private:
     void ResolveAndDestroy(const FVector& MarkLocation, const FVector& MarkNormal);
 
-private:
+protected:
+    UPROPERTY(VisibleAnywhere)
+    TObjectPtr<USphereComponent> Collision = nullptr;
+
+    UPROPERTY(VisibleAnywhere)
+    TObjectPtr<UProjectileMovementComponent> ProjectileMovement = nullptr;
+
     TWeakObjectPtr<ATP_Character> OwnerCharacter;
     TWeakObjectPtr<UCombatComponent> OwningCombatComp;
     TWeakObjectPtr<UObject> OwningSkill;

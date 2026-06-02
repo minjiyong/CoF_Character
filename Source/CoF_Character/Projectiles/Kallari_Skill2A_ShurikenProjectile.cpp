@@ -54,6 +54,7 @@ void AKallari_Skill2A_ShurikenProjectile::InitProjectile(
     Collision->SetSphereRadius(InRadius);
     Collision->IgnoreActorWhenMoving(InOwnerCharacter, true);
 
+    ProjectileMovement->ProjectileGravityScale = 0.f;
     ProjectileMovement->InitialSpeed = InInitialSpeed;
     ProjectileMovement->MaxSpeed = InInitialSpeed;
     ProjectileMovement->Velocity = GetActorForwardVector() * InInitialSpeed;
@@ -69,6 +70,48 @@ void AKallari_Skill2A_ShurikenProjectile::InitProjectile(
     if (GEngine)
     {
         GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("[Projectile Init] Damage=%.1f Speed=%.1f Radius=%.1f"), InDamage, InInitialSpeed, InRadius));
+    }
+#endif
+}
+
+void AKallari_Skill2A_ShurikenProjectile::InitProjectileArc(
+    ATP_Character* InOwnerCharacter,
+    UCombatComponent* InCombatComp,
+    UObject* InOwningSkill,
+    float InDamage,
+    const FVector& InLaunchVelocity,
+    float InLifeSeconds,
+    float InRadius,
+    float InGravityScale)
+{
+    OwnerCharacter = InOwnerCharacter;
+    OwningCombatComp = InCombatComp;
+    OwningSkill = InOwningSkill;
+    Damage = InDamage;
+
+    SetOwner(InOwnerCharacter);
+    SetInstigator(InOwnerCharacter);
+
+    Collision->SetSphereRadius(InRadius);
+    Collision->IgnoreActorWhenMoving(InOwnerCharacter, true);
+
+    ProjectileMovement->ProjectileGravityScale = InGravityScale;
+    ProjectileMovement->InitialSpeed = InLaunchVelocity.Size();
+    ProjectileMovement->MaxSpeed = InLaunchVelocity.Size();
+    ProjectileMovement->Velocity = InLaunchVelocity;
+
+    SetLifeSpan(InLifeSeconds);
+
+#if !(UE_BUILD_SHIPPING)
+    if (UWorld* World = GetWorld())
+    {
+        DrawDebugSphere(World, GetActorLocation(), InRadius, 16, FColor::Cyan, false, 2.0f, 0, 1.5f);
+        DrawDebugLine(World, GetActorLocation(), GetActorLocation() + InLaunchVelocity.GetSafeNormal() * 250.f, FColor::Cyan, false, 2.0f, 0, 2.f);
+    }
+
+    if (GEngine)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Cyan, FString::Printf(TEXT("[Projectile Arc Init] Damage=%.1f Speed=%.1f Radius=%.1f Gravity=%.2f"), InDamage, InLaunchVelocity.Size(), InRadius, InGravityScale));
     }
 #endif
 }
@@ -99,7 +142,6 @@ void AKallari_Skill2A_ShurikenProjectile::LifeSpanExpired()
     Super::LifeSpanExpired();
 }
 
-// Àû°ú °ãÃÆÀ» ¶§ Ã³¸®
 void AKallari_Skill2A_ShurikenProjectile::HandleOverlap(
     UPrimitiveComponent* OverlappedComp,
     AActor* OtherActor,
