@@ -164,16 +164,16 @@ public:
 	TSubclassOf<ACoF_CommonProjectile> Skill1B_ProjectileClass = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B|Gideon")
-	float Skill1B_ProjectileForwardSpeed = 1400.f;   // 전방 힘
+	float Skill1B_ProjectileForwardSpeed = 1400.f;   // 비락온 전방 힘
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B|Gideon")
-	float Skill1B_ProjectileUpwardSpeed = 650.f;     // 위쪽 힘
+	float Skill1B_ProjectileUpwardSpeed = 650.f;     // 비락온 위쪽 힘
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B|Gideon")
-	float Skill1B_ProjectileGravityScale = 1.0f;     // 자유낙하 중력 배율
+	float Skill1B_ProjectileGravityScale = 1.0f;     // 중력 배율
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B|Gideon")
-	float Skill1B_ProjectileLockOnExtraUpwardSpeed = 450.f; // 락온 시 추가 상향 힘
+	float Skill1B_ProjectileLockOnArcPeakHeight = 500.f; // 락온 시 목표점보다 얼마나 높게 정점을 잡을지
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill1|B|Gideon")
 	float Skill1B_ProjectileLifeSeconds = 2.0f;

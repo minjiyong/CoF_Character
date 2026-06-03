@@ -37,12 +37,12 @@ void UGideon_Skill1B_WaterBomb::ThrowProjectile()
 
 	const float ForwardSpeed = FMath::Max(C->Skill1B_ProjectileForwardSpeed, 1.f);
 	const float UpwardSpeed = C->Skill1B_ProjectileUpwardSpeed;
-	const float GravityScale = C->Skill1B_ProjectileGravityScale;
-	const float LockOnExtraUpward = C->Skill1B_ProjectileLockOnExtraUpwardSpeed;
+	const float GravityScale = FMath::Max(C->Skill1B_ProjectileGravityScale, 0.01f);
+	const float ArcPeakHeight = FMath::Max(C->Skill1B_ProjectileLockOnArcPeakHeight, 50.f);
 
 	FVector LaunchVelocity = FVector::ZeroVector;
 
-	// 락온 대상이 있으면: 손 소켓 -> 락온 대상 중심으로 포물선 연결
+	// 락온 대상이 있으면: 손 소켓 -> 락온 대상 하체 근처를 정확히 통과하는 포물선
 	if (C->HasValidLockOnTarget())
 	{
 		if (AActor* LockTarget = C->GetLockOnTarget())
@@ -50,41 +50,41 @@ void UGideon_Skill1B_WaterBomb::ThrowProjectile()
 			FVector TargetOrigin, TargetExtent;
 			LockTarget->GetActorBounds(true, TargetOrigin, TargetExtent);
 
-			FVector Delta = TargetOrigin - SpawnLocation;
-			FVector Horizontal = Delta;
-			Horizontal.Z = 0.f;
+			// 중심이 아니라 하체 쪽으로 조준
+			FVector TargetPoint = TargetOrigin;
+			TargetPoint.Z -= TargetExtent.Z * 0.5f;
 
-			FVector HorizontalDir = Horizontal.GetSafeNormal();
+			FVector HorizontalDelta = TargetPoint - SpawnLocation;
+			HorizontalDelta.Z = 0.f;
+
+			FVector HorizontalDir = HorizontalDelta.GetSafeNormal2D();
 			if (HorizontalDir.IsNearlyZero())
 			{
 				HorizontalDir = C->GetActorForwardVector().GetSafeNormal2D();
 			}
 
-			const float HorizontalDist = FMath::Max(Horizontal.Size(), 1.f);
+			const float HorizontalDist = FMath::Max(HorizontalDelta.Size(), 1.f);
 			const float Gravity = FMath::Abs(World->GetGravityZ()) * GravityScale;
 
-			// 전방 속도로 비행 시간 계산
-			const float FlightTime = HorizontalDist / ForwardSpeed;
+			// 정점을 목표점/시작점보다 ArcPeakHeight 만큼 높게
+			const float ApexZ = FMath::Max(SpawnLocation.Z, TargetPoint.Z) + ArcPeakHeight;
 
-			// 목표점에 닿게 하는 수직 속도 + 상향 보정
-			float VerticalSpeed = 0.f;
-			if (FlightTime > KINDA_SMALL_NUMBER)
-			{
-				VerticalSpeed =
-					(Delta.Z + 0.5f * Gravity * FlightTime * FlightTime) / FlightTime
-					+ LockOnExtraUpward;
-			}
-			else
-			{
-				VerticalSpeed = UpwardSpeed + LockOnExtraUpward;
-			}
+			const float HeightToApex = FMath::Max(ApexZ - SpawnLocation.Z, 1.f);
+			const float HeightFromApex = FMath::Max(ApexZ - TargetPoint.Z, 1.f);
 
-			LaunchVelocity = HorizontalDir * ForwardSpeed + FVector::UpVector * VerticalSpeed;
+			const float TimeUp = FMath::Sqrt((2.f * HeightToApex) / Gravity);
+			const float TimeDown = FMath::Sqrt((2.f * HeightFromApex) / Gravity);
+			const float TotalTime = FMath::Max(TimeUp + TimeDown, 0.05f);
+
+			const FVector HorizontalVelocity = HorizontalDir * (HorizontalDist / TotalTime);
+			const float VerticalVelocity = Gravity * TimeUp;
+
+			LaunchVelocity = HorizontalVelocity + FVector::UpVector * VerticalVelocity;
 		}
 	}
 	else
 	{
-		// 락온이 없으면: 몸체 전방 + 위쪽 힘
+		// 비락온: 몸체 전방 + 위쪽 힘
 		FVector Forward = C->GetActorForwardVector();
 		Forward.Z = 0.f;
 		Forward = Forward.GetSafeNormal();

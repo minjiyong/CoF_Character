@@ -352,7 +352,7 @@ public:
 	float Skill1B_ProjectileForwardSpeed = 0.f;
 	float Skill1B_ProjectileUpwardSpeed = 0.f;
 	float Skill1B_ProjectileGravityScale = 1.0f;
-	float Skill1B_ProjectileLockOnExtraUpwardSpeed = 0.f;
+	float Skill1B_ProjectileLockOnArcPeakHeight = 0.f;
 	float Skill1B_ProjectileLifeSeconds = 0.f;
 	float Skill1B_ProjectileRadius = 0.f;
 	float Skill1B_ProjectileSpawnForwardOffset = 0.f;

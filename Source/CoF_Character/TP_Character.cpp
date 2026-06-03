@@ -1579,7 +1579,7 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	Skill1B_ProjectileForwardSpeed = Data->Skill1B_ProjectileForwardSpeed;
 	Skill1B_ProjectileUpwardSpeed = Data->Skill1B_ProjectileUpwardSpeed;
 	Skill1B_ProjectileGravityScale = Data->Skill1B_ProjectileGravityScale;
-	Skill1B_ProjectileLockOnExtraUpwardSpeed = Data->Skill1B_ProjectileLockOnExtraUpwardSpeed;
+	Skill1B_ProjectileLockOnArcPeakHeight = Data->Skill1B_ProjectileLockOnArcPeakHeight;
 	Skill1B_ProjectileLifeSeconds = Data->Skill1B_ProjectileLifeSeconds;
 	Skill1B_ProjectileRadius = Data->Skill1B_ProjectileRadius;
 	Skill1B_ProjectileSpawnForwardOffset = Data->Skill1B_ProjectileSpawnForwardOffset;
