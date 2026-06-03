@@ -226,26 +226,26 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Terra")
 	float Skill2A_HalfAngleDeg = 60.f; // 부채꼴 반각(총 120도)
 
-	// 2_A Kallari - 수리검 던지고 텔레포트
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Kallari")
+	// 2_A Kallari 및 Gideon - 투사체 던지기
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Projectile")
 	TSubclassOf<ACoF_CommonProjectile> Skill2A_ProjectileClass = nullptr;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Kallari")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Projectile")
 	float Skill2A_ProjectileSpeed = 2600.f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Kallari")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Projectile")
 	float Skill2A_ProjectileLifeSeconds = 1.8f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Kallari")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Projectile")
 	float Skill2A_ProjectileRadius = 18.f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Kallari")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Projectile")
 	float Skill2A_ProjectileSpawnForwardOffset = 60.f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Kallari")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Projectile")
 	float Skill2A_ProjectileSpawnZOffset = 35.f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Kallari")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Projectile")
 	FName Skill2A_ProjectileSpawnSocket = NAME_None;
 
 	// 2_A Kallari - 텔레포트 후 돌며 공격
@@ -257,6 +257,13 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Kallari")
 	float Skill2A_TeleportOffsetFromMark = 60.f;
+
+	// 2_A Gideon - 부조화 구슬
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Gideon")
+	float Skill2A_DebuffDuration = 5.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|A|Gideon")
+	float Skill2A_DebuffIncomingDamageMultiplier = 1.3f;
 
 	// ===== Skill2_B =====
 

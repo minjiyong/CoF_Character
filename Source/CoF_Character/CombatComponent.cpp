@@ -10,6 +10,8 @@
 #include "CollisionShape.h"
 
 #include "HitReactInterface.h"
+#include "Interfaces/DebuffBallTargetInterface.h"
+
 #include "TP_Character.h"
 
 
@@ -430,10 +432,19 @@ void UCombatComponent::ApplyHitToActor(AActor* Target, float InDamage, const FVe
 {
 	if (!Target) return;
 
-	// 기존 콤보에서 쓰던 방식대로 HitReact 인터페이스로 데미지 전달
+	float FinalDamage = InDamage;
+
+	if (Target->GetClass()->ImplementsInterface(UDebuffBallTargetInterface::StaticClass()))
+	{
+		if (IDebuffBallTargetInterface::Execute_IsDebuffBallActive(Target))
+		{
+			FinalDamage *= IDebuffBallTargetInterface::Execute_GetDebuffBallIncomingDamageMultiplier(Target);
+		}
+	}
+
 	if (Target->GetClass()->ImplementsInterface(UHitReactInterface::StaticClass()))
 	{
-		IHitReactInterface::Execute_OnHitReact(Target, InDamage, HitPoint, HitNormal);
+		IHitReactInterface::Execute_OnHitReact(Target, FinalDamage, HitPoint, HitNormal);
 	}
 }
 

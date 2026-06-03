@@ -27,9 +27,9 @@ enum class ESkillVariant : uint8
 UENUM(BlueprintType)
 enum class ESkillSlot : uint8
 {
-	Skill1 UMETA(DisplayName = "Skill1"),
-	Skill2 UMETA(DisplayName = "Skill2"),
-	Ult    UMETA(DisplayName = "Ultimate"),
+	Skill1				UMETA(DisplayName = "Skill1"),
+	Skill2				UMETA(DisplayName = "Skill2"),
+	Ult					UMETA(DisplayName = "Ultimate"),
 };
 
 // 스킬1_A 중 어떤것인지
@@ -47,7 +47,7 @@ enum class ESkill1BImplementation : uint8
 {
 	TerraAxeSlam		UMETA(DisplayName = "TerraAxeSlam"),
 	KallariBackflip		UMETA(DisplayName = "KallariBackflip"),
-	GideonWaterBomb UMETA(DisplayName = "GideonWaterBomb")
+	GideonWaterBomb		UMETA(DisplayName = "GideonWaterBomb")
 };
 
 // 스킬2_A 중 어떤것인지
@@ -55,7 +55,8 @@ UENUM(BlueprintType)
 enum class ESkill2AImplementation : uint8
 {
 	TerraShieldPush				UMETA(DisplayName = "TerraShieldPush"),
-	KallariShurikenTeleport		UMETA(DisplayName = "KallariShurikenTeleport")
+	KallariShurikenTeleport		UMETA(DisplayName = "KallariShurikenTeleport"),
+	GideonDebuffBall			UMETA(DisplayName = "GideonDebuffBall")
 };
 
 // 스킬2_B 중 어떤것인지

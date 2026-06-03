@@ -50,7 +50,7 @@
 #include "Projectiles/CoF_CommonProjectile.h"		// 평타 Kallari 투사체 재사용
 #include "Skills/Gideon/Gideon_Skill1A_WaterCannon.h"
 #include "Skills/Gideon/Gideon_Skill1B_WaterBomb.h"
-
+#include "Skills/Gideon/Gideon_Skill2A_DebuffBall.h"
 
 #include "DrawDebugHelpers.h"
 
@@ -1088,7 +1088,8 @@ void ATP_Character::Input_Skill2Started(const FInputActionValue&)
 
 	const bool bSkill2AReady =
 		(Skill2A_Implementation == ESkill2AImplementation::TerraShieldPush && Terra_Skill2A) ||
-		(Skill2A_Implementation == ESkill2AImplementation::KallariShurikenTeleport && Kallari_Skill2A);
+		(Skill2A_Implementation == ESkill2AImplementation::KallariShurikenTeleport && Kallari_Skill2A) ||
+		(Skill2A_Implementation == ESkill2AImplementation::GideonDebuffBall && Gideon_Skill2A);
 
 	const bool bSkill2BReady =
 		(Skill2B_Implementation == ESkill2BImplementation::TerraSpin && Terra_Skill2B) ||
@@ -1176,6 +1177,10 @@ void ATP_Character::Input_Skill2Started(const FInputActionValue&)
 		{
 			bInCooldown = Kallari_Skill2A->IsInCooldown(Now);
 		}
+		else if (Skill2A_Implementation == ESkill2AImplementation::GideonDebuffBall && Gideon_Skill2A)
+		{
+			bInCooldown = Gideon_Skill2A->IsInCooldown(Now);
+		}
 
 		if (bInCooldown)
 		{
@@ -1238,6 +1243,10 @@ void ATP_Character::Input_Skill2Started(const FInputActionValue&)
 		{
 			Kallari_Skill2A->StartCooldown(Now, Skill2A_Cooldown);
 		}
+		else if (Skill2A_Implementation == ESkill2AImplementation::GideonDebuffBall && Gideon_Skill2A)
+		{
+			Gideon_Skill2A->StartCooldown(Now, Skill2A_Cooldown);
+		}
 	}
 	else if (Skill2Selected == ESkillVariant::B)
 	{
@@ -1273,6 +1282,13 @@ void ATP_Character::Skill2A_ThrowProjectile()
 	if (Skill2A_Implementation == ESkill2AImplementation::KallariShurikenTeleport && Kallari_Skill2A)
 	{
 		Kallari_Skill2A->ThrowProjectile();
+		return;
+	}
+
+	if (Skill2A_Implementation == ESkill2AImplementation::GideonDebuffBall && Gideon_Skill2A)
+	{
+		Gideon_Skill2A->ThrowProjectile();
+		return;
 	}
 }
 
@@ -1613,6 +1629,9 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	Skill2A_TeleportAttackRadius = Data->Skill2A_TeleportAttackRadius;
 	Skill2A_TeleportOffsetFromMark = Data->Skill2A_TeleportOffsetFromMark;
 
+	Skill2A_DebuffDuration = Data->Skill2A_DebuffDuration;
+	Skill2A_DebuffIncomingDamageMultiplier = Data->Skill2A_DebuffIncomingDamageMultiplier;
+
 	Skill2B_DamagePerTick = Data->Skill2B_DamagePerTick;
 	Skill2B_Radius = Data->Skill2B_Radius;
 	Skill2B_TickInterval = Data->Skill2B_TickInterval;
@@ -1675,6 +1694,7 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 
 	if (!Gideon_Skill1A) { Gideon_Skill1A = NewObject<UGideon_Skill1A_WaterCannon>(this); Gideon_Skill1A->Init(this); }
 	if (!Gideon_Skill1B) { Gideon_Skill1B = NewObject<UGideon_Skill1B_WaterBomb>(this); Gideon_Skill1B->Init(this); }
+	if (!Gideon_Skill2A) { Gideon_Skill2A = NewObject<UGideon_Skill2A_DebuffBall>(this); Gideon_Skill2A->Init(this); }
 	
 
 	// ===== 런타임 상태 초기화 =====
@@ -1695,6 +1715,35 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 
 	if (Gideon_Skill1A) Gideon_Skill1A->ResetRuntime();
 	if (Gideon_Skill1B) Gideon_Skill1B->ResetRuntime();
+	if (Gideon_Skill2A) Gideon_Skill2A->ResetRuntime();
+}
+
+// Gideon Skill2A 부조화 구슬 디버프 인터페이스
+void ATP_Character::ApplyDebuffBall_Implementation(float InDuration, float InIncomingDamageMultiplier)
+{
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	DebuffBallEndTime = World->GetTimeSeconds() + InDuration;
+	DebuffBallIncomingDamageMultiplier = FMath::Max(InIncomingDamageMultiplier, 1.f);
+}
+
+bool ATP_Character::IsDebuffBallActive_Implementation() const
+{
+	const UWorld* World = GetWorld();
+	if (!World) return false;
+
+	return World->GetTimeSeconds() < DebuffBallEndTime;
+}
+
+float ATP_Character::GetDebuffBallIncomingDamageMultiplier_Implementation() const
+{
+	if (IsDebuffBallActive_Implementation())
+	{
+		return DebuffBallIncomingDamageMultiplier;
+	}
+
+	return 1.f;
 }
 
 // Character Select

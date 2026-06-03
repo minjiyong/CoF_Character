@@ -3,9 +3,12 @@
 #include "CombatComponent.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+
 #include "Skills/Kallari/Kallari_Skill2A_ShurikenTeleport.h"
 #include "Skills/Kallari/Kallari_Skill2B_ShurikenExplosion.h"
 #include "Skills/Gideon/Gideon_Skill1B_WaterBomb.h"
+#include "Skills/Gideon/Gideon_Skill2A_DebuffBall.h"
+
 #include "TP_Character.h"
 
 #include "DrawDebugHelpers.h"
@@ -180,11 +183,20 @@ void ACoF_CommonProjectile::HandleOverlap(
         }
 #endif
 
-        OwningCombatComp->ApplyHitToActor(OtherActor, Damage, HitPoint, HitNormal);
+        // direct damage는 0보다 클 때만
+        if (Damage > 0.f)
+        {
+            OwningCombatComp->ApplyHitToActor(OtherActor, Damage, HitPoint, HitNormal);
+        }
 
         if (UGideon_Skill1B_WaterBomb* WaterBombSkill = Cast<UGideon_Skill1B_WaterBomb>(OwningSkill))
         {
             WaterBombSkill->ExplodeAtLocation(HitPoint);
+        }
+
+        if (UGideon_Skill2A_DebuffBall* DebuffBallSkill = Cast<UGideon_Skill2A_DebuffBall>(OwningSkill))
+        {
+            DebuffBallSkill->ApplyDebuffToActor(OtherActor);
         }
 
         ResolveAndDestroy(HitPoint, HitNormal);

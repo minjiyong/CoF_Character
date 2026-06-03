@@ -5,6 +5,7 @@
 
 #include "SkillTypes.h"
 #include "HitReactInterface.h"
+#include "Interfaces/DebuffBallTargetInterface.h"
 #include "TimerManager.h"
 
 #include "TP_Character.generated.h"
@@ -27,7 +28,7 @@ class UAnimMontage;
 class UUserWidget;
 
 UCLASS()
-class COF_CHARACTER_API ATP_Character : public ACharacter, public IHitReactInterface
+class COF_CHARACTER_API ATP_Character : public ACharacter, public IHitReactInterface, public IDebuffBallTargetInterface
 {
 	GENERATED_BODY()
 
@@ -50,7 +51,7 @@ class COF_CHARACTER_API ATP_Character : public ACharacter, public IHitReactInter
 	// ===== Gideon Skills =====
 	friend class UGideon_Skill1A_WaterCannon;
 	friend class UGideon_Skill1B_WaterBomb;
-
+	friend class UGideon_Skill2A_DebuffBall;
 
 	friend class ACoF_CommonProjectile;
 
@@ -295,6 +296,9 @@ public:
 	UPROPERTY()
 	TObjectPtr<UGideon_Skill1B_WaterBomb> Gideon_Skill1B = nullptr;
 
+	UPROPERTY()
+	TObjectPtr<UGideon_Skill2A_DebuffBall> Gideon_Skill2A = nullptr;
+
 	// ===== Skill 1 =====
 
 	// 스킬1 뭘 선택했는지
@@ -391,6 +395,9 @@ public:
 	TObjectPtr<UAnimMontage> Skill2A_TeleportAttackMontage = nullptr;
 	float Skill2A_TeleportAttackRadius = 0.f;
 	float Skill2A_TeleportOffsetFromMark = 0.f;
+
+	float Skill2A_DebuffDuration = 0.f;
+	float Skill2A_DebuffIncomingDamageMultiplier = 1.f;
 
 	// 스킬 2_B 돌기 / Kallari 수리검 던지고 폭발
 	UFUNCTION(BlueprintCallable, Category = "Skills|Skill2|B")
@@ -489,6 +496,15 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Skills|Ult|B|Visual")
 	void BP_UltBVisualEnd();
+
+
+	// Gideon skill2A 관련 런타임 디버프 상태 변수
+	double DebuffBallEndTime = 0.0;
+	float DebuffBallIncomingDamageMultiplier = 1.f;
+	virtual void ApplyDebuffBall_Implementation(float InDuration, float InIncomingDamageMultiplier) override;
+	virtual bool IsDebuffBallActive_Implementation() const override;
+	virtual float GetDebuffBallIncomingDamageMultiplier_Implementation() const override;
+
 
 	// ===== 락온 관련 멤버 변수들 =====
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "LockOn")
