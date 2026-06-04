@@ -72,7 +72,7 @@ void ACoF_CommonProjectile::InitProjectile(
 
     if (GEngine)
     {
-        GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("[Projectile Init] Damage=%.1f Speed=%.1f Radius=%.1f"), InDamage, InInitialSpeed, InRadius));
+        //GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("[Projectile Init] Damage=%.1f Speed=%.1f Radius=%.1f"), InDamage, InInitialSpeed, InRadius));
     }
 #endif
 }
@@ -114,7 +114,7 @@ void ACoF_CommonProjectile::InitProjectileArc(
 
     if (GEngine)
     {
-        GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Cyan, FString::Printf(TEXT("[Projectile Arc Init] Damage=%.1f Speed=%.1f Radius=%.1f Gravity=%.2f"), InDamage, InLaunchVelocity.Size(), InRadius, InGravityScale));
+        //GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Cyan, FString::Printf(TEXT("[Projectile Arc Init] Damage=%.1f Speed=%.1f Radius=%.1f Gravity=%.2f"), InDamage, InLaunchVelocity.Size(), InRadius, InGravityScale));
     }
 #endif
 }
@@ -179,7 +179,7 @@ void ACoF_CommonProjectile::HandleOverlap(
 
         if (GEngine)
         {
-            GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, FString::Printf(TEXT("[Projectile Hit] Target=%s Damage=%.1f"), *GetNameSafe(OtherActor), Damage));
+            //GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, FString::Printf(TEXT("[Projectile Hit] Target=%s Damage=%.1f"), *GetNameSafe(OtherActor), Damage));
         }
 #endif
 

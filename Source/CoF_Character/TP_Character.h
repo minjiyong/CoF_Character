@@ -52,6 +52,7 @@ class COF_CHARACTER_API ATP_Character : public ACharacter, public IHitReactInter
 	friend class UGideon_Skill1A_WaterCannon;
 	friend class UGideon_Skill1B_WaterBomb;
 	friend class UGideon_Skill2A_DebuffBall;
+	friend class UGideon_Skill2B_BackDash;
 
 	friend class ACoF_CommonProjectile;
 
@@ -299,6 +300,9 @@ public:
 	UPROPERTY()
 	TObjectPtr<UGideon_Skill2A_DebuffBall> Gideon_Skill2A = nullptr;
 
+	UPROPERTY()
+	TObjectPtr<UGideon_Skill2B_BackDash> Gideon_Skill2B = nullptr;
+
 	// ===== Skill 1 =====
 
 	// 스킬1 뭘 선택했는지
@@ -412,6 +416,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Skills|Skill2|B")
 	void Skill2B_ExplodeAtMark();
 
+	UFUNCTION(BlueprintCallable, Category = "Skills|Skill2|B")
+	void Skill2B_BackDashStart();
+
+	UFUNCTION(BlueprintCallable, Category = "Skills|Skill2|B")
+	void Skill2B_BackDashEnd();
+
 	TObjectPtr<UAnimMontage> Skill2MontageB = nullptr;
 	ESkill2BImplementation Skill2B_Implementation = ESkill2BImplementation::TerraSpin;
 
@@ -432,6 +442,9 @@ public:
 	TObjectPtr<UAnimMontage> Skill2B_ExplosionMontage = nullptr;
 	float Skill2B_ExplosionDamage = 0.f;
 	float Skill2B_ExplosionRadius = 0.f;
+
+	float Skill2B_BackDashDuration = 0.f;
+	float Skill2B_BackwardDistance = 0.f;
 
 	// ===== Ultimate =====
 	ESkillVariant UltSelected = ESkillVariant::None;

@@ -64,7 +64,8 @@ UENUM(BlueprintType)
 enum class ESkill2BImplementation : uint8
 {
 	TerraSpin					UMETA(DisplayName = "TerraSpin"),
-	KallariShurikenExplosion	UMETA(DisplayName = "KallariShurikenExplosion")
+	KallariShurikenExplosion	UMETA(DisplayName = "KallariShurikenExplosion"),
+	GideonBackDash				UMETA(DisplayName = "GideonBackDash")
 };
 
 // ±√±ÿ±‚ A ¡ﬂ æÓ∂≤ ∞Õ¿Œ¡ˆ

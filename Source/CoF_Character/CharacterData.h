@@ -319,6 +319,13 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|B|Kallari")
 	float Skill2B_ExplosionRadius = 220.f;
 
+	// 2_B Gideon - 백대쉬
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|B|Gideon")
+	float Skill2B_BackDashDuration = 0.14f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Skill2|B|Gideon")
+	float Skill2B_BackwardDistance = 420.f;
+
 	// ===== Ultimate =====
 
 	// 어떤 걸 선택했는지

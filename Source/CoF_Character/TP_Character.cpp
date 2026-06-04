@@ -51,6 +51,7 @@
 #include "Skills/Gideon/Gideon_Skill1A_WaterCannon.h"
 #include "Skills/Gideon/Gideon_Skill1B_WaterBomb.h"
 #include "Skills/Gideon/Gideon_Skill2A_DebuffBall.h"
+#include "Skills/Gideon/Gideon_Skill2B_BackDash.h"
 
 #include "DrawDebugHelpers.h"
 
@@ -1093,7 +1094,8 @@ void ATP_Character::Input_Skill2Started(const FInputActionValue&)
 
 	const bool bSkill2BReady =
 		(Skill2B_Implementation == ESkill2BImplementation::TerraSpin && Terra_Skill2B) ||
-		(Skill2B_Implementation == ESkill2BImplementation::KallariShurikenExplosion && Kallari_Skill2B);
+		(Skill2B_Implementation == ESkill2BImplementation::KallariShurikenExplosion && Kallari_Skill2B) ||
+		(Skill2B_Implementation == ESkill2BImplementation::GideonBackDash && Gideon_Skill2B);
 
 	// 스킬 객체 방어
 	if ((Skill2Selected == ESkillVariant::A && !bSkill2AReady) ||
@@ -1200,6 +1202,10 @@ void ATP_Character::Input_Skill2Started(const FInputActionValue&)
 		{
 			bInCooldown = Kallari_Skill2B->IsInCooldown(Now);
 		}
+		else if (Skill2B_Implementation == ESkill2BImplementation::GideonBackDash && Gideon_Skill2B)
+		{
+			bInCooldown = Gideon_Skill2B->IsInCooldown(Now);
+		}
 
 		if (bInCooldown)
 		{
@@ -1258,6 +1264,10 @@ void ATP_Character::Input_Skill2Started(const FInputActionValue&)
 		else if (Skill2B_Implementation == ESkill2BImplementation::KallariShurikenExplosion && Kallari_Skill2B)
 		{
 			Kallari_Skill2B->StartCooldown(Now, Skill2B_Cooldown);
+		}
+		else if (Skill2B_Implementation == ESkill2BImplementation::GideonBackDash && Gideon_Skill2B)
+		{
+			Gideon_Skill2B->StartCooldown(Now, Skill2B_Cooldown);
 		}
 	}
 }
@@ -1318,6 +1328,23 @@ void ATP_Character::Skill2B_ExplodeAtMark()
 	if (Skill2B_Implementation == ESkill2BImplementation::KallariShurikenExplosion && Kallari_Skill2B)
 	{
 		Kallari_Skill2B->ExplodeAtMark();
+	}
+}
+
+// Gideon Skill2_B : 백대쉬 스킬
+void ATP_Character::Skill2B_BackDashStart()
+{
+	if (Skill2B_Implementation == ESkill2BImplementation::GideonBackDash && Gideon_Skill2B)
+	{
+		Gideon_Skill2B->DashStart();
+	}
+}
+
+void ATP_Character::Skill2B_BackDashEnd()
+{
+	if (Skill2B_Implementation == ESkill2BImplementation::GideonBackDash && Gideon_Skill2B)
+	{
+		Gideon_Skill2B->DashEnd();
 	}
 }
 
@@ -1650,6 +1677,9 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	Skill2B_ExplosionDamage = Data->Skill2B_ExplosionDamage;
 	Skill2B_ExplosionRadius = Data->Skill2B_ExplosionRadius;
 
+	Skill2B_BackDashDuration = Data->Skill2B_BackDashDuration;
+	Skill2B_BackwardDistance = Data->Skill2B_BackwardDistance;
+
 	// 궁극기
 	UltSelected = Data->UltSelected;
 
@@ -1695,7 +1725,7 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	if (!Gideon_Skill1A) { Gideon_Skill1A = NewObject<UGideon_Skill1A_WaterCannon>(this); Gideon_Skill1A->Init(this); }
 	if (!Gideon_Skill1B) { Gideon_Skill1B = NewObject<UGideon_Skill1B_WaterBomb>(this); Gideon_Skill1B->Init(this); }
 	if (!Gideon_Skill2A) { Gideon_Skill2A = NewObject<UGideon_Skill2A_DebuffBall>(this); Gideon_Skill2A->Init(this); }
-	
+	if (!Gideon_Skill2B) { Gideon_Skill2B = NewObject<UGideon_Skill2B_BackDash>(this); Gideon_Skill2B->Init(this); }
 
 	// ===== 런타임 상태 초기화 =====
 	// - 캐릭터 교체(슬롯 변경) 시, 이전 캐릭터의 쿨다운/타이머/맵 상태가 남으면 안 됨.
@@ -1716,6 +1746,7 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	if (Gideon_Skill1A) Gideon_Skill1A->ResetRuntime();
 	if (Gideon_Skill1B) Gideon_Skill1B->ResetRuntime();
 	if (Gideon_Skill2A) Gideon_Skill2A->ResetRuntime();
+	if (Gideon_Skill2B) Gideon_Skill2B->ResetRuntime();
 }
 
 // Gideon Skill2A 부조화 구슬 디버프 인터페이스

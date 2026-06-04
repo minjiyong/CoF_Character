@@ -445,6 +445,11 @@ void UCombatComponent::ApplyHitToActor(AActor* Target, float InDamage, const FVe
 	if (Target->GetClass()->ImplementsInterface(UHitReactInterface::StaticClass()))
 	{
 		IHitReactInterface::Execute_OnHitReact(Target, FinalDamage, HitPoint, HitNormal);
+
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, FString::Printf(TEXT("[FinalDamage] Raw=%.1f Final=%.1f"), InDamage, FinalDamage));
+		}
 	}
 }
 
