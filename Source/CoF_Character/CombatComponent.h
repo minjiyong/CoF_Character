@@ -15,6 +15,7 @@ enum class EHitQueryType : uint8
 	SpinSweep,
 	AOEForward,
 	AOELocation,
+	BeamSweepForward,
 };
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -56,16 +57,19 @@ public:
 	// 스킬 2_B 돌기
 	void ConfigureSpinHit(float InDamagePerTick, float InRadius, float InTickInterval, float InDuration);
 
+	// Gideon 궁_A
+	void ConfigureBeamSweepHit(float InDamage, float InRange, float InRadius, FName InStartSocket = NAME_None);
+
 	// HitReact 호출 유틸
 	void ApplyHitToActor(AActor* Target, float InDamage, const FVector& HitPoint, const FVector& HitNormal);
-
 
 protected:
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	bool DoLineTrace(FHitResult& OutHit) const;
-	bool DoLineTraceWithRange(FHitResult& OutHit, float InRange) const;
+	bool DoLineTraceMultiWithRange(TArray<FHitResult>& OutHits, float InRange) const;
+	bool DoSphereSweepMultiWithRange(TArray<FHitResult>& OutHits, float InRange, float InRadius, FName InStartSocket) const;
+	void ApplyHitResults(const TArray<FHitResult>& HitResults, float InDamage);
 
 	// HitWindow에서 실제로 1회 실행되는 판정 본체, 기본공격용
 	void ProcessHitQuery();

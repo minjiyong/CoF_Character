@@ -112,6 +112,15 @@ void UCombatComponent::ConfigureSpinHit(float InDamagePerTick, float InRadius, f
 		SpinPrevLoc = Owner->GetActorLocation();
 }
 
+void UCombatComponent::ConfigureBeamSweepHit(float InDamage, float InRange, float InRadius, FName InStartSocket)
+{
+	HitQueryType = EHitQueryType::BeamSweepForward;
+	PendingDamage = InDamage;
+	PendingRange = InRange;
+	PendingRadius = InRadius;
+	PendingTraceStartSocket = InStartSocket;
+}
+
 
 void UCombatComponent::BeginHitWindow_OneShot()
 {
@@ -144,11 +153,16 @@ void UCombatComponent::ProcessHitQuery()
 
 	if (HitQueryType == EHitQueryType::TraceForward)
 	{
-		FHitResult Hit;
-		if (DoLineTrace(Hit) && Hit.GetActor())
-		{
-			ApplyHitToActor(Hit.GetActor(), PendingDamage, Hit.ImpactPoint, Hit.ImpactNormal);
-		}
+		TArray<FHitResult> Hits;
+		DoLineTraceMultiWithRange(Hits, PendingRange);
+		ApplyHitResults(Hits, PendingDamage);
+	}
+
+	else if (HitQueryType == EHitQueryType::BeamSweepForward)
+	{
+		TArray<FHitResult> Hits;
+		DoSphereSweepMultiWithRange(Hits, PendingRange, PendingRadius, PendingTraceStartSocket);
+		ApplyHitResults(Hits, PendingDamage);
 	}
 
 	else if (HitQueryType == EHitQueryType::AOESphere)
@@ -453,13 +467,7 @@ void UCombatComponent::ApplyHitToActor(AActor* Target, float InDamage, const FVe
 	}
 }
 
-
-bool UCombatComponent::DoLineTrace(FHitResult& OutHit) const
-{
-	return DoLineTraceWithRange(OutHit, TraceRange);
-}
-
-bool UCombatComponent::DoLineTraceWithRange(FHitResult& OutHit, float InRange) const
+bool UCombatComponent::DoLineTraceMultiWithRange(TArray<FHitResult>& OutHits, float InRange) const
 {
 	AActor* Owner = GetOwner();
 	if (!Owner) return false;
@@ -481,7 +489,6 @@ bool UCombatComponent::DoLineTraceWithRange(FHitResult& OutHit, float InRange) c
 
 	FVector Dir = Owner->GetActorForwardVector();
 
-	// 락온 대상이 있으면 대상 중심으로
 	if (TPChar && TPChar->HasValidLockOnTarget())
 	{
 		if (AActor* LockTarget = TPChar->GetLockOnTarget())
@@ -498,16 +505,15 @@ bool UCombatComponent::DoLineTraceWithRange(FHitResult& OutHit, float InRange) c
 	}
 	else
 	{
-		// 락온이 없으면 캐릭터 전방 기준
 		Dir = Owner->GetActorForwardVector().GetSafeNormal();
 	}
 
 	const FVector End = Start + Dir * InRange;
 
-	FCollisionQueryParams Params(SCENE_QUERY_STAT(LocalAttackTrace), false, Owner);
+	FCollisionQueryParams Params(SCENE_QUERY_STAT(LocalAttackTraceMulti), false, Owner);
 
-	const bool bHit = World->LineTraceSingleByChannel(
-		OutHit,
+	const bool bHit = World->LineTraceMultiByChannel(
+		OutHits,
 		Start,
 		End,
 		ECC_Visibility,
@@ -517,11 +523,112 @@ bool UCombatComponent::DoLineTraceWithRange(FHitResult& OutHit, float InRange) c
 	if (bDrawDebug)
 	{
 		DrawDebugLine(World, Start, End, bHit ? FColor::Red : FColor::Green, false, 1.5f, 0, 2.f);
-		if (bHit)
+
+		for (const FHitResult& Hit : OutHits)
 		{
-			DrawDebugPoint(World, OutHit.ImpactPoint, 12.f, FColor::Red, false, 1.5f);
+			DrawDebugPoint(World, Hit.ImpactPoint, 10.f, FColor::Red, false, 1.5f);
 		}
 	}
 
 	return bHit;
+}
+
+bool UCombatComponent::DoSphereSweepMultiWithRange(TArray<FHitResult>& OutHits, float InRange, float InRadius, FName InStartSocket) const
+{
+	AActor* Owner = GetOwner();
+	if (!Owner) return false;
+
+	UWorld* World = Owner->GetWorld();
+	if (!World) return false;
+
+	ACharacter* Char = Cast<ACharacter>(Owner);
+	ATP_Character* TPChar = Cast<ATP_Character>(Owner);
+
+	FVector Start = Owner->GetActorLocation();
+	if (Char && Char->GetMesh())
+	{
+		if (InStartSocket != NAME_None && Char->GetMesh()->DoesSocketExist(InStartSocket))
+		{
+			Start = Char->GetMesh()->GetSocketLocation(InStartSocket);
+		}
+	}
+
+	FVector Dir = Owner->GetActorForwardVector();
+
+	if (TPChar && TPChar->HasValidLockOnTarget())
+	{
+		if (AActor* LockTarget = TPChar->GetLockOnTarget())
+		{
+			FVector TargetOrigin, TargetExtent;
+			LockTarget->GetActorBounds(true, TargetOrigin, TargetExtent);
+
+			const FVector ToTarget = (TargetOrigin - Start).GetSafeNormal();
+			if (!ToTarget.IsNearlyZero())
+			{
+				Dir = ToTarget;
+			}
+		}
+	}
+	else
+	{
+		Dir = Owner->GetActorForwardVector().GetSafeNormal();
+	}
+
+	const FVector End = Start + Dir * InRange;
+
+	FCollisionQueryParams Params(SCENE_QUERY_STAT(BeamSweepMulti), false, Owner);
+
+	const bool bHit = World->SweepMultiByChannel(
+		OutHits,
+		Start,
+		End,
+		FQuat::Identity,
+		ECC_Visibility,
+		FCollisionShape::MakeSphere(InRadius),
+		Params
+	);
+
+	if (bDrawDebug)
+	{
+		DrawDebugLine(World, Start, End, bHit ? FColor::Blue : FColor::Cyan, false, 1.5f, 0, 2.f);
+		DrawDebugSphere(World, Start, InRadius, 16, FColor::Blue, false, 1.5f, 0, 1.f);
+		DrawDebugSphere(World, End, InRadius, 16, FColor::Blue, false, 1.5f, 0, 1.f);
+
+		for (const FHitResult& Hit : OutHits)
+		{
+			DrawDebugPoint(World, Hit.ImpactPoint, 10.f, FColor::Blue, false, 1.5f);
+		}
+	}
+
+	return bHit;
+}
+
+void UCombatComponent::ApplyHitResults(const TArray<FHitResult>& HitResults, float InDamage)
+{
+	TSet<AActor*> HitActors;
+	AActor* Owner = GetOwner();
+
+	for (const FHitResult& Hit : HitResults)
+	{
+		AActor* HitActor = Hit.GetActor();
+		if (!HitActor) continue;
+		if (HitActor == Owner) continue;
+		if (HitActors.Contains(HitActor)) continue;
+
+		HitActors.Add(HitActor);
+
+		FVector HitPoint = Hit.ImpactPoint;
+		if (HitPoint.IsNearlyZero())
+		{
+			HitPoint = HitActor->GetActorLocation();
+		}
+
+		FVector HitNormal = Hit.ImpactNormal;
+		if (HitNormal.IsNearlyZero())
+		{
+			HitNormal = -Owner->GetActorForwardVector();
+		}
+
+		ApplyHitToActor(HitActor, InDamage, HitPoint, HitNormal);
+	}
 }

@@ -52,6 +52,7 @@
 #include "Skills/Gideon/Gideon_Skill1B_WaterBomb.h"
 #include "Skills/Gideon/Gideon_Skill2A_DebuffBall.h"
 #include "Skills/Gideon/Gideon_Skill2B_BackDash.h"
+#include "Skills/Gideon/Gideon_UltA_MirrorWaterBeam.h"
 
 #include "DrawDebugHelpers.h"
 
@@ -1358,7 +1359,8 @@ void ATP_Character::Input_UltStarted(const FInputActionValue&)
 
 	const bool bUltAReady =
 		(UltA_Implementation == EUltimateAImplementation::TerraAllyShield && Terra_UltA) ||
-		(UltA_Implementation == EUltimateAImplementation::KallariBlinkDash && Kallari_UltA);
+		(UltA_Implementation == EUltimateAImplementation::KallariBlinkDash && Kallari_UltA) ||
+		(UltA_Implementation == EUltimateAImplementation::GideonMirrorWaterBeam && Gideon_UltA);
 
 	const bool bUltBReady =
 		(UltB_Implementation == EUltimateBImplementation::TerraSelfBuff && Terra_UltB) ||
@@ -1384,6 +1386,10 @@ void ATP_Character::Input_UltStarted(const FInputActionValue&)
 		else if (UltA_Implementation == EUltimateAImplementation::KallariBlinkDash && Kallari_UltA)
 		{
 			bInCooldown = Kallari_UltA->IsInCooldown(Now);
+		}
+		else if (UltA_Implementation == EUltimateAImplementation::GideonMirrorWaterBeam && Gideon_UltA)
+		{
+			bInCooldown = Gideon_UltA->IsInCooldown(Now);
 		}
 
 		if (bInCooldown)
@@ -1452,6 +1458,10 @@ void ATP_Character::Input_UltStarted(const FInputActionValue&)
 		{
 			Kallari_UltA->StartCooldown(Now, UltA_Cooldown);
 		}
+		else if (UltA_Implementation == EUltimateAImplementation::GideonMirrorWaterBeam && Gideon_UltA)
+		{
+			Gideon_UltA->StartCooldown(Now, UltA_Cooldown);
+		}
 	}
 	else if (UltSelected == ESkillVariant::B)
 	{
@@ -1499,6 +1509,22 @@ void ATP_Character::UltA_BlinkDashEnd()
 	if (UltA_Implementation == EUltimateAImplementation::KallariBlinkDash && Kallari_UltA)
 	{
 		Kallari_UltA->DashEnd();
+	}
+}
+
+void ATP_Character::UltA_BeamStart()
+{
+	if (UltA_Implementation == EUltimateAImplementation::GideonMirrorWaterBeam && Gideon_UltA)
+	{
+		Gideon_UltA->BeamStart();
+	}
+}
+
+void ATP_Character::UltA_BeamEnd()
+{
+	if (UltA_Implementation == EUltimateAImplementation::GideonMirrorWaterBeam && Gideon_UltA)
+	{
+		Gideon_UltA->BeamEnd();
 	}
 }
 
@@ -1695,6 +1721,13 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	UltA_DashDuration = Data->UltA_DashDuration;
 	UltA_HitRadius = Data->UltA_HitRadius;
 
+	UltA_BeamDamagePerTick = Data->UltA_BeamDamagePerTick;
+	UltA_BeamDuration = Data->UltA_BeamDuration;
+	UltA_BeamTickInterval = Data->UltA_BeamTickInterval;
+	UltA_BeamRange = Data->UltA_BeamRange;
+	UltA_BeamRadius = Data->UltA_BeamRadius;
+	UltA_BeamStartSocket = Data->UltA_BeamStartSocket;
+
 	UltB_Implementation = Data->UltB_Implementation;
 	UltMontageB = Data->Ult_Montage_B;
 	UltB_Duration = Data->UltB_Duration;
@@ -1726,6 +1759,7 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	if (!Gideon_Skill1B) { Gideon_Skill1B = NewObject<UGideon_Skill1B_WaterBomb>(this); Gideon_Skill1B->Init(this); }
 	if (!Gideon_Skill2A) { Gideon_Skill2A = NewObject<UGideon_Skill2A_DebuffBall>(this); Gideon_Skill2A->Init(this); }
 	if (!Gideon_Skill2B) { Gideon_Skill2B = NewObject<UGideon_Skill2B_BackDash>(this); Gideon_Skill2B->Init(this); }
+	if (!Gideon_UltA) { Gideon_UltA = NewObject<UGideon_UltA_MirrorWaterBeam>(this); Gideon_UltA->Init(this); }
 
 	// ===== 런타임 상태 초기화 =====
 	// - 캐릭터 교체(슬롯 변경) 시, 이전 캐릭터의 쿨다운/타이머/맵 상태가 남으면 안 됨.
@@ -1747,6 +1781,7 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	if (Gideon_Skill1B) Gideon_Skill1B->ResetRuntime();
 	if (Gideon_Skill2A) Gideon_Skill2A->ResetRuntime();
 	if (Gideon_Skill2B) Gideon_Skill2B->ResetRuntime();
+	if (Gideon_UltA) Gideon_UltA->ResetRuntime();
 }
 
 // Gideon Skill2A 부조화 구슬 디버프 인터페이스

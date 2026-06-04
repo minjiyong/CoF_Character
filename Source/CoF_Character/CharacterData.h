@@ -371,6 +371,25 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|A|Kallari")
 	float UltA_HitRadius = 120.f;
 
+	// ===== Ult_A : Gideon =====
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|A|Gideon")
+	float UltA_BeamDamagePerTick = 8.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|A|Gideon")
+	float UltA_BeamDuration = 2.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|A|Gideon")
+	float UltA_BeamTickInterval = 0.2f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|A|Gideon")
+	float UltA_BeamRange = 1800.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|A|Gideon")
+	float UltA_BeamRadius = 120.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|A|Gideon")
+	FName UltA_BeamStartSocket = NAME_None;
+
 	// ===== Ult_B =====
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|B")

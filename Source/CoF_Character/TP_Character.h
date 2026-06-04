@@ -53,6 +53,7 @@ class COF_CHARACTER_API ATP_Character : public ACharacter, public IHitReactInter
 	friend class UGideon_Skill1B_WaterBomb;
 	friend class UGideon_Skill2A_DebuffBall;
 	friend class UGideon_Skill2B_BackDash;
+	friend class UGideon_UltA_MirrorWaterBeam;
 
 	friend class ACoF_CommonProjectile;
 
@@ -303,6 +304,9 @@ public:
 	UPROPERTY()
 	TObjectPtr<UGideon_Skill2B_BackDash> Gideon_Skill2B = nullptr;
 
+	UPROPERTY()
+	TObjectPtr<UGideon_UltA_MirrorWaterBeam> Gideon_UltA = nullptr;
+
 	// ===== Skill 1 =====
 
 	// ½ºÅ³1 ¹» ¼±ÅÃÇß´ÂÁö
@@ -467,6 +471,14 @@ public:
 	float UltA_DashDistance = 0.f;
 	float UltA_DashDuration = 0.f;
 	float UltA_HitRadius = 0.f;
+	
+	// Gideon
+	float UltA_BeamDamagePerTick = 0.f;
+	float UltA_BeamDuration = 0.f;
+	float UltA_BeamTickInterval = 0.f;
+	float UltA_BeamRange = 0.f;
+	float UltA_BeamRadius = 0.f;
+	FName UltA_BeamStartSocket = NAME_None;
 
 	UFUNCTION(BlueprintCallable, Category = "Skills|Ult|A")
 	void UltA_ShieldStart(); // Terra
@@ -482,6 +494,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Skills|Ult|A")
 	void UltA_BlinkDashEnd(); // Kallari
+
+	UFUNCTION(BlueprintCallable, Category = "Skills|Ult|A")
+	void UltA_BeamStart();		// Gideon
+
+	UFUNCTION(BlueprintCallable, Category = "Skills|Ult|A")
+	void UltA_BeamEnd();		// Gideon
 
 	// ±Ã_B
 	TObjectPtr<UAnimMontage> UltMontageB = nullptr;

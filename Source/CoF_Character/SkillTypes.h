@@ -73,7 +73,8 @@ UENUM(BlueprintType)
 enum class EUltimateAImplementation : uint8
 {
 	TerraAllyShield UMETA(DisplayName = "TerraAllyShield"),
-	KallariBlinkDash UMETA(DisplayName = "KallariBlinkDash")
+	KallariBlinkDash UMETA(DisplayName = "KallariBlinkDash"),
+	GideonMirrorWaterBeam UMETA(DisplayName = "GideonMirrorWaterBeam")
 };
 
 // ±√±ÿ±‚ B ¡ﬂ æÓ∂≤ ∞Õ¿Œ¡ˆ
