@@ -54,6 +54,8 @@ class COF_CHARACTER_API ATP_Character : public ACharacter, public IHitReactInter
 	friend class UGideon_Skill2A_DebuffBall;
 	friend class UGideon_Skill2B_BackDash;
 	friend class UGideon_UltA_MirrorWaterBeam;
+	friend class UGideon_UltB_WaterBombDrop;
+	friend class AGideon_UltB_WaterBombActor;
 
 	friend class ACoF_CommonProjectile;
 
@@ -307,6 +309,9 @@ public:
 	UPROPERTY()
 	TObjectPtr<UGideon_UltA_MirrorWaterBeam> Gideon_UltA = nullptr;
 
+	UPROPERTY()
+	TObjectPtr<UGideon_UltB_WaterBombDrop> Gideon_UltB = nullptr;
+
 	// ===== Skill 1 =====
 
 	// 스킬1 뭘 선택했는지
@@ -516,11 +521,25 @@ public:
 
 	float AttackMultiplier = 1.0f;
 
+	// Gideon
+	TSubclassOf<ACoF_CommonProjectile> UltB_WaterBombActorClass = nullptr;
+	float UltB_WaterBombDamage = 0.f;
+	float UltB_WaterBombRadius = 0.f;
+	float UltB_WaterBombTargetDistance = 0.f;
+	float UltB_WaterBombFallHeight = 0.f;
+	float UltB_WaterBombFallDuration = 0.f;
+	float UltB_WaterBombGroundTraceUp = 0.f;
+	float UltB_WaterBombGroundTraceDown = 0.f;
+
+
 	UFUNCTION(BlueprintCallable, Category = "Skills|Ult|B")
 	void UltB_BuffStart();
 
 	UFUNCTION(BlueprintCallable, Category = "Skills|Ult|B")
 	void UltB_BuffEnd();
+
+	UFUNCTION(BlueprintCallable, Category = "Skills|Ult|B")
+	void UltB_WaterBombDropStart();
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Skills|Ult|B|Visual")
 	void BP_UltBVisualStart();

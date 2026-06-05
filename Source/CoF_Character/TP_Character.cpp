@@ -53,6 +53,8 @@
 #include "Skills/Gideon/Gideon_Skill2A_DebuffBall.h"
 #include "Skills/Gideon/Gideon_Skill2B_BackDash.h"
 #include "Skills/Gideon/Gideon_UltA_MirrorWaterBeam.h"
+#include "Skills/Gideon/Gideon_UltB_WaterBombDrop.h"
+#include "Skills/Gideon/Gideon_UltB_WaterBombActor.h"
 
 #include "DrawDebugHelpers.h"
 
@@ -1364,7 +1366,8 @@ void ATP_Character::Input_UltStarted(const FInputActionValue&)
 
 	const bool bUltBReady =
 		(UltB_Implementation == EUltimateBImplementation::TerraSelfBuff && Terra_UltB) ||
-		(UltB_Implementation == EUltimateBImplementation::KallariInvincible && Kallari_UltB);
+		(UltB_Implementation == EUltimateBImplementation::KallariInvincible && Kallari_UltB) ||
+		(UltB_Implementation == EUltimateBImplementation::GideonWaterBombDrop && Gideon_UltB);
 
 	if ((UltSelected == ESkillVariant::A && !bUltAReady) ||
 		(UltSelected == ESkillVariant::B && !bUltBReady))
@@ -1409,6 +1412,10 @@ void ATP_Character::Input_UltStarted(const FInputActionValue&)
 		else if (UltB_Implementation == EUltimateBImplementation::KallariInvincible && Kallari_UltB)
 		{
 			bInCooldown = Kallari_UltB->IsInCooldown(Now);
+		}
+		else if (UltB_Implementation == EUltimateBImplementation::GideonWaterBombDrop && Gideon_UltB)
+		{
+			bInCooldown = Gideon_UltB->IsInCooldown(Now);
 		}
 
 		if (bInCooldown)
@@ -1472,6 +1479,10 @@ void ATP_Character::Input_UltStarted(const FInputActionValue&)
 		else if (UltB_Implementation == EUltimateBImplementation::KallariInvincible && Kallari_UltB)
 		{
 			Kallari_UltB->StartCooldown(Now, UltB_Cooldown);
+		}
+		else if (UltB_Implementation == EUltimateBImplementation::GideonWaterBombDrop && Gideon_UltB)
+		{
+			Gideon_UltB->StartCooldown(Now, UltB_Cooldown);
 		}
 	}
 }
@@ -1554,6 +1565,14 @@ void ATP_Character::UltB_BuffEnd()
 	if (UltB_Implementation == EUltimateBImplementation::KallariInvincible && Kallari_UltB)
 	{
 		Kallari_UltB->BuffEnd();
+	}
+}
+
+void ATP_Character::UltB_WaterBombDropStart()
+{
+	if (UltB_Implementation == EUltimateBImplementation::GideonWaterBombDrop && Gideon_UltB)
+	{
+		Gideon_UltB->DropStart();
 	}
 }
 
@@ -1737,6 +1756,16 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 
 	UltB_InvincibleDuration = Data->UltB_InvincibleDuration;
 
+	UltB_WaterBombActorClass = Data->UltB_WaterBombActorClass;
+	UltB_WaterBombDamage = Data->UltB_WaterBombDamage;
+	UltB_WaterBombRadius = Data->UltB_WaterBombRadius;
+	UltB_WaterBombTargetDistance = Data->UltB_WaterBombTargetDistance;
+	UltB_WaterBombFallHeight = Data->UltB_WaterBombFallHeight;
+	UltB_WaterBombFallDuration = Data->UltB_WaterBombFallDuration;
+	UltB_WaterBombGroundTraceUp = Data->UltB_WaterBombGroundTraceUp;
+	UltB_WaterBombGroundTraceDown = Data->UltB_WaterBombGroundTraceDown;
+
+
 	// ===== Terra Skill Objects init =====
 	// - 캐릭터가 Terra든 Gideon이든, 일단은 Terra 구현이 연결돼 있어도
 	//   SkillSelected가 None이면 실행되지 않으니 안전.
@@ -1760,6 +1789,7 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	if (!Gideon_Skill2A) { Gideon_Skill2A = NewObject<UGideon_Skill2A_DebuffBall>(this); Gideon_Skill2A->Init(this); }
 	if (!Gideon_Skill2B) { Gideon_Skill2B = NewObject<UGideon_Skill2B_BackDash>(this); Gideon_Skill2B->Init(this); }
 	if (!Gideon_UltA) { Gideon_UltA = NewObject<UGideon_UltA_MirrorWaterBeam>(this); Gideon_UltA->Init(this); }
+	if (!Gideon_UltB) { Gideon_UltB = NewObject<UGideon_UltB_WaterBombDrop>(this); Gideon_UltB->Init(this); }
 
 	// ===== 런타임 상태 초기화 =====
 	// - 캐릭터 교체(슬롯 변경) 시, 이전 캐릭터의 쿨다운/타이머/맵 상태가 남으면 안 됨.
@@ -1782,6 +1812,7 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	if (Gideon_Skill2A) Gideon_Skill2A->ResetRuntime();
 	if (Gideon_Skill2B) Gideon_Skill2B->ResetRuntime();
 	if (Gideon_UltA) Gideon_UltA->ResetRuntime();
+	if (Gideon_UltB) Gideon_UltB->ResetRuntime();
 }
 
 // Gideon Skill2A 부조화 구슬 디버프 인터페이스

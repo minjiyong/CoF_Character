@@ -9,6 +9,7 @@ class USkeletalMesh;
 class UAnimInstance;
 class UAnimMontage;
 class ACoF_CommonProjectile;
+class AGideon_UltB_WaterBombActor;
 
 UCLASS(BlueprintType)
 class COF_CHARACTER_API UCharacterData : public UPrimaryDataAsset
@@ -412,4 +413,29 @@ public:
 	// ===== Ult_B : Kallari =====
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|B|Kallari")
 	float UltB_InvincibleDuration = 3.f;
+
+	// ===== Ult_B : Gideon =====
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|B|Gideon")
+	TSubclassOf<ACoF_CommonProjectile> UltB_WaterBombActorClass = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|B|Gideon")
+	float UltB_WaterBombDamage = 100.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|B|Gideon")
+	float UltB_WaterBombRadius = 450.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|B|Gideon")
+	float UltB_WaterBombTargetDistance = 900.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|B|Gideon")
+	float UltB_WaterBombFallHeight = 1200.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|B|Gideon")
+	float UltB_WaterBombFallDuration = 0.8f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|B|Gideon")
+	float UltB_WaterBombGroundTraceUp = 800.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skills|Ult|B|Gideon")
+	float UltB_WaterBombGroundTraceDown = 2500.0f;
 };

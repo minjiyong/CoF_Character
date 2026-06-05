@@ -15,10 +15,10 @@ public:
 	UHealthComponent();
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Health")
-	float MaxHp = 100.f;
+	float MaxHp = 1000.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health")
-	float CurrentHp = 100.f;
+	float CurrentHp = 1000.f;
 
 	UPROPERTY(BlueprintAssignable, Category = "Health")
 	FOnHpChanged OnHpChanged;

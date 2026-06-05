@@ -82,5 +82,6 @@ UENUM(BlueprintType)
 enum class EUltimateBImplementation : uint8
 {
 	TerraSelfBuff UMETA(DisplayName = "TerraSelfBuff"),
-	KallariInvincible UMETA(DisplayName = "KallariInvincible")
+	KallariInvincible UMETA(DisplayName = "KallariInvincible"),
+	GideonWaterBombDrop UMETA(DisplayName = "GideonWaterBombDrop")
 };
