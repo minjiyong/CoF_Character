@@ -539,13 +539,18 @@ public:
 	float UltB_GideonLiftUpDuration = 0.25f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Ult|B|Gideon")
-	float UltB_GideonLiftDownDuration = 0.25f;
+	float UltB_GideonLiftDownDuration = 0.85f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Ult|B|Gideon")
+	float UltB_GideonLiftDownEaseExponent = 2.0f;
 
 	FTimerHandle GideonUltB_LiftUpTimerHandle;
 	FTimerHandle GideonUltB_LiftDownTimerHandle;
 
 	FVector GideonUltB_LiftStartLocation = FVector::ZeroVector;
 	FVector GideonUltB_LiftTopLocation = FVector::ZeroVector;
+	FVector GideonUltB_LiftDownStartLocation = FVector::ZeroVector;
+	FVector GideonUltB_LiftLandingLocation = FVector::ZeroVector;
 
 	float GideonUltB_LiftElapsedTime = 0.f;
 

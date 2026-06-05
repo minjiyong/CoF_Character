@@ -1616,12 +1616,14 @@ void ATP_Character::StartGideonUltBLift()
 	GideonUltB_PrevGravityScale = MoveComp->GravityScale;
 
 	GideonUltB_LiftStartLocation = GetActorLocation();
+	GideonUltB_LiftLandingLocation = GideonUltB_LiftStartLocation;
 	GideonUltB_LiftTopLocation = GideonUltB_LiftStartLocation + FVector(0.f, 0.f, UltB_GideonLiftHeight);
 	GideonUltB_LiftElapsedTime = 0.f;
 
 	MoveComp->StopMovementImmediately();
 	MoveComp->SetMovementMode(MOVE_Flying);
 	MoveComp->GravityScale = 0.f;
+	MoveComp->Velocity = FVector::ZeroVector;
 
 	GetWorldTimerManager().ClearTimer(GideonUltB_LiftUpTimerHandle);
 	GetWorldTimerManager().ClearTimer(GideonUltB_LiftDownTimerHandle);
@@ -1630,7 +1632,7 @@ void ATP_Character::StartGideonUltBLift()
 		GideonUltB_LiftUpTimerHandle,
 		this,
 		&ATP_Character::TickGideonUltBLiftUp,
-		0.01f,
+		0.016f,
 		true
 	);
 }
@@ -1663,30 +1665,58 @@ void ATP_Character::StartGideonUltBLiftDown()
 	GetWorldTimerManager().ClearTimer(GideonUltB_LiftUpTimerHandle);
 	GetWorldTimerManager().ClearTimer(GideonUltB_LiftDownTimerHandle);
 
-	GideonUltB_LiftStartLocation = GetActorLocation();
+	GideonUltB_LiftDownStartLocation = GetActorLocation();
+
+	if (GideonUltB_LiftLandingLocation.IsNearlyZero())
+	{
+		GideonUltB_LiftLandingLocation = GideonUltB_LiftTopLocation - FVector(0.f, 0.f, UltB_GideonLiftHeight);
+	}
+
 	GideonUltB_LiftElapsedTime = 0.f;
+
+	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+	{
+		MoveComp->StopMovementImmediately();
+		MoveComp->Velocity = FVector::ZeroVector;
+		MoveComp->SetMovementMode(MOVE_Flying);
+		MoveComp->GravityScale = 0.f;
+	}
 
 	GetWorldTimerManager().SetTimer(
 		GideonUltB_LiftDownTimerHandle,
 		this,
 		&ATP_Character::TickGideonUltBLiftDown,
-		0.01f,
+		0.016f,
 		true
 	);
 }
 
 void ATP_Character::TickGideonUltBLiftDown()
 {
-	GideonUltB_LiftElapsedTime += 0.01f;
+	const float DeltaTime = GetWorld() ? GetWorld()->GetDeltaSeconds() : 0.016f;
+	GideonUltB_LiftElapsedTime += DeltaTime;
 
-	const float Alpha = UltB_GideonLiftDownDuration <= KINDA_SMALL_NUMBER
+	const float RawAlpha = UltB_GideonLiftDownDuration <= KINDA_SMALL_NUMBER
 		? 1.f
 		: FMath::Clamp(GideonUltB_LiftElapsedTime / UltB_GideonLiftDownDuration, 0.f, 1.f);
 
-	const FVector NewLocation = FMath::Lerp(GideonUltB_LiftStartLocation, GideonUltB_LiftTopLocation - FVector(0.f, 0.f, UltB_GideonLiftHeight), Alpha);
+	// 플레이어 하강은 선형 이동이 아니라 시작과 착지 시점이 부드러운 곡선으로 처리한다.
+	const float SmoothAlpha = FMath::InterpEaseInOut(
+		0.f,
+		1.f,
+		RawAlpha,
+		UltB_GideonLiftDownEaseExponent
+	);
+
+	const FVector NewLocation = FMath::Lerp(
+		GideonUltB_LiftDownStartLocation,
+		GideonUltB_LiftLandingLocation,
+		SmoothAlpha
+	);
+
 	SetActorLocation(NewLocation, true);
 
-	if (Alpha >= 1.f)
+	if (RawAlpha >= 1.f)
 	{
 		FinishGideonUltBLift();
 	}
@@ -1697,9 +1727,12 @@ void ATP_Character::FinishGideonUltBLift()
 	GetWorldTimerManager().ClearTimer(GideonUltB_LiftUpTimerHandle);
 	GetWorldTimerManager().ClearTimer(GideonUltB_LiftDownTimerHandle);
 
+	SetActorLocation(GideonUltB_LiftLandingLocation, true);
+
 	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
 	{
 		MoveComp->GravityScale = GideonUltB_PrevGravityScale;
+		MoveComp->Velocity = FVector::ZeroVector;
 		MoveComp->SetMovementMode(GideonUltB_PrevMovementMode);
 	}
 
