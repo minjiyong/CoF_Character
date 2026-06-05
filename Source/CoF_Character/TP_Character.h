@@ -522,7 +522,7 @@ public:
 	float AttackMultiplier = 1.0f;
 
 	// Gideon
-	TSubclassOf<ACoF_CommonProjectile> UltB_WaterBombActorClass = nullptr;
+	TSubclassOf<AGideon_UltB_WaterBombActor> UltB_WaterBombActorClass = nullptr;
 	float UltB_WaterBombDamage = 0.f;
 	float UltB_WaterBombRadius = 0.f;
 	float UltB_WaterBombTargetDistance = 0.f;
@@ -530,6 +530,38 @@ public:
 	float UltB_WaterBombFallDuration = 0.f;
 	float UltB_WaterBombGroundTraceUp = 0.f;
 	float UltB_WaterBombGroundTraceDown = 0.f;
+
+	// Gideon UltB 사용 중 캐릭터를 공중에 띄우기 위한 설정값
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Ult|B|Gideon")
+	float UltB_GideonLiftHeight = 450.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Ult|B|Gideon")
+	float UltB_GideonLiftUpDuration = 0.25f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Ult|B|Gideon")
+	float UltB_GideonLiftHoldDuration = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Ult|B|Gideon")
+	float UltB_GideonLiftDownDuration = 0.25f;
+
+	FTimerHandle GideonUltB_LiftUpTimerHandle;
+	FTimerHandle GideonUltB_LiftDownTimerHandle;
+	FTimerHandle GideonUltB_LiftHoldTimerHandle;
+
+	FVector GideonUltB_LiftStartLocation = FVector::ZeroVector;
+	FVector GideonUltB_LiftTopLocation = FVector::ZeroVector;
+
+	float GideonUltB_LiftElapsedTime = 0.f;
+
+	bool bGideonUltBLifting = false;
+
+	EMovementMode GideonUltB_PrevMovementMode = MOVE_Walking;
+
+	void StartGideonUltBLift();
+	void TickGideonUltBLiftUp();
+	void HoldGideonUltBLift();
+	void TickGideonUltBLiftDown();
+	void FinishGideonUltBLift();
 
 
 	UFUNCTION(BlueprintCallable, Category = "Skills|Ult|B")
@@ -540,6 +572,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Skills|Ult|B")
 	void UltB_WaterBombDropStart();
+
+	UFUNCTION(BlueprintCallable, Category = "Skills|Ult|B")
+	void UltB_GideonLiftStart();
+
+	UFUNCTION(BlueprintCallable, Category = "Skills|Ult|B")
+	void UltB_GideonLiftDownStart();
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Skills|Ult|B|Visual")
 	void BP_UltBVisualStart();

@@ -3,31 +3,23 @@
 #include "CombatComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Engine/World.h"
-#include "Projectiles/CoF_CommonProjectile.h"
 #include "Skills/Gideon/Gideon_UltB_WaterBombActor.h"
 #include "TP_Character.h"
 
 void UGideon_UltB_WaterBombDrop::ResetRuntime()
 {
-	NextAvailableTime = 0.0;
-	bDropActive = false;
-
-	if (IsValid(ActiveBomb))
-	{
-		ActiveBomb->Destroy();
-	}
-
+	CooldownEndTime = 0.0;
 	ActiveBomb = nullptr;
 }
 
 bool UGideon_UltB_WaterBombDrop::IsInCooldown(double Now) const
 {
-	return Now < NextAvailableTime;
+	return Now < CooldownEndTime;
 }
 
-void UGideon_UltB_WaterBombDrop::StartCooldown(double Now, float CooldownSec)
+void UGideon_UltB_WaterBombDrop::StartCooldown(double Now, float Cooldown)
 {
-	NextAvailableTime = Now + CooldownSec;
+	CooldownEndTime = Now + Cooldown;
 }
 
 void UGideon_UltB_WaterBombDrop::DropStart()
@@ -38,21 +30,16 @@ void UGideon_UltB_WaterBombDrop::DropStart()
 		return;
 	}
 
-	UWorld* World = GetWorld();
+	UWorld* World = GetWorldFromOwner();
 	if (!World)
 	{
 		return;
 	}
 
-	FVector ImpactLocation = FVector::ZeroVector;
-	if (!ResolveImpactLocation(ImpactLocation))
-	{
-		return;
-	}
+	FVector ImpactLocation = ResolveImpactLocation();
+	FVector SpawnLocation = ImpactLocation + FVector(0.f, 0.f, C->UltB_WaterBombFallHeight);
 
-	const FVector SpawnLocation = ImpactLocation + FVector(0.0, 0.0, C->UltB_WaterBombFallHeight);
-
-	TSubclassOf<ACoF_CommonProjectile> BombClass = C->UltB_WaterBombActorClass;
+	TSubclassOf<AGideon_UltB_WaterBombActor> BombClass = C->UltB_WaterBombActorClass;
 	if (!BombClass)
 	{
 		BombClass = AGideon_UltB_WaterBombActor::StaticClass();
@@ -63,55 +50,25 @@ void UGideon_UltB_WaterBombDrop::DropStart()
 	SpawnParams.Instigator = C;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	ACoF_CommonProjectile* SpawnedProjectile = World->SpawnActor<ACoF_CommonProjectile>(
+	AGideon_UltB_WaterBombActor* Bomb = World->SpawnActor<AGideon_UltB_WaterBombActor>(
 		BombClass,
 		SpawnLocation,
 		FRotator::ZeroRotator,
 		SpawnParams
 	);
 
-	AGideon_UltB_WaterBombActor* Bomb = Cast<AGideon_UltB_WaterBombActor>(SpawnedProjectile);
+	// Spawn 실패 시에도 스킬이 완전히 증발하지 않도록 즉시 AOE 폭발 처리
 	if (!Bomb)
 	{
-		if (SpawnedProjectile)
-		{
-			SpawnedProjectile->Destroy();
-		}
+		ExplodeAtLocation(ImpactLocation);
 		return;
 	}
 
-	bDropActive = true;
 	ActiveBomb = Bomb;
+	Bomb->InitVisualBomb(this, SpawnLocation, ImpactLocation, C->UltB_WaterBombFallDuration);
 
-	Bomb->InitVisualBomb(
-		this,
-		SpawnLocation,
-		ImpactLocation,
-		C->UltB_WaterBombFallDuration
-	);
-
-#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
-	DrawDebugSphere(
-		World,
-		ImpactLocation,
-		C->UltB_WaterBombRadius,
-		32,
-		FColor::Cyan,
-		false,
-		C->UltB_WaterBombFallDuration
-	);
-
-	DrawDebugLine(
-		World,
-		SpawnLocation,
-		ImpactLocation,
-		FColor::Blue,
-		false,
-		C->UltB_WaterBombFallDuration,
-		0,
-		3.0f
-	);
-#endif
+	DrawDebugSphere(World, ImpactLocation, C->UltB_WaterBombRadius, 32, FColor::Cyan, false, 2.0f);
+	DrawDebugLine(World, SpawnLocation, ImpactLocation, FColor::Cyan, false, 2.0f, 0, 3.0f);
 }
 
 void UGideon_UltB_WaterBombDrop::ExplodeAtLocation(const FVector& ImpactLocation)
@@ -119,8 +76,6 @@ void UGideon_UltB_WaterBombDrop::ExplodeAtLocation(const FVector& ImpactLocation
 	ATP_Character* C = GetOwnerChar();
 	if (!C || !C->CombatComp)
 	{
-		bDropActive = false;
-		ActiveBomb = nullptr;
 		return;
 	}
 
@@ -135,80 +90,62 @@ void UGideon_UltB_WaterBombDrop::ExplodeAtLocation(const FVector& ImpactLocation
 	C->CombatComp->BeginHitWindow_OneShot();
 	C->CombatComp->EndHitWindow();
 
-	bDropActive = false;
-	ActiveBomb = nullptr;
-
-#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
-	if (UWorld* World = GetWorld())
+	if (UWorld* World = GetWorldFromOwner())
 	{
-		DrawDebugSphere(
-			World,
-			ImpactLocation,
-			C->UltB_WaterBombRadius,
-			32,
-			FColor::Red,
-			false,
-			1.0f
-		);
+		DrawDebugSphere(World, ImpactLocation, C->UltB_WaterBombRadius, 48, FColor::Red, false, 2.0f);
 	}
-#endif
 }
 
-bool UGideon_UltB_WaterBombDrop::ResolveImpactLocation(FVector& OutImpactLocation) const
+UWorld* UGideon_UltB_WaterBombDrop::GetWorldFromOwner() const
+{
+	const ATP_Character* C = GetOwnerChar();
+	return C ? C->GetWorld() : nullptr;
+}
+
+FVector UGideon_UltB_WaterBombDrop::ResolveImpactLocation() const
 {
 	const ATP_Character* C = GetOwnerChar();
 	if (!C)
 	{
-		return false;
+		return FVector::ZeroVector;
 	}
+
+	FVector SourceLocation = C->GetActorLocation();
 
 	if (C->HasValidLockOnTarget())
 	{
-		AActor* Target = C->GetLockOnTarget();
-		if (IsValid(Target))
-		{
-			FVector Origin = FVector::ZeroVector;
-			FVector Extent = FVector::ZeroVector;
-			Target->GetActorBounds(true, Origin, Extent);
-
-			// 시각적으로는 머리 위에서 떨어지지만, 판정 기준은 대상 발밑 바닥 위치로 잡는다.
-			const FVector TargetGroundHint = FVector(
-				Origin.X,
-				Origin.Y,
-				Origin.Z - Extent.Z
-			);
-
-			return ProjectToGround(TargetGroundHint, OutImpactLocation);
-		}
+		SourceLocation = C->LockOnTarget->GetActorLocation();
+	}
+	else
+	{
+		SourceLocation = C->GetActorLocation() + C->GetActorForwardVector() * C->UltB_WaterBombTargetDistance;
 	}
 
-	const FVector Forward = C->GetActorForwardVector().GetSafeNormal();
-	const FVector BaseLocation = C->GetActorLocation() + Forward * C->UltB_WaterBombTargetDistance;
+	FVector GroundLocation;
+	if (ProjectToGround(SourceLocation, GroundLocation))
+	{
+		return GroundLocation;
+	}
 
-	return ProjectToGround(BaseLocation, OutImpactLocation);
+	return SourceLocation;
 }
 
 bool UGideon_UltB_WaterBombDrop::ProjectToGround(const FVector& SourceLocation, FVector& OutGroundLocation) const
 {
 	const ATP_Character* C = GetOwnerChar();
-	if (!C)
+	UWorld* World = GetWorldFromOwner();
+
+	if (!C || !World)
 	{
 		return false;
 	}
 
-	UWorld* World = GetWorld();
-	if (!World)
-	{
-		return false;
-	}
-
-	const FVector TraceStart = SourceLocation + FVector(0.0, 0.0, C->UltB_WaterBombGroundTraceUp);
-	const FVector TraceEnd = SourceLocation - FVector(0.0, 0.0, C->UltB_WaterBombGroundTraceDown);
-
-	FCollisionQueryParams Params(SCENE_QUERY_STAT(GideonUltBProjectToGround), false);
-	Params.AddIgnoredActor(C);
+	const FVector TraceStart = SourceLocation + FVector(0.f, 0.f, C->UltB_WaterBombGroundTraceUp);
+	const FVector TraceEnd = SourceLocation - FVector(0.f, 0.f, C->UltB_WaterBombGroundTraceDown);
 
 	FHitResult Hit;
+	FCollisionQueryParams Params(SCENE_QUERY_STAT(GideonUltBProjectToGround), false, C);
+
 	const bool bHit = World->LineTraceSingleByChannel(
 		Hit,
 		TraceStart,
@@ -217,23 +154,11 @@ bool UGideon_UltB_WaterBombDrop::ProjectToGround(const FVector& SourceLocation, 
 		Params
 	);
 
-	if (bHit)
+	if (!bHit)
 	{
-		OutGroundLocation = Hit.ImpactPoint;
-		return true;
+		return false;
 	}
 
-	// 바닥 Trace 실패 시에도 스킬이 완전히 무효화되지 않도록 기준 위치를 그대로 사용한다.
-	OutGroundLocation = SourceLocation;
+	OutGroundLocation = Hit.ImpactPoint;
 	return true;
-}
-
-UWorld* UGideon_UltB_WaterBombDrop::GetWorld() const
-{
-	if (ATP_Character* C = GetOwnerChar())
-	{
-		return C->GetWorld();
-	}
-
-	return nullptr;
 }

@@ -4,6 +4,7 @@
 #include "Projectiles/CoF_CommonProjectile.h"
 #include "Gideon_UltB_WaterBombActor.generated.h"
 
+class UStaticMeshComponent;
 class UGideon_UltB_WaterBombDrop;
 
 UCLASS()
@@ -16,36 +17,36 @@ public:
 
 	virtual void Tick(float DeltaSeconds) override;
 
-	// 물폭탄 연출용 액터를 낙하 시작 위치와 착탄 위치 기준으로 초기화한다.
+	// 물폭탄 낙하 시작 위치와 도착 위치를 설정한다.
 	void InitVisualBomb(
-		UGideon_UltB_WaterBombDrop* InOwningSkill,
+		UGideon_UltB_WaterBombDrop* InSkill,
 		const FVector& InStartLocation,
 		const FVector& InImpactLocation,
 		float InFallDuration
 	);
 
 protected:
-	virtual void BeginPlay() override;
-
-	UFUNCTION(BlueprintImplementableEvent, Category = "Skills|Ult|B|Gideon|Visual")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Skills|Ult|B|Gideon")
 	void BP_OnBombInitialized();
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Skills|Ult|B|Gideon|Visual")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Skills|Ult|B|Gideon")
 	void BP_OnBombExploded();
 
 private:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Skills|Ult|B|Gideon", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UStaticMeshComponent> BombVisual = nullptr;
+
 	UPROPERTY()
 	TObjectPtr<UGideon_UltB_WaterBombDrop> WaterBombSkill = nullptr;
 
 	FVector StartLocation = FVector::ZeroVector;
 	FVector ImpactLocation = FVector::ZeroVector;
 
-	float FallDuration = 0.8f;
-	float ElapsedTime = 0.0f;
+	float FallDuration = 0.5f;
+	float ElapsedTime = 0.f;
 
 	bool bInitialized = false;
-	bool bExploded = false;
+	bool bFinished = false;
 
-	// 낙하가 끝났을 때 스킬 객체에 폭발 처리를 요청하고 자신을 제거한다.
 	void FinishDrop();
 };

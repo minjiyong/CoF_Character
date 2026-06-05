@@ -1576,7 +1576,137 @@ void ATP_Character::UltB_WaterBombDropStart()
 	}
 }
 
+void ATP_Character::UltB_GideonLiftStart()
+{
+	if (UltB_Implementation != EUltimateBImplementation::GideonWaterBombDrop)
+	{
+		return;
+	}
 
+	StartGideonUltBLift();
+}
+
+void ATP_Character::UltB_GideonLiftDownStart()
+{
+	if (UltB_Implementation != EUltimateBImplementation::GideonWaterBombDrop)
+	{
+		return;
+	}
+
+	StartGideonUltBLiftDown();
+}
+
+void ATP_Character::StartGideonUltBLift()
+{
+	if (bGideonUltBLifting)
+	{
+		return;
+	}
+
+	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
+	if (!MoveComp)
+	{
+		return;
+	}
+
+	bGideonUltBLifting = true;
+	bGideonUltBAtTop = false;
+
+	GideonUltB_PrevMovementMode = MoveComp->MovementMode;
+	GideonUltB_PrevGravityScale = MoveComp->GravityScale;
+
+	GideonUltB_LiftStartLocation = GetActorLocation();
+	GideonUltB_LiftTopLocation = GideonUltB_LiftStartLocation + FVector(0.f, 0.f, UltB_GideonLiftHeight);
+	GideonUltB_LiftElapsedTime = 0.f;
+
+	MoveComp->StopMovementImmediately();
+	MoveComp->SetMovementMode(MOVE_Flying);
+	MoveComp->GravityScale = 0.f;
+
+	GetWorldTimerManager().ClearTimer(GideonUltB_LiftUpTimerHandle);
+	GetWorldTimerManager().ClearTimer(GideonUltB_LiftDownTimerHandle);
+
+	GetWorldTimerManager().SetTimer(
+		GideonUltB_LiftUpTimerHandle,
+		this,
+		&ATP_Character::TickGideonUltBLiftUp,
+		0.01f,
+		true
+	);
+}
+
+void ATP_Character::TickGideonUltBLiftUp()
+{
+	GideonUltB_LiftElapsedTime += 0.01f;
+
+	const float Alpha = UltB_GideonLiftUpDuration <= KINDA_SMALL_NUMBER
+		? 1.f
+		: FMath::Clamp(GideonUltB_LiftElapsedTime / UltB_GideonLiftUpDuration, 0.f, 1.f);
+
+	const FVector NewLocation = FMath::Lerp(GideonUltB_LiftStartLocation, GideonUltB_LiftTopLocation, Alpha);
+	SetActorLocation(NewLocation, true);
+
+	if (Alpha >= 1.f)
+	{
+		GetWorldTimerManager().ClearTimer(GideonUltB_LiftUpTimerHandle);
+		bGideonUltBAtTop = true;
+	}
+}
+
+void ATP_Character::StartGideonUltBLiftDown()
+{
+	if (!bGideonUltBLifting)
+	{
+		return;
+	}
+
+	GetWorldTimerManager().ClearTimer(GideonUltB_LiftUpTimerHandle);
+	GetWorldTimerManager().ClearTimer(GideonUltB_LiftDownTimerHandle);
+
+	GideonUltB_LiftStartLocation = GetActorLocation();
+	GideonUltB_LiftElapsedTime = 0.f;
+
+	GetWorldTimerManager().SetTimer(
+		GideonUltB_LiftDownTimerHandle,
+		this,
+		&ATP_Character::TickGideonUltBLiftDown,
+		0.01f,
+		true
+	);
+}
+
+void ATP_Character::TickGideonUltBLiftDown()
+{
+	GideonUltB_LiftElapsedTime += 0.01f;
+
+	const float Alpha = UltB_GideonLiftDownDuration <= KINDA_SMALL_NUMBER
+		? 1.f
+		: FMath::Clamp(GideonUltB_LiftElapsedTime / UltB_GideonLiftDownDuration, 0.f, 1.f);
+
+	const FVector NewLocation = FMath::Lerp(GideonUltB_LiftStartLocation, GideonUltB_LiftTopLocation - FVector(0.f, 0.f, UltB_GideonLiftHeight), Alpha);
+	SetActorLocation(NewLocation, true);
+
+	if (Alpha >= 1.f)
+	{
+		FinishGideonUltBLift();
+	}
+}
+
+void ATP_Character::FinishGideonUltBLift()
+{
+	GetWorldTimerManager().ClearTimer(GideonUltB_LiftUpTimerHandle);
+	GetWorldTimerManager().ClearTimer(GideonUltB_LiftDownTimerHandle);
+
+	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+	{
+		MoveComp->GravityScale = GideonUltB_PrevGravityScale;
+		MoveComp->SetMovementMode(GideonUltB_PrevMovementMode);
+	}
+
+	bGideonUltBLifting = false;
+	bGideonUltBAtTop = false;
+	GideonUltB_LiftElapsedTime = 0.f;
+}
 
 // Character Settings 
 void ATP_Character::ApplyCharacterData(const UCharacterData* Data)

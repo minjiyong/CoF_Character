@@ -1,93 +1,97 @@
 #include "Skills/Gideon/Gideon_UltB_WaterBombActor.h"
 
 #include "Components/SphereComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Skills/Gideon/Gideon_UltB_WaterBombDrop.h"
+#include "UObject/ConstructorHelpers.h"
 
 AGideon_UltB_WaterBombActor::AGideon_UltB_WaterBombActor()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	// 이 액터는 기존 Projectile 계열 BP 목록에 뜨기 위해 ACoF_CommonProjectile을 상속하지만,
-	// 실제 판정은 CombatComponent의 AOELocation으로 처리하므로 Projectile 충돌/이동은 사용하지 않는다.
+	// 이 클래스는 CommonProjectile 목록에 넣기 위해 ACoF_CommonProjectile을 상속하지만,
+	// 실제 판정은 projectile collision/movement가 아니라 Gideon_UltB_WaterBombDrop의 AOELocation으로 처리한다.
 	if (Collision)
 	{
 		Collision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		Collision->SetSphereRadius(1.0f);
+		Collision->SetGenerateOverlapEvents(false);
 	}
 
 	if (ProjectileMovement)
 	{
 		ProjectileMovement->Deactivate();
-		ProjectileMovement->Velocity = FVector::ZeroVector;
-		ProjectileMovement->InitialSpeed = 0.0f;
-		ProjectileMovement->MaxSpeed = 0.0f;
-		ProjectileMovement->ProjectileGravityScale = 0.0f;
+		ProjectileMovement->ProjectileGravityScale = 0.f;
+		ProjectileMovement->InitialSpeed = 0.f;
+		ProjectileMovement->MaxSpeed = 0.f;
 	}
-}
 
-void AGideon_UltB_WaterBombActor::BeginPlay()
-{
-	Super::BeginPlay();
+	BombVisual = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BombVisual"));
+	BombVisual->SetupAttachment(GetRootComponent());
+	BombVisual->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	BombVisual->SetGenerateOverlapEvents(false);
+	BombVisual->SetRelativeScale3D(FVector(2.0f));
 
-	if (ProjectileMovement)
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereMesh(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
+	if (SphereMesh.Succeeded())
 	{
-		ProjectileMovement->Deactivate();
-		ProjectileMovement->Velocity = FVector::ZeroVector;
+		BombVisual->SetStaticMesh(SphereMesh.Object);
 	}
-}
-
-void AGideon_UltB_WaterBombActor::InitVisualBomb(
-	UGideon_UltB_WaterBombDrop* InOwningSkill,
-	const FVector& InStartLocation,
-	const FVector& InImpactLocation,
-	float InFallDuration
-)
-{
-	WaterBombSkill = InOwningSkill;
-	StartLocation = InStartLocation;
-	ImpactLocation = InImpactLocation;
-	FallDuration = FMath::Max(InFallDuration, 0.01f);
-
-	ElapsedTime = 0.0f;
-	bInitialized = true;
-	bExploded = false;
-
-	SetActorLocation(StartLocation);
-
-	BP_OnBombInitialized();
 }
 
 void AGideon_UltB_WaterBombActor::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	if (!bInitialized || bExploded)
+	if (!bInitialized || bFinished)
 	{
 		return;
 	}
 
 	ElapsedTime += DeltaSeconds;
 
-	const float Alpha = FMath::Clamp(ElapsedTime / FallDuration, 0.0f, 1.0f);
-	const FVector NewLocation = FMath::Lerp(StartLocation, ImpactLocation, Alpha);
+	const float Alpha = FallDuration <= KINDA_SMALL_NUMBER
+		? 1.f
+		: FMath::Clamp(ElapsedTime / FallDuration, 0.f, 1.f);
 
+	const FVector NewLocation = FMath::Lerp(StartLocation, ImpactLocation, Alpha);
 	SetActorLocation(NewLocation);
 
-	if (Alpha >= 1.0f)
+	if (Alpha >= 1.f)
 	{
 		FinishDrop();
 	}
 }
 
+void AGideon_UltB_WaterBombActor::InitVisualBomb(
+	UGideon_UltB_WaterBombDrop* InSkill,
+	const FVector& InStartLocation,
+	const FVector& InImpactLocation,
+	float InFallDuration
+)
+{
+	WaterBombSkill = InSkill;
+	StartLocation = InStartLocation;
+	ImpactLocation = InImpactLocation;
+	FallDuration = FMath::Max(InFallDuration, 0.01f);
+	ElapsedTime = 0.f;
+	bInitialized = true;
+	bFinished = false;
+
+	SetActorLocation(StartLocation);
+
+	BP_OnBombInitialized();
+}
+
 void AGideon_UltB_WaterBombActor::FinishDrop()
 {
-	if (bExploded)
+	if (bFinished)
 	{
 		return;
 	}
 
-	bExploded = true;
+	bFinished = true;
 
 	BP_OnBombExploded();
 
