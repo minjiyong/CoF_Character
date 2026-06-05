@@ -539,14 +539,10 @@ public:
 	float UltB_GideonLiftUpDuration = 0.25f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Ult|B|Gideon")
-	float UltB_GideonLiftHoldDuration = 1.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Ult|B|Gideon")
 	float UltB_GideonLiftDownDuration = 0.25f;
 
 	FTimerHandle GideonUltB_LiftUpTimerHandle;
 	FTimerHandle GideonUltB_LiftDownTimerHandle;
-	FTimerHandle GideonUltB_LiftHoldTimerHandle;
 
 	FVector GideonUltB_LiftStartLocation = FVector::ZeroVector;
 	FVector GideonUltB_LiftTopLocation = FVector::ZeroVector;
@@ -554,12 +550,14 @@ public:
 	float GideonUltB_LiftElapsedTime = 0.f;
 
 	bool bGideonUltBLifting = false;
+	bool bGideonUltBAtTop = false;
 
 	EMovementMode GideonUltB_PrevMovementMode = MOVE_Walking;
+	float GideonUltB_PrevGravityScale = 1.f;
 
 	void StartGideonUltBLift();
 	void TickGideonUltBLiftUp();
-	void HoldGideonUltBLift();
+	void StartGideonUltBLiftDown();
 	void TickGideonUltBLiftDown();
 	void FinishGideonUltBLift();
 
