@@ -2,6 +2,7 @@
 
 #include "CombatComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/SplineComponent.h"
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
 #include "TP_Character.h"
@@ -110,18 +111,17 @@ void UGideon_Skill1A_WaterCannon::SpawnWaterBeamFX()
 		return;
 	}
 
-	const float SafeBaseLength = FMath::Max(C->GideonSkill1A_WaterBeamFXBaseLength, 1.f);
-	const float LengthScale = BeamLength / SafeBaseLength;
-
-	// BP_Gideon_Skill1A_WaterBeamFX가 로컬 X축 방향으로 길게 만들어져 있다는 전제.
-	// 방향이 맞지 않으면 BP 안의 Spline/Niagara 방향을 X축 기준으로 맞춘다.
+	// Spline VFX는 Actor Scale만으로 길이가 반영되지 않을 수 있으므로,
+	// Spawn된 BP 내부의 SplineComponent를 실제 BeamLength에 맞춰 직접 늘린다.
 	ActiveWaterBeamFX->SetActorScale3D(
 		FVector(
-			LengthScale,
+			1.f,
 			C->GideonSkill1A_WaterBeamFXThickness,
 			C->GideonSkill1A_WaterBeamFXThickness
 		)
 	);
+
+	ConfigureWaterBeamSpline(BeamLength);
 }
 
 void UGideon_Skill1A_WaterCannon::ClearWaterBeamFX()
@@ -186,4 +186,47 @@ FVector UGideon_Skill1A_WaterCannon::ResolveFXEndLocation(const FVector& StartLo
 	}
 
 	return StartLocation + Direction.GetSafeNormal() * C->Skill1A_Range;
+}
+
+void UGideon_Skill1A_WaterCannon::ConfigureWaterBeamSpline(float BeamLength)
+{
+	if (!IsValid(ActiveWaterBeamFX))
+	{
+		return;
+	}
+
+	TArray<USplineComponent*> SplineComponents;
+	ActiveWaterBeamFX->GetComponents<USplineComponent>(SplineComponents);
+
+	if (SplineComponents.Num() <= 0)
+	{
+		return;
+	}
+
+	for (USplineComponent* SplineComp : SplineComponents)
+	{
+		if (!SplineComp)
+		{
+			continue;
+		}
+
+		SplineComp->ClearSplinePoints(false);
+
+		SplineComp->AddSplinePoint(
+			FVector(0.f, 0.f, 0.f),
+			ESplineCoordinateSpace::Local,
+			false
+		);
+
+		SplineComp->AddSplinePoint(
+			FVector(BeamLength, 0.f, 0.f),
+			ESplineCoordinateSpace::Local,
+			false
+		);
+
+		SplineComp->SetSplinePointType(0, ESplinePointType::Linear, false);
+		SplineComp->SetSplinePointType(1, ESplinePointType::Linear, false);
+
+		SplineComp->UpdateSpline();
+	}
 }

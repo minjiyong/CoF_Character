@@ -34,4 +34,6 @@ private:
 
 	FVector ResolveFXStartLocation() const;
 	FVector ResolveFXEndLocation(const FVector& StartLocation) const;
+
+	void ConfigureWaterBeamSpline(float BeamLength);
 };
