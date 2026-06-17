@@ -15,7 +15,10 @@ public class CoF_Character : ModuleRules
 			"InputCore",
 			"EnhancedInput",
 			"AIModule",
-			"StateTreeModule",
+            "GameplayTasks",
+			"NavigationSystem",
+			"Niagara",
+            "StateTreeModule",
 			"GameplayStateTreeModule",
 			"UMG",
 			"Slate"
