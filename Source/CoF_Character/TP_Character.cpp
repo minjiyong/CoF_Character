@@ -992,30 +992,26 @@ void ATP_Character::Skill1A_HitStart()
 	{
 		Terra_Skill1A->HitStart();
 	}
-
 	else if (Skill1A_Implementation == ESkill1AImplementation::KallariDashSlash && Kallari_Skill1A)
 	{
 		Kallari_Skill1A->HitStart();
 	}
-
 	else if (Skill1A_Implementation == ESkill1AImplementation::GideonWaterCannon && Gideon_Skill1A)
 	{
 		Gideon_Skill1A->HitStart();
 	}
 }
 
-void ATP_Character::Skill1A_HitEnd()		//역시나 당장은 필요없는듯 기존 hitend 돌려쓰는중 나중에 필요하면 바꾸자.
+void ATP_Character::Skill1A_HitEnd()
 {
 	if (Skill1A_Implementation == ESkill1AImplementation::TerraDash && Terra_Skill1A)
 	{
 		Terra_Skill1A->HitEnd();
 	}
-
 	else if (Skill1A_Implementation == ESkill1AImplementation::KallariDashSlash && Kallari_Skill1A)
 	{
 		Kallari_Skill1A->HitEnd();
 	}
-
 	else if (Skill1A_Implementation == ESkill1AImplementation::GideonWaterCannon && Gideon_Skill1A)
 	{
 		Gideon_Skill1A->HitEnd();

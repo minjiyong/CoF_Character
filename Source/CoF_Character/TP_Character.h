@@ -342,6 +342,17 @@ public:
 	float Skill1A_Range = 0.f;
 	FName Skill1A_StartSocket = NAME_None;
 
+	// Gideon Skill1A 물줄기 이펙트 설정
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Skill1|A|Gideon|VFX")
+	TSubclassOf<AActor> GideonSkill1A_WaterBeamFXClass = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Skill1|A|Gideon|VFX")
+	float GideonSkill1A_WaterBeamFXBaseLength = 100.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Skill1|A|Gideon|VFX")
+	float GideonSkill1A_WaterBeamFXThickness = 1.f;
+
+
 	// 스킬1_B 도끼찍기 / 위로 상승하면서 돌진 / 물폭탄 던지기
 	UFUNCTION(BlueprintCallable, Category = "Skills|Skill1")
 	void Skill1B_ApplyAOE();
