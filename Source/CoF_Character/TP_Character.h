@@ -533,7 +533,7 @@ public:
 	float AttackMultiplier = 1.0f;
 
 	// Gideon
-	TSubclassOf<AGideon_UltB_WaterBombActor> UltB_WaterBombActorClass = nullptr;
+	TSubclassOf<ACoF_CommonProjectile> UltB_WaterBombActorClass = nullptr;
 	float UltB_WaterBombDamage = 0.f;
 	float UltB_WaterBombRadius = 0.f;
 	float UltB_WaterBombTargetDistance = 0.f;

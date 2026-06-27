@@ -3,7 +3,7 @@
 #include "CombatComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Engine/World.h"
-#include "Skills/Gideon/Gideon_UltB_WaterBombActor.h"
+#include "Projectiles/CoF_CommonProjectile.h"
 #include "TP_Character.h"
 
 void UGideon_UltB_WaterBombDrop::ResetRuntime()
@@ -36,13 +36,25 @@ void UGideon_UltB_WaterBombDrop::DropStart()
 		return;
 	}
 
-	FVector ImpactLocation = ResolveImpactLocation();
-	FVector SpawnLocation = ImpactLocation + FVector(0.f, 0.f, C->UltB_WaterBombFallHeight);
+	const FVector ImpactLocation = ResolveImpactLocation();
+	const FVector SpawnLocation = ImpactLocation + FVector(0.f, 0.f, C->UltB_WaterBombFallHeight);
 
-	TSubclassOf<AGideon_UltB_WaterBombActor> BombClass = C->UltB_WaterBombActorClass;
+	TSubclassOf<ACoF_CommonProjectile> BombClass = C->UltB_WaterBombActorClass;
 	if (!BombClass)
 	{
-		BombClass = AGideon_UltB_WaterBombActor::StaticClass();
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(
+				-1,
+				3.0f,
+				FColor::Red,
+				TEXT("[Gideon UltB] UltB_WaterBombActorClass is null. Check CharacterData cache and DA_Char02_Gideon.")
+			);
+		}
+
+		// 물폭탄 BP가 연결되지 않아도 스킬 판정이 완전히 증발하지 않도록 즉시 AOE 폭발 처리
+		ExplodeAtLocation(ImpactLocation);
+		return;
 	}
 
 	FActorSpawnParameters SpawnParams;
@@ -50,14 +62,13 @@ void UGideon_UltB_WaterBombDrop::DropStart()
 	SpawnParams.Instigator = C;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	AGideon_UltB_WaterBombActor* Bomb = World->SpawnActor<AGideon_UltB_WaterBombActor>(
+	ACoF_CommonProjectile* Bomb = World->SpawnActor<ACoF_CommonProjectile>(
 		BombClass,
 		SpawnLocation,
 		FRotator::ZeroRotator,
 		SpawnParams
 	);
 
-	// Spawn 실패 시에도 스킬이 완전히 증발하지 않도록 즉시 AOE 폭발 처리
 	if (!Bomb)
 	{
 		ExplodeAtLocation(ImpactLocation);
@@ -65,7 +76,22 @@ void UGideon_UltB_WaterBombDrop::DropStart()
 	}
 
 	ActiveBomb = Bomb;
-	Bomb->InitVisualBomb(this, SpawnLocation, ImpactLocation, C->UltB_WaterBombFallDuration);
+
+	const float FallDuration = FMath::Max(C->UltB_WaterBombFallDuration, 0.01f);
+	const float FallSpeed = C->UltB_WaterBombFallHeight / FallDuration;
+
+	const FVector LaunchVelocity = FVector(0.f, 0.f, -FallSpeed);
+
+	Bomb->InitProjectileArc(
+		C,
+		C->CombatComp,
+		this,
+		0.f,
+		LaunchVelocity,
+		FallDuration + 1.0f,
+		C->UltB_WaterBombRadius,
+		0.f
+	);
 
 	DrawDebugSphere(World, ImpactLocation, C->UltB_WaterBombRadius, 32, FColor::Cyan, false, 2.0f);
 	DrawDebugLine(World, SpawnLocation, ImpactLocation, FColor::Cyan, false, 2.0f, 0, 3.0f);
