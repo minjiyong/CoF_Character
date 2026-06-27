@@ -78,9 +78,15 @@ void UGideon_UltB_WaterBombDrop::DropStart()
 	ActiveBomb = Bomb;
 
 	const float FallDuration = FMath::Max(C->UltB_WaterBombFallDuration, 0.01f);
+
 	const float FallSpeed = C->UltB_WaterBombFallHeight / FallDuration;
 
 	const FVector LaunchVelocity = FVector(0.f, 0.f, -FallSpeed);
+
+	// UltB_WaterBombRadius는 폭발 피해 반경이다.
+	// Projectile Collision까지 이 값을 쓰면, 구체가 실제로 닿기 전에 폭발 반경 overlap만으로 터진다.
+	// 따라서 낙하 중 물폭탄이 보스/바닥에 닿는 용도의 충돌 반경은 별도로 작게 사용한다.
+	const float BombCollisionRadius = 60.f;
 
 	Bomb->InitProjectileArc(
 		C,
@@ -89,7 +95,7 @@ void UGideon_UltB_WaterBombDrop::DropStart()
 		0.f,
 		LaunchVelocity,
 		FallDuration + 1.0f,
-		C->UltB_WaterBombRadius,
+		BombCollisionRadius,
 		0.f
 	);
 
