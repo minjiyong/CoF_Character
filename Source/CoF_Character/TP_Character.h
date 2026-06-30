@@ -27,6 +27,9 @@ class UAnimMontage;
 // Camera
 class UUserWidget;
 
+// Effect
+class AActor;
+
 UCLASS()
 class COF_CHARACTER_API ATP_Character : public ACharacter, public IHitReactInterface, public IDebuffBallTargetInterface
 {
@@ -386,6 +389,13 @@ public:
 	float Skill1B_ProjectileSpawnForwardOffset = 0.f;
 	float Skill1B_ProjectileSpawnZOffset = 0.f;
 	FName Skill1B_StartSocket = NAME_None;
+
+	// Gideon AOE ¹°Æø¹ß FX ¼³Á¤
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Gideon|VFX")
+	TSubclassOf<AActor> GideonAOEWaterExplosionFXClass = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Gideon|VFX")
+	float GideonAOEWaterExplosionFXBaseRadius = 450.f;
 
 	// ===== Skill 2 =====
 

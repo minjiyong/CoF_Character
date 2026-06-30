@@ -6,6 +6,50 @@
 #include "Projectiles/CoF_CommonProjectile.h"
 #include "TP_Character.h"
 
+namespace
+{
+	void SpawnGideonAOEWaterExplosionFX(ATP_Character* C, const FVector& ImpactLocation, float Radius)
+	{
+		if (!C)
+		{
+			return;
+		}
+
+		if (!C->GideonAOEWaterExplosionFXClass)
+		{
+			return;
+		}
+
+		UWorld* World = C->GetWorld();
+		if (!World)
+		{
+			return;
+		}
+
+		FActorSpawnParameters Params;
+		Params.Owner = C;
+		Params.Instigator = C;
+		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		AActor* SpawnedFX = World->SpawnActor<AActor>(
+			C->GideonAOEWaterExplosionFXClass,
+			ImpactLocation + FVector(0.f, 0.f, 5.f),
+			FRotator::ZeroRotator,
+			Params
+		);
+
+		if (!SpawnedFX)
+		{
+			return;
+		}
+
+		const float BaseRadius = FMath::Max(C->GideonAOEWaterExplosionFXBaseRadius, 1.f);
+		const float FXScale = FMath::Max(Radius / BaseRadius, 0.1f);
+
+		SpawnedFX->SetActorScale3D(FVector(FXScale));
+	}
+}
+
 void UGideon_UltB_WaterBombDrop::ResetRuntime()
 {
 	CooldownEndTime = 0.0;
@@ -110,6 +154,9 @@ void UGideon_UltB_WaterBombDrop::ExplodeAtLocation(const FVector& ImpactLocation
 	{
 		return;
 	}
+
+	// ÀÌÆåÆ® »ý¼º
+	SpawnGideonAOEWaterExplosionFX(C, ImpactLocation, C->UltB_WaterBombRadius);
 
 	const float FinalDamage = C->UltB_WaterBombDamage * C->AttackMultiplier;
 
