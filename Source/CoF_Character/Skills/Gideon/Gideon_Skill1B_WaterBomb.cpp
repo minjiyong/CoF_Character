@@ -10,7 +10,7 @@
 
 namespace
 {
-	void SpawnGideonAOEWaterExplosionFX(ATP_Character* C, const FVector& ImpactLocation, float Radius)
+	void SpawnGideonSkill1BAOEWaterExplosionFX(ATP_Character* C, const FVector& ImpactLocation, float Radius)
 	{
 		if (!C)
 		{
@@ -191,7 +191,7 @@ void UGideon_Skill1B_WaterBomb::ExplodeAtLocation(const FVector& ImpactLocation)
 	}
 
 	// ÀÌÆåÆ® »ý¼º
-	SpawnGideonAOEWaterExplosionFX(C, ImpactLocation, C->Skill1B_Radius);
+	SpawnGideonSkill1BAOEWaterExplosionFX(C, ImpactLocation, C->Skill1B_Radius);
 
 #if !(UE_BUILD_SHIPPING)
 	DrawDebugSphere(

@@ -8,7 +8,7 @@
 
 namespace
 {
-	void SpawnGideonAOEWaterExplosionFX(ATP_Character* C, const FVector& ImpactLocation, float Radius)
+	void SpawnGideonUltBAOEWaterExplosionFX(ATP_Character* C, const FVector& ImpactLocation, float Radius)
 	{
 		if (!C)
 		{
@@ -156,7 +156,7 @@ void UGideon_UltB_WaterBombDrop::ExplodeAtLocation(const FVector& ImpactLocation
 	}
 
 	// ÀÌÆåÆ® »ý¼º
-	SpawnGideonAOEWaterExplosionFX(C, ImpactLocation, C->UltB_WaterBombRadius);
+	SpawnGideonUltBAOEWaterExplosionFX(C, ImpactLocation, C->UltB_WaterBombRadius);
 
 	const float FinalDamage = C->UltB_WaterBombDamage * C->AttackMultiplier;
 

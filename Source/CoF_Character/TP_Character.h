@@ -506,6 +506,17 @@ public:
 	float UltA_BeamRadius = 0.f;
 	FName UltA_BeamStartSocket = NAME_None;
 
+	// Gideon UltA ¹°±¤¼± FX ¼³Á¤
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Ult|A|Gideon|VFX")
+	TSubclassOf<AActor> GideonUltA_WaterBeamFXClass = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Ult|A|Gideon|VFX")
+	float GideonUltA_WaterBeamFXBaseLength = 1800.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Ult|A|Gideon|VFX")
+	float GideonUltA_WaterBeamFXThickness = 1.f;
+
+
 	UFUNCTION(BlueprintCallable, Category = "Skills|Ult|A")
 	void UltA_ShieldStart(); // Terra
 
