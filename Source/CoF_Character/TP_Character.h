@@ -683,6 +683,18 @@ public:
 	float DefaultCameraArmLength = 0.f;
 	FVector DefaultCameraSocketOffset = FVector::ZeroVector;
 
+
+	// ===== 플레이어 HUD =====
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category = "UI|PlayerHUD")
+	TSubclassOf<UUserWidget> PlayerHUDWidgetClass = nullptr;
+
+	UPROPERTY()
+	TObjectPtr<UUserWidget> PlayerHUDWidgetInstance = nullptr;
+
+	// 로컬 플레이어의 HUD를 생성한다.
+	void EnsurePlayerHUDWidget();
+
+
 	// ===== 캐릭터 선택(런타임 교체) =====
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character|Switch")
 	TArray<TObjectPtr<UCharacterData>> CharacterSlots; // 0~4 => 1~5키
