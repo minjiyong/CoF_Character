@@ -492,6 +492,10 @@ public:
 	float UltA_Shield = 0.f;
 	float UltA_Radius = 0.f;
 
+	// Terra UltA 쉴드가 부여된 대상에게 붙일 FX
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Ult|A|Terra|VFX")
+	TSubclassOf<AActor> TerraUltA_ShieldedFXClass = nullptr;
+
 	// Kallari
 	float UltA_Damage = 0.f;
 	float UltA_DashDistance = 0.f;

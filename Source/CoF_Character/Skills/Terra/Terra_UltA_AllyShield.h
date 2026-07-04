@@ -22,11 +22,19 @@ public:
 	// UltA로 보호막을 준 대상들(약참조) - TP_Character에서 옮겨옴
 	TMap<TWeakObjectPtr<AActor>, float> ShieldGiven;
 
+	// UltA로 보호막 FX를 붙인 대상들
+	TMap<TWeakObjectPtr<AActor>, TWeakObjectPtr<AActor>> ShieldFXGiven;
+
 	void ResetRuntime()
 	{
 		NextAvailableTime = 0.0;
 		ShieldGiven.Reset();
-		if (UWorld* W = GetWorld()) W->GetTimerManager().ClearTimer(EndTimerHandle);
+		ClearShieldFX();
+
+		if (UWorld* W = GetWorld())
+		{
+			W->GetTimerManager().ClearTimer(EndTimerHandle);
+		}
 	}
 
 	bool IsInCooldown(double Now) const { return Now < NextAvailableTime; }
@@ -38,4 +46,7 @@ private:
 public:
 	void ShieldStart(); // 몽타주 Notify에서 호출 (부여)
 	void ShieldEnd();   // 타이머에서 자동 호출 (제거)
+
+	void SpawnShieldFX(AActor* Target);
+	void ClearShieldFX();
 };
