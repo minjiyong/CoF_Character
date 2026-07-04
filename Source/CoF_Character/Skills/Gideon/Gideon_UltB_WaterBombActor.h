@@ -4,7 +4,6 @@
 #include "Projectiles/CoF_CommonProjectile.h"
 #include "Gideon_UltB_WaterBombActor.generated.h"
 
-class UStaticMeshComponent;
 class UGideon_UltB_WaterBombDrop;
 
 UCLASS()
@@ -33,9 +32,6 @@ protected:
 	void BP_OnBombExploded();
 
 private:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Skills|Ult|B|Gideon", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UStaticMeshComponent> BombVisual = nullptr;
-
 	UPROPERTY()
 	TObjectPtr<UGideon_UltB_WaterBombDrop> WaterBombSkill = nullptr;
 

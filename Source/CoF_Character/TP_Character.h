@@ -27,6 +27,9 @@ class UAnimMontage;
 // Camera
 class UUserWidget;
 
+// Effect
+class AActor;
+
 UCLASS()
 class COF_CHARACTER_API ATP_Character : public ACharacter, public IHitReactInterface, public IDebuffBallTargetInterface
 {
@@ -342,6 +345,17 @@ public:
 	float Skill1A_Range = 0.f;
 	FName Skill1A_StartSocket = NAME_None;
 
+	// Gideon Skill1A 물줄기 이펙트 설정
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Skill1|A|Gideon|VFX")
+	TSubclassOf<AActor> GideonSkill1A_WaterBeamFXClass = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Skill1|A|Gideon|VFX")
+	float GideonSkill1A_WaterBeamFXBaseLength = 100.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Skill1|A|Gideon|VFX")
+	float GideonSkill1A_WaterBeamFXThickness = 1.f;
+
+
 	// 스킬1_B 도끼찍기 / 위로 상승하면서 돌진 / 물폭탄 던지기
 	UFUNCTION(BlueprintCallable, Category = "Skills|Skill1")
 	void Skill1B_ApplyAOE();
@@ -375,6 +389,13 @@ public:
 	float Skill1B_ProjectileSpawnForwardOffset = 0.f;
 	float Skill1B_ProjectileSpawnZOffset = 0.f;
 	FName Skill1B_StartSocket = NAME_None;
+
+	// Gideon AOE 물폭발 FX 설정
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Gideon|VFX")
+	TSubclassOf<AActor> GideonAOEWaterExplosionFXClass = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Gideon|VFX")
+	float GideonAOEWaterExplosionFXBaseRadius = 450.f;
 
 	// ===== Skill 2 =====
 
@@ -411,6 +432,11 @@ public:
 
 	float Skill2A_DebuffDuration = 0.f;
 	float Skill2A_DebuffIncomingDamageMultiplier = 1.f;
+
+	// Gideon Skill2A 디버프가 적용된 대상에게 붙일 FX
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Skill2|A|Gideon|VFX") TSubclassOf<AActor> GideonSkill2A_DebuffFXClass = nullptr;
+	// 디버프 FX를 붙일 대상 Skeletal Mesh의 소켓 이름
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Skill2|A|Gideon|VFX") FName GideonSkill2A_DebuffFXSocketName = TEXT("FX_Center");
 
 	// 스킬 2_B 돌기 / Kallari 수리검 던지고 폭발
 	UFUNCTION(BlueprintCallable, Category = "Skills|Skill2|B")
@@ -452,6 +478,13 @@ public:
 	float Skill2B_ExplosionDamage = 0.f;
 	float Skill2B_ExplosionRadius = 0.f;
 
+	// Kallari Skill2B 수리검 폭발 이펙트
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Skill2|B|Kallari|VFX") TSubclassOf<AActor> KallariSkill2B_ExplosionFXClass = nullptr;
+	// 이펙트가 지면이나 충돌 대상 내부에 묻히지 않도록 위로 올리는 값 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Skill2|B|Kallari|VFX") float KallariSkill2B_ExplosionFXZOffset = 5.f;
+	// 생성된 FX Actor를 자동으로 제거하는 시간
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Skill2|B|Kallari|VFX", meta = (ClampMin = "0.0")) float KallariSkill2B_ExplosionFXLifeSeconds = 5.f;
+
 	float Skill2B_BackDashDuration = 0.f;
 	float Skill2B_BackwardDistance = 0.f;
 
@@ -471,6 +504,10 @@ public:
 	float UltA_Shield = 0.f;
 	float UltA_Radius = 0.f;
 
+	// Terra UltA 쉴드가 부여된 대상에게 붙일 FX
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Ult|A|Terra|VFX")
+	TSubclassOf<AActor> TerraUltA_ShieldedFXClass = nullptr;
+
 	// Kallari
 	float UltA_Damage = 0.f;
 	float UltA_DashDistance = 0.f;
@@ -484,6 +521,17 @@ public:
 	float UltA_BeamRange = 0.f;
 	float UltA_BeamRadius = 0.f;
 	FName UltA_BeamStartSocket = NAME_None;
+
+	// Gideon UltA 물광선 FX 설정
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Ult|A|Gideon|VFX")
+	TSubclassOf<AActor> GideonUltA_WaterBeamFXClass = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Ult|A|Gideon|VFX")
+	float GideonUltA_WaterBeamFXBaseLength = 1800.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Ult|A|Gideon|VFX")
+	float GideonUltA_WaterBeamFXThickness = 1.f;
+
 
 	UFUNCTION(BlueprintCallable, Category = "Skills|Ult|A")
 	void UltA_ShieldStart(); // Terra
@@ -522,7 +570,7 @@ public:
 	float AttackMultiplier = 1.0f;
 
 	// Gideon
-	TSubclassOf<AGideon_UltB_WaterBombActor> UltB_WaterBombActorClass = nullptr;
+	TSubclassOf<ACoF_CommonProjectile> UltB_WaterBombActorClass = nullptr;
 	float UltB_WaterBombDamage = 0.f;
 	float UltB_WaterBombRadius = 0.f;
 	float UltB_WaterBombTargetDistance = 0.f;
@@ -634,6 +682,18 @@ public:
 
 	float DefaultCameraArmLength = 0.f;
 	FVector DefaultCameraSocketOffset = FVector::ZeroVector;
+
+
+	// ===== 플레이어 HUD =====
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category = "UI|PlayerHUD")
+	TSubclassOf<UUserWidget> PlayerHUDWidgetClass = nullptr;
+
+	UPROPERTY()
+	TObjectPtr<UUserWidget> PlayerHUDWidgetInstance = nullptr;
+
+	// 로컬 플레이어의 HUD를 생성한다.
+	void EnsurePlayerHUDWidget();
+
 
 	// ===== 캐릭터 선택(런타임 교체) =====
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character|Switch")

@@ -3,8 +3,52 @@
 #include "CombatComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Engine/World.h"
-#include "Skills/Gideon/Gideon_UltB_WaterBombActor.h"
+#include "Projectiles/CoF_CommonProjectile.h"
 #include "TP_Character.h"
+
+namespace
+{
+	void SpawnGideonUltBAOEWaterExplosionFX(ATP_Character* C, const FVector& ImpactLocation, float Radius)
+	{
+		if (!C)
+		{
+			return;
+		}
+
+		if (!C->GideonAOEWaterExplosionFXClass)
+		{
+			return;
+		}
+
+		UWorld* World = C->GetWorld();
+		if (!World)
+		{
+			return;
+		}
+
+		FActorSpawnParameters Params;
+		Params.Owner = C;
+		Params.Instigator = C;
+		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		AActor* SpawnedFX = World->SpawnActor<AActor>(
+			C->GideonAOEWaterExplosionFXClass,
+			ImpactLocation + FVector(0.f, 0.f, 5.f),
+			FRotator::ZeroRotator,
+			Params
+		);
+
+		if (!SpawnedFX)
+		{
+			return;
+		}
+
+		const float BaseRadius = FMath::Max(C->GideonAOEWaterExplosionFXBaseRadius, 1.f);
+		const float FXScale = FMath::Max(Radius / BaseRadius, 0.1f);
+
+		SpawnedFX->SetActorScale3D(FVector(FXScale));
+	}
+}
 
 void UGideon_UltB_WaterBombDrop::ResetRuntime()
 {
@@ -36,13 +80,25 @@ void UGideon_UltB_WaterBombDrop::DropStart()
 		return;
 	}
 
-	FVector ImpactLocation = ResolveImpactLocation();
-	FVector SpawnLocation = ImpactLocation + FVector(0.f, 0.f, C->UltB_WaterBombFallHeight);
+	const FVector ImpactLocation = ResolveImpactLocation();
+	const FVector SpawnLocation = ImpactLocation + FVector(0.f, 0.f, C->UltB_WaterBombFallHeight);
 
-	TSubclassOf<AGideon_UltB_WaterBombActor> BombClass = C->UltB_WaterBombActorClass;
+	TSubclassOf<ACoF_CommonProjectile> BombClass = C->UltB_WaterBombActorClass;
 	if (!BombClass)
 	{
-		BombClass = AGideon_UltB_WaterBombActor::StaticClass();
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(
+				-1,
+				3.0f,
+				FColor::Red,
+				TEXT("[Gideon UltB] UltB_WaterBombActorClass is null. Check CharacterData cache and DA_Char02_Gideon.")
+			);
+		}
+
+		// 물폭탄 BP가 연결되지 않아도 스킬 판정이 완전히 증발하지 않도록 즉시 AOE 폭발 처리
+		ExplodeAtLocation(ImpactLocation);
+		return;
 	}
 
 	FActorSpawnParameters SpawnParams;
@@ -50,14 +106,13 @@ void UGideon_UltB_WaterBombDrop::DropStart()
 	SpawnParams.Instigator = C;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	AGideon_UltB_WaterBombActor* Bomb = World->SpawnActor<AGideon_UltB_WaterBombActor>(
+	ACoF_CommonProjectile* Bomb = World->SpawnActor<ACoF_CommonProjectile>(
 		BombClass,
 		SpawnLocation,
 		FRotator::ZeroRotator,
 		SpawnParams
 	);
 
-	// Spawn 실패 시에도 스킬이 완전히 증발하지 않도록 즉시 AOE 폭발 처리
 	if (!Bomb)
 	{
 		ExplodeAtLocation(ImpactLocation);
@@ -65,7 +120,28 @@ void UGideon_UltB_WaterBombDrop::DropStart()
 	}
 
 	ActiveBomb = Bomb;
-	Bomb->InitVisualBomb(this, SpawnLocation, ImpactLocation, C->UltB_WaterBombFallDuration);
+
+	const float FallDuration = FMath::Max(C->UltB_WaterBombFallDuration, 0.01f);
+
+	const float FallSpeed = C->UltB_WaterBombFallHeight / FallDuration;
+
+	const FVector LaunchVelocity = FVector(0.f, 0.f, -FallSpeed);
+
+	// UltB_WaterBombRadius는 폭발 피해 반경이다.
+	// Projectile Collision까지 이 값을 쓰면, 구체가 실제로 닿기 전에 폭발 반경 overlap만으로 터진다.
+	// 따라서 낙하 중 물폭탄이 보스/바닥에 닿는 용도의 충돌 반경은 별도로 작게 사용한다.
+	const float BombCollisionRadius = 60.f;
+
+	Bomb->InitProjectileArc(
+		C,
+		C->CombatComp,
+		this,
+		0.f,
+		LaunchVelocity,
+		FallDuration + 1.0f,
+		BombCollisionRadius,
+		0.f
+	);
 
 	DrawDebugSphere(World, ImpactLocation, C->UltB_WaterBombRadius, 32, FColor::Cyan, false, 2.0f);
 	DrawDebugLine(World, SpawnLocation, ImpactLocation, FColor::Cyan, false, 2.0f, 0, 3.0f);
@@ -78,6 +154,9 @@ void UGideon_UltB_WaterBombDrop::ExplodeAtLocation(const FVector& ImpactLocation
 	{
 		return;
 	}
+
+	// 이펙트 생성
+	SpawnGideonUltBAOEWaterExplosionFX(C, ImpactLocation, C->UltB_WaterBombRadius);
 
 	const float FinalDamage = C->UltB_WaterBombDamage * C->AttackMultiplier;
 
