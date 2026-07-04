@@ -433,6 +433,11 @@ public:
 	float Skill2A_DebuffDuration = 0.f;
 	float Skill2A_DebuffIncomingDamageMultiplier = 1.f;
 
+	// Gideon Skill2A 디버프가 적용된 대상에게 붙일 FX
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Skill2|A|Gideon|VFX") TSubclassOf<AActor> GideonSkill2A_DebuffFXClass = nullptr;
+	// 디버프 FX를 붙일 대상 Skeletal Mesh의 소켓 이름
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Skill2|A|Gideon|VFX") FName GideonSkill2A_DebuffFXSocketName = TEXT("FX_Center");
+
 	// 스킬 2_B 돌기 / Kallari 수리검 던지고 폭발
 	UFUNCTION(BlueprintCallable, Category = "Skills|Skill2|B")
 	void Skill2B_HitStart();
@@ -472,6 +477,13 @@ public:
 	TObjectPtr<UAnimMontage> Skill2B_ExplosionMontage = nullptr;
 	float Skill2B_ExplosionDamage = 0.f;
 	float Skill2B_ExplosionRadius = 0.f;
+
+	// Kallari Skill2B 수리검 폭발 이펙트
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Skill2|B|Kallari|VFX") TSubclassOf<AActor> KallariSkill2B_ExplosionFXClass = nullptr;
+	// 이펙트가 지면이나 충돌 대상 내부에 묻히지 않도록 위로 올리는 값 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Skill2|B|Kallari|VFX") float KallariSkill2B_ExplosionFXZOffset = 5.f;
+	// 생성된 FX Actor를 자동으로 제거하는 시간
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills|Skill2|B|Kallari|VFX", meta = (ClampMin = "0.0")) float KallariSkill2B_ExplosionFXLifeSeconds = 5.f;
 
 	float Skill2B_BackDashDuration = 0.f;
 	float Skill2B_BackwardDistance = 0.f;
