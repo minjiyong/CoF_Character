@@ -8,6 +8,7 @@
 #include "Skills/Kallari/Kallari_Skill2B_ShurikenExplosion.h"
 #include "Skills/Gideon/Gideon_Skill1B_WaterBomb.h"
 #include "Skills/Gideon/Gideon_Skill2A_DebuffBall.h"
+#include "Skills/Gideon/Gideon_UltB_WaterBombDrop.h"
 
 #include "TP_Character.h"
 
@@ -199,6 +200,11 @@ void ACoF_CommonProjectile::HandleOverlap(
             DebuffBallSkill->ApplyDebuffToActor(OtherActor);
         }
 
+        if (UGideon_UltB_WaterBombDrop* UltBWaterBombSkill = Cast<UGideon_UltB_WaterBombDrop>(OwningSkill))
+        {
+            UltBWaterBombSkill->ExplodeAtLocation(HitPoint);
+        }
+
         ResolveAndDestroy(HitPoint, HitNormal);
     }
 }
@@ -229,6 +235,18 @@ void ACoF_CommonProjectile::HandleProjectileStop(const FHitResult& ImpactResult)
         }
 
         WaterBombSkill->ExplodeAtLocation(ExplosionLocation);
+    }
+
+    if (UGideon_UltB_WaterBombDrop* UltBWaterBombSkill = Cast<UGideon_UltB_WaterBombDrop>(OwningSkill))
+    {
+        FVector ExplosionLocation = GetActorLocation();
+
+        if (ImpactResult.bBlockingHit)
+        {
+            ExplosionLocation = FVector(ImpactResult.ImpactPoint);
+        }
+
+        UltBWaterBombSkill->ExplodeAtLocation(ExplosionLocation);
     }
 
     ResolveAndDestroy(MarkLocation, MarkNormal);

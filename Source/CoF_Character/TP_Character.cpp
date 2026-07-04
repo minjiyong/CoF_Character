@@ -124,6 +124,9 @@ void ATP_Character::BeginPlay()
 	UEnhancedInputLocalPlayerSubsystem* Subsys = LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
 	if (!Subsys) return;
 
+	// ===== 플레이어 HUD 준비 =====
+	EnsurePlayerHUDWidget();
+
 	if (DefaultMappingContext)
 	{
 		Subsys->AddMappingContext(DefaultMappingContext, 0);
@@ -339,7 +342,7 @@ void ATP_Character::EnsureLockOnWidget()
 	LockOnWidgetInstance->SetAlignmentInViewport(FVector2D(0.5f, 0.5f));
 
 	// 작은 마커 위젯 크기
-	LockOnWidgetInstance->SetDesiredSizeInViewport(FVector2D(40.f, 40.f));
+	LockOnWidgetInstance->SetDesiredSizeInViewport(FVector2D(96.f, 96.f));
 
 	LockOnWidgetInstance->SetVisibility(ESlateVisibility::Hidden);
 }
@@ -381,6 +384,42 @@ void ATP_Character::UpdateLockOnWidget()
 
 	LockOnWidgetInstance->SetPositionInViewport(ScreenPos, false);
 	LockOnWidgetInstance->SetVisibility(ESlateVisibility::HitTestInvisible);
+}
+
+// 플레이어 UI 위젯
+void ATP_Character::EnsurePlayerHUDWidget()
+{
+	if (PlayerHUDWidgetInstance || !PlayerHUDWidgetClass)
+	{
+		return;
+	}
+
+	// 자신의 화면에만 HUD를 생성한다.
+	if (!IsLocallyControlled())
+	{
+		return;
+	}
+
+	APlayerController* PC =
+		Cast<APlayerController>(GetController());
+
+	if (!PC)
+	{
+		return;
+	}
+
+	PlayerHUDWidgetInstance =
+		CreateWidget<UUserWidget>(
+			PC,
+			PlayerHUDWidgetClass
+		);
+
+	if (!PlayerHUDWidgetInstance)
+	{
+		return;
+	}
+
+	PlayerHUDWidgetInstance->AddToViewport(10);
 }
 
 // 플레이어 세팅
@@ -992,30 +1031,26 @@ void ATP_Character::Skill1A_HitStart()
 	{
 		Terra_Skill1A->HitStart();
 	}
-
 	else if (Skill1A_Implementation == ESkill1AImplementation::KallariDashSlash && Kallari_Skill1A)
 	{
 		Kallari_Skill1A->HitStart();
 	}
-
 	else if (Skill1A_Implementation == ESkill1AImplementation::GideonWaterCannon && Gideon_Skill1A)
 	{
 		Gideon_Skill1A->HitStart();
 	}
 }
 
-void ATP_Character::Skill1A_HitEnd()		//역시나 당장은 필요없는듯 기존 hitend 돌려쓰는중 나중에 필요하면 바꾸자.
+void ATP_Character::Skill1A_HitEnd()
 {
 	if (Skill1A_Implementation == ESkill1AImplementation::TerraDash && Terra_Skill1A)
 	{
 		Terra_Skill1A->HitEnd();
 	}
-
 	else if (Skill1A_Implementation == ESkill1AImplementation::KallariDashSlash && Kallari_Skill1A)
 	{
 		Kallari_Skill1A->HitEnd();
 	}
-
 	else if (Skill1A_Implementation == ESkill1AImplementation::GideonWaterCannon && Gideon_Skill1A)
 	{
 		Gideon_Skill1A->HitEnd();

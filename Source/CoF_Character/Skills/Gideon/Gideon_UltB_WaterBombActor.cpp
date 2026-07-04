@@ -1,11 +1,8 @@
 #include "Skills/Gideon/Gideon_UltB_WaterBombActor.h"
 
 #include "Components/SphereComponent.h"
-#include "Components/StaticMeshComponent.h"
-#include "Engine/StaticMesh.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Skills/Gideon/Gideon_UltB_WaterBombDrop.h"
-#include "UObject/ConstructorHelpers.h"
 
 AGideon_UltB_WaterBombActor::AGideon_UltB_WaterBombActor()
 {
@@ -25,18 +22,6 @@ AGideon_UltB_WaterBombActor::AGideon_UltB_WaterBombActor()
 		ProjectileMovement->ProjectileGravityScale = 0.f;
 		ProjectileMovement->InitialSpeed = 0.f;
 		ProjectileMovement->MaxSpeed = 0.f;
-	}
-
-	BombVisual = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BombVisual"));
-	BombVisual->SetupAttachment(GetRootComponent());
-	BombVisual->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	BombVisual->SetGenerateOverlapEvents(false);
-	BombVisual->SetRelativeScale3D(FVector(2.0f));
-
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereMesh(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
-	if (SphereMesh.Succeeded())
-	{
-		BombVisual->SetStaticMesh(SphereMesh.Object);
 	}
 }
 
@@ -74,8 +59,10 @@ void AGideon_UltB_WaterBombActor::InitVisualBomb(
 	WaterBombSkill = InSkill;
 	StartLocation = InStartLocation;
 	ImpactLocation = InImpactLocation;
+
 	FallDuration = FMath::Max(InFallDuration, 0.01f);
 	ElapsedTime = 0.f;
+
 	bInitialized = true;
 	bFinished = false;
 

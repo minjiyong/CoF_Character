@@ -4,7 +4,7 @@
 #include "Skills/CoF_SkillBase.h"
 #include "Gideon_UltB_WaterBombDrop.generated.h"
 
-class AGideon_UltB_WaterBombActor;
+class ACoF_CommonProjectile;
 
 UCLASS()
 class COF_CHARACTER_API UGideon_UltB_WaterBombDrop : public UCoF_SkillBase
@@ -27,7 +27,7 @@ private:
 	double CooldownEndTime = 0.0;
 
 	UPROPERTY()
-	TObjectPtr<AGideon_UltB_WaterBombActor> ActiveBomb = nullptr;
+	TObjectPtr<ACoF_CommonProjectile> ActiveBomb = nullptr;
 
 	UWorld* GetWorldFromOwner() const;
 
