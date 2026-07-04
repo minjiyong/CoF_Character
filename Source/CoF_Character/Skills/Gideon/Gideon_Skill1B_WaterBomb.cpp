@@ -56,12 +56,15 @@ void UGideon_Skill1B_WaterBomb::ThrowProjectile()
 {
 	ATP_Character* C = GetOwnerChar();
 	if (!C) return;
+
 	if (!C->CombatComp) return;
 
 	UWorld* World = C->GetWorld();
 	if (!World) return;
 
-	TSubclassOf<ACoF_CommonProjectile> SpawnClass = C->Skill1B_ProjectileClass;
+	TSubclassOf<ACoF_CommonProjectile> SpawnClass =
+		C->Skill1B_ProjectileClass;
+
 	if (!SpawnClass)
 	{
 		SpawnClass = ACoF_CommonProjectile::StaticClass();
@@ -69,68 +72,167 @@ void UGideon_Skill1B_WaterBomb::ThrowProjectile()
 
 	FVector SpawnLocation =
 		C->GetActorLocation()
-		+ C->GetActorForwardVector() * C->Skill1B_ProjectileSpawnForwardOffset
-		+ FVector::UpVector * C->Skill1B_ProjectileSpawnZOffset;
+		+ C->GetActorForwardVector()
+		* C->Skill1B_ProjectileSpawnForwardOffset
+		+ FVector::UpVector
+		* C->Skill1B_ProjectileSpawnZOffset;
 
 	if (USkeletalMeshComponent* MeshComp = C->GetMesh())
 	{
-		if (C->Skill1B_StartSocket != NAME_None && MeshComp->DoesSocketExist(C->Skill1B_StartSocket))
+		if (
+			C->Skill1B_StartSocket != NAME_None
+			&& MeshComp->DoesSocketExist(
+				C->Skill1B_StartSocket
+			)
+			)
 		{
-			SpawnLocation = MeshComp->GetSocketLocation(C->Skill1B_StartSocket);
+			SpawnLocation =
+				MeshComp->GetSocketLocation(
+					C->Skill1B_StartSocket
+				);
 		}
 	}
 
-	const float ForwardSpeed = FMath::Max(C->Skill1B_ProjectileForwardSpeed, 1.f);
-	const float UpwardSpeed = C->Skill1B_ProjectileUpwardSpeed;
-	const float GravityScale = FMath::Max(C->Skill1B_ProjectileGravityScale, 0.01f);
-	const float ArcPeakHeight = FMath::Max(C->Skill1B_ProjectileLockOnArcPeakHeight, 50.f);
+	const float ForwardSpeed =
+		FMath::Max(
+			C->Skill1B_ProjectileForwardSpeed,
+			1.f
+		);
+
+	const float UpwardSpeed =
+		C->Skill1B_ProjectileUpwardSpeed;
+
+	const float GravityScale =
+		FMath::Max(
+			C->Skill1B_ProjectileGravityScale,
+			0.01f
+		);
+
+	const float ArcPeakHeight =
+		FMath::Max(
+			C->Skill1B_ProjectileLockOnArcPeakHeight,
+			50.f
+		);
 
 	FVector LaunchVelocity = FVector::ZeroVector;
 
-	// 락온 대상이 있으면: 손 소켓 -> 락온 대상 하체 근처를 정확히 통과하는 포물선
+	// 기본 투사체 수명.
+	// 락온 상태라면 아래에서 실제 포물선 비행시간을 기준으로 다시 늘린다.
+	float ProjectileLifeSeconds =
+		FMath::Max(
+			C->Skill1B_ProjectileLifeSeconds,
+			0.1f
+		);
+
+	// 락온 대상이 있으면:
+	// 손 소켓 -> 락온 대상 하체 근처를 정확히 통과하는 포물선
 	if (C->HasValidLockOnTarget())
 	{
 		if (AActor* LockTarget = C->GetLockOnTarget())
 		{
-			FVector TargetOrigin, TargetExtent;
-			LockTarget->GetActorBounds(true, TargetOrigin, TargetExtent);
+			FVector TargetOrigin;
+			FVector TargetExtent;
+
+			LockTarget->GetActorBounds(
+				true,
+				TargetOrigin,
+				TargetExtent
+			);
 
 			// 중심이 아니라 하체 쪽으로 조준
 			FVector TargetPoint = TargetOrigin;
 			TargetPoint.Z -= TargetExtent.Z * 0.5f;
 
-			FVector HorizontalDelta = TargetPoint - SpawnLocation;
+			FVector HorizontalDelta =
+				TargetPoint - SpawnLocation;
+
 			HorizontalDelta.Z = 0.f;
 
-			FVector HorizontalDir = HorizontalDelta.GetSafeNormal2D();
+			FVector HorizontalDir =
+				HorizontalDelta.GetSafeNormal2D();
+
 			if (HorizontalDir.IsNearlyZero())
 			{
-				HorizontalDir = C->GetActorForwardVector().GetSafeNormal2D();
+				HorizontalDir =
+					C->GetActorForwardVector()
+					.GetSafeNormal2D();
 			}
 
-			const float HorizontalDist = FMath::Max(HorizontalDelta.Size(), 1.f);
-			const float Gravity = FMath::Abs(World->GetGravityZ()) * GravityScale;
+			const float HorizontalDist =
+				FMath::Max(
+					HorizontalDelta.Size(),
+					1.f
+				);
 
-			// 정점을 목표점/시작점보다 ArcPeakHeight 만큼 높게
-			const float ApexZ = FMath::Max(SpawnLocation.Z, TargetPoint.Z) + ArcPeakHeight;
+			const float Gravity =
+				FMath::Abs(World->GetGravityZ())
+				* GravityScale;
 
-			const float HeightToApex = FMath::Max(ApexZ - SpawnLocation.Z, 1.f);
-			const float HeightFromApex = FMath::Max(ApexZ - TargetPoint.Z, 1.f);
+			// 정점을 목표점/시작점보다 ArcPeakHeight만큼 높게 설정
+			const float ApexZ =
+				FMath::Max(
+					SpawnLocation.Z,
+					TargetPoint.Z
+				)
+				+ ArcPeakHeight;
 
-			const float TimeUp = FMath::Sqrt((2.f * HeightToApex) / Gravity);
-			const float TimeDown = FMath::Sqrt((2.f * HeightFromApex) / Gravity);
-			const float TotalTime = FMath::Max(TimeUp + TimeDown, 0.05f);
+			const float HeightToApex =
+				FMath::Max(
+					ApexZ - SpawnLocation.Z,
+					1.f
+				);
 
-			const FVector HorizontalVelocity = HorizontalDir * (HorizontalDist / TotalTime);
-			const float VerticalVelocity = Gravity * TimeUp;
+			const float HeightFromApex =
+				FMath::Max(
+					ApexZ - TargetPoint.Z,
+					1.f
+				);
 
-			LaunchVelocity = HorizontalVelocity + FVector::UpVector * VerticalVelocity;
+			const float TimeUp =
+				FMath::Sqrt(
+					(2.f * HeightToApex)
+					/ Gravity
+				);
+
+			const float TimeDown =
+				FMath::Sqrt(
+					(2.f * HeightFromApex)
+					/ Gravity
+				);
+
+			const float TotalTime =
+				FMath::Max(
+					TimeUp + TimeDown,
+					0.05f
+				);
+
+			const FVector HorizontalVelocity =
+				HorizontalDir
+				* (HorizontalDist / TotalTime);
+
+			const float VerticalVelocity =
+				Gravity * TimeUp;
+
+			LaunchVelocity =
+				HorizontalVelocity
+				+ FVector::UpVector
+				* VerticalVelocity;
+
+			// 실제 도착시간보다 0.5초 더 오래 살아 있도록 보장한다.
+			// 기존에 설정한 수명이 더 길다면 기존 수명을 유지한다.
+			ProjectileLifeSeconds =
+				FMath::Max(
+					ProjectileLifeSeconds,
+					TotalTime + 0.75f
+				);
 		}
 	}
 	else
 	{
 		// 비락온: 몸체 전방 + 위쪽 힘
-		FVector Forward = C->GetActorForwardVector();
+		FVector Forward =
+			C->GetActorForwardVector();
+
 		Forward.Z = 0.f;
 		Forward = Forward.GetSafeNormal();
 
@@ -139,15 +241,19 @@ void UGideon_Skill1B_WaterBomb::ThrowProjectile()
 			Forward = FVector::ForwardVector;
 		}
 
-		LaunchVelocity = Forward * ForwardSpeed + FVector::UpVector * UpwardSpeed;
+		LaunchVelocity =
+			Forward * ForwardSpeed
+			+ FVector::UpVector * UpwardSpeed;
 	}
 
-	FRotator SpawnRotation = LaunchVelocity.Rotation();
+	const FRotator SpawnRotation =
+		LaunchVelocity.Rotation();
 
 	FActorSpawnParameters Params;
 	Params.Owner = C;
 	Params.Instigator = C;
-	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	Params.SpawnCollisionHandlingOverride =
+		ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 	ACoF_CommonProjectile* Projectile =
 		World->SpawnActor<ACoF_CommonProjectile>(
@@ -157,7 +263,10 @@ void UGideon_Skill1B_WaterBomb::ThrowProjectile()
 			Params
 		);
 
-	if (!Projectile) return;
+	if (!Projectile)
+	{
+		return;
+	}
 
 	Projectile->InitProjectileArc(
 		C,
@@ -165,7 +274,11 @@ void UGideon_Skill1B_WaterBomb::ThrowProjectile()
 		this,
 		0.f,
 		LaunchVelocity,
-		C->Skill1B_ProjectileLifeSeconds,
+
+		// 기존의 C->Skill1B_ProjectileLifeSeconds 대신
+		// 계산된 안전 수명을 전달한다.
+		ProjectileLifeSeconds,
+
 		C->Skill1B_ProjectileRadius,
 		GravityScale
 	);
