@@ -2,6 +2,8 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
+#include "Engine/Texture2D.h"
+
 #include "SkillTypes.h"
 #include "CharacterData.generated.h"
 
@@ -10,6 +12,26 @@ class UAnimInstance;
 class UAnimMontage;
 class ACoF_CommonProjectile;
 class AGideon_UltB_WaterBombActor;
+
+USTRUCT(BlueprintType)
+struct FSkillSelectionUIData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skill UI")
+	FText DisplayName;
+
+	UPROPERTY(
+		EditDefaultsOnly,
+		BlueprintReadOnly,
+		Category = "Skill UI",
+		meta = (MultiLine = "true")
+	)
+	FText Description;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skill UI")
+	TObjectPtr<UTexture2D> Icon = nullptr;
+};
 
 UCLASS(BlueprintType)
 class COF_CHARACTER_API UCharacterData : public UPrimaryDataAsset
@@ -24,6 +46,37 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Visual")
 	TSubclassOf<UAnimInstance> AnimClass;
+
+
+	// ===== Skill Select UI =====
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI|Character")
+	FText CharacterDisplayName;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI|Character")
+	TObjectPtr<UTexture2D> CharacterPortrait = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI|Character")
+	FLinearColor SkillAccentColor = FLinearColor::White;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI|Skill1")
+	FSkillSelectionUIData Skill1A_UI;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI|Skill1")
+	FSkillSelectionUIData Skill1B_UI;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI|Skill2")
+	FSkillSelectionUIData Skill2A_UI;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI|Skill2")
+	FSkillSelectionUIData Skill2B_UI;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI|Ultimate")
+	FSkillSelectionUIData UltA_UI;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI|Ultimate")
+	FSkillSelectionUIData UltB_UI;
+
 
 	// ===== Stats =====
 

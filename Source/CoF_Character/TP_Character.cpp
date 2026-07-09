@@ -2013,6 +2013,23 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	if (Gideon_UltB) Gideon_UltB->ResetRuntime();
 }
 
+// 캐릭터 스킬 아이콘 인터페이스
+void ATP_Character::SetSelectedSkillLoadout(ESkillVariant InSkill1, ESkillVariant InSkill2, ESkillVariant InUltimate)
+{
+	Skill1Selected = InSkill1;
+	Skill2Selected = InSkill2;
+	UltSelected = InUltimate;
+
+	UE_LOG(
+		LogTemp,
+		Log,
+		TEXT("[SkillLoadout] Skill1=%d, Skill2=%d, Ultimate=%d"),
+		static_cast<int32>(Skill1Selected),
+		static_cast<int32>(Skill2Selected),
+		static_cast<int32>(UltSelected)
+	);
+}
+
 // Gideon Skill2A 부조화 구슬 디버프 인터페이스
 void ATP_Character::ApplyDebuffBall_Implementation(float InDuration, float InIncomingDamageMultiplier)
 {

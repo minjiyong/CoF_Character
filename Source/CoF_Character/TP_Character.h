@@ -121,6 +121,21 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character")
 	TObjectPtr<UCharacterData> DefaultCharacterData;
 
+
+	// ===== Character UI Icon =====
+	UFUNCTION(BlueprintCallable, Category = "Skills|Selection")
+	void SetSelectedSkillLoadout(ESkillVariant InSkill1, ESkillVariant InSkill2, ESkillVariant InUltimate );
+
+	UFUNCTION(BlueprintPure, Category = "Skills|Selection")
+	ESkillVariant GetSelectedSkill1() const{ return Skill1Selected; }
+
+	UFUNCTION(BlueprintPure, Category = "Skills|Selection")
+	ESkillVariant GetSelectedSkill2() const{ return Skill2Selected; }
+
+	UFUNCTION(BlueprintPure, Category = "Skills|Selection")
+	ESkillVariant GetSelectedUltimate() const{ return UltSelected; }
+
+
 	// ===== Input callbacks =====
 	void Input_Move(const FInputActionValue& Value);
 	void Input_Look(const FInputActionValue& Value);
