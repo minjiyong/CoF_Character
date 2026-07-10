@@ -118,6 +118,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Character")
 	void ApplyCharacterData(const UCharacterData* Data);
 
+	// 현재 적용 중인 캐릭터 데이터를 반환한다.
+	UFUNCTION(BlueprintPure, Category = "Character|Data")
+	UCharacterData* GetCurrentCharacterData() const;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character")
 	TObjectPtr<UCharacterData> DefaultCharacterData;
 

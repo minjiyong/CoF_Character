@@ -2080,3 +2080,14 @@ void ATP_Character::SelectSlot2() { SelectCharacterSlot(1); }
 void ATP_Character::SelectSlot3() { SelectCharacterSlot(2); }
 void ATP_Character::SelectSlot4() { SelectCharacterSlot(3); }
 void ATP_Character::SelectSlot5() { SelectCharacterSlot(4); }
+
+// 현재 적용 중인 캐릭터 데이터를 반환한다.
+UCharacterData* ATP_Character::GetCurrentCharacterData() const
+{
+	if (CharacterSlots.IsValidIndex(CurrentSlotIndex))
+	{
+		return CharacterSlots[CurrentSlotIndex].Get();
+	}
+
+	return DefaultCharacterData.Get();
+}
