@@ -1022,6 +1022,9 @@ void ATP_Character::Input_Skill1Started(const FInputActionValue&)
 			Gideon_Skill1B->StartCooldown(Now, Skill1B_Cooldown);
 		}
 	}
+
+	// HUD 표시용 쿨타임 시작
+	StartSkillCooldownUI(ESkillSlot::Skill1, GetSelectedSkillMaxCooldown(ESkillSlot::Skill1));
 }
 
 // ===== Skill1_A 돌진 (wrapper) =====
@@ -1308,6 +1311,11 @@ void ATP_Character::Input_Skill2Started(const FInputActionValue&)
 			Gideon_Skill2B->StartCooldown(Now, Skill2B_Cooldown);
 		}
 	}
+
+	// HUD 표시용 쿨타임 시작
+	StartSkillCooldownUI(ESkillSlot::Skill2, GetSelectedSkillMaxCooldown(ESkillSlot::Skill2));
+	// 재사용 전까지는 화면에 쿨타임을 표시하지 않음
+	SetSkillCooldownUIVisible(ESkillSlot::Skill2, false);
 }
 
 // ===== Skill2_A (wrapper) =====
@@ -1520,6 +1528,9 @@ void ATP_Character::Input_UltStarted(const FInputActionValue&)
 			Gideon_UltB->StartCooldown(Now, UltB_Cooldown);
 		}
 	}
+
+	// HUD 표시용 쿨타임 시작
+	StartSkillCooldownUI(ESkillSlot::Ult, GetSelectedSkillMaxCooldown(ESkillSlot::Ult));
 }
 
 // ===== UltA Terra =====
@@ -2011,6 +2022,9 @@ void ATP_Character::ApplyCharacterData(const UCharacterData* Data)
 	if (Gideon_Skill2B) Gideon_Skill2B->ResetRuntime();
 	if (Gideon_UltA) Gideon_UltA->ResetRuntime();
 	if (Gideon_UltB) Gideon_UltB->ResetRuntime();
+
+	// 쿨타임 HUD UI 초기화
+	ResetSkillCooldownUI();
 }
 
 // 캐릭터 스킬 아이콘 인터페이스
@@ -2028,6 +2042,269 @@ void ATP_Character::SetSelectedSkillLoadout(ESkillVariant InSkill1, ESkillVarian
 		static_cast<int32>(Skill2Selected),
 		static_cast<int32>(UltSelected)
 	);
+}
+
+UTexture2D* ATP_Character::GetSelectedSkillIcon(ESkillSlot Slot) const
+{
+	const UCharacterData* Data = GetCurrentCharacterData();
+
+	if (!Data)
+	{
+		return nullptr;
+	}
+
+	switch (Slot)
+	{
+	case ESkillSlot::Skill1:
+		if (Skill1Selected == ESkillVariant::A)
+		{
+			return Data->Skill1A_UI.Icon.Get();
+		}
+
+		if (Skill1Selected == ESkillVariant::B)
+		{
+			return Data->Skill1B_UI.Icon.Get();
+		}
+		break;
+
+	case ESkillSlot::Skill2:
+		if (Skill2Selected == ESkillVariant::A)
+		{
+			return Data->Skill2A_UI.Icon.Get();
+		}
+
+		if (Skill2Selected == ESkillVariant::B)
+		{
+			return Data->Skill2B_UI.Icon.Get();
+		}
+		break;
+
+	case ESkillSlot::Ult:
+		if (UltSelected == ESkillVariant::A)
+		{
+			return Data->UltA_UI.Icon.Get();
+		}
+
+		if (UltSelected == ESkillVariant::B)
+		{
+			return Data->UltB_UI.Icon.Get();
+		}
+		break;
+
+	default:
+		break;
+	}
+
+	return nullptr;
+}
+
+float ATP_Character::GetSelectedSkillMaxCooldown(ESkillSlot Slot) const
+{
+	switch (Slot)
+	{
+	case ESkillSlot::Skill1:
+		if (Skill1Selected == ESkillVariant::A)
+		{
+			return Skill1A_Cooldown;
+		}
+
+		if (Skill1Selected == ESkillVariant::B)
+		{
+			return Skill1B_Cooldown;
+		}
+		break;
+
+	case ESkillSlot::Skill2:
+		if (Skill2Selected == ESkillVariant::A)
+		{
+			return Skill2A_Cooldown;
+		}
+
+		if (Skill2Selected == ESkillVariant::B)
+		{
+			return Skill2B_Cooldown;
+		}
+		break;
+
+	case ESkillSlot::Ult:
+		if (UltSelected == ESkillVariant::A)
+		{
+			return UltA_Cooldown;
+		}
+
+		if (UltSelected == ESkillVariant::B)
+		{
+			return UltB_Cooldown;
+		}
+		break;
+
+	default:
+		break;
+	}
+
+	return 0.0f;
+}
+
+void ATP_Character::StartSkillCooldownUI(ESkillSlot Slot, float MaxCooldown)
+{
+	UWorld* World = GetWorld();
+
+	if (!World)
+	{
+		return;
+	}
+
+	MaxCooldown = FMath::Max(0.0f, MaxCooldown);
+
+	const double EndTime =
+		MaxCooldown > 0.0f
+		? World->GetTimeSeconds() + static_cast<double>(MaxCooldown)
+		: 0.0;
+
+	switch (Slot)
+	{
+	case ESkillSlot::Skill1:
+		Skill1UICooldownMax = MaxCooldown;
+		Skill1UICooldownEndTime = EndTime;
+		break;
+
+	case ESkillSlot::Skill2:
+		Skill2UICooldownMax = MaxCooldown;
+		Skill2UICooldownEndTime = EndTime;
+		break;
+
+	case ESkillSlot::Ult:
+		UltUICooldownMax = MaxCooldown;
+		UltUICooldownEndTime = EndTime;
+		break;
+
+	default:
+		break;
+	}
+}
+
+float ATP_Character::GetSkillCooldownRemaining(ESkillSlot Slot) const
+{
+	const UWorld* World = GetWorld();
+
+	if (!World)
+	{
+		return 0.0f;
+	}
+
+	double EndTime = 0.0;
+
+	switch (Slot)
+	{
+	case ESkillSlot::Skill1:
+		EndTime = Skill1UICooldownEndTime;
+		break;
+
+	case ESkillSlot::Skill2:
+		EndTime = Skill2UICooldownEndTime;
+		break;
+
+	case ESkillSlot::Ult:
+		EndTime = UltUICooldownEndTime;
+		break;
+
+	default:
+		return 0.0f;
+	}
+
+	const double Remaining =
+		EndTime - World->GetTimeSeconds();
+
+	return Remaining > 0.0
+		? static_cast<float>(Remaining)
+		: 0.0f;
+}
+
+float ATP_Character::GetSkillCooldownPercent(ESkillSlot Slot) const
+{
+	float MaxCooldown = 0.0f;
+
+	switch (Slot)
+	{
+	case ESkillSlot::Skill1:
+		MaxCooldown = Skill1UICooldownMax;
+		break;
+
+	case ESkillSlot::Skill2:
+		MaxCooldown = Skill2UICooldownMax;
+		break;
+
+	case ESkillSlot::Ult:
+		MaxCooldown = UltUICooldownMax;
+		break;
+
+	default:
+		return 0.0f;
+	}
+
+	if (MaxCooldown <= KINDA_SMALL_NUMBER)
+	{
+		return 0.0f;
+	}
+
+	return FMath::Clamp(
+		GetSkillCooldownRemaining(Slot) / MaxCooldown,
+		0.0f,
+		1.0f
+	);
+}
+
+bool ATP_Character::ShouldShowSkillCooldownUI(ESkillSlot Slot) const
+{
+	switch (Slot)
+	{
+	case ESkillSlot::Skill1:
+		return bSkill1UICooldownVisible;
+
+	case ESkillSlot::Skill2:
+		return bSkill2UICooldownVisible;
+
+	case ESkillSlot::Ult:
+		return bUltUICooldownVisible;
+
+	default:
+		return false;
+	}
+}
+
+void ATP_Character::SetSkillCooldownUIVisible(
+	ESkillSlot Slot,
+	bool bVisible
+)
+{
+	switch (Slot)
+	{
+	case ESkillSlot::Skill1:
+		bSkill1UICooldownVisible = bVisible;
+		break;
+
+	case ESkillSlot::Skill2:
+		bSkill2UICooldownVisible = bVisible;
+		break;
+
+	case ESkillSlot::Ult:
+		bUltUICooldownVisible = bVisible;
+		break;
+
+	default:
+		break;
+	}
+}
+
+void ATP_Character::ResetSkillCooldownUI()
+{
+	Skill1UICooldownEndTime = 0.0;
+	Skill2UICooldownEndTime = 0.0;
+	UltUICooldownEndTime = 0.0;
+
+	Skill1UICooldownMax = 0.0f;
+	Skill2UICooldownMax = 0.0f;
+	UltUICooldownMax = 0.0f;
 }
 
 // Gideon Skill2A 부조화 구슬 디버프 인터페이스

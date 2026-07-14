@@ -30,6 +30,9 @@ class UUserWidget;
 // Effect
 class AActor;
 
+// Cooltime UI
+class UTexture2D;
+
 UCLASS()
 class COF_CHARACTER_API ATP_Character : public ACharacter, public IHitReactInterface, public IDebuffBallTargetInterface
 {
@@ -138,6 +141,39 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Skills|Selection")
 	ESkillVariant GetSelectedUltimate() const{ return UltSelected; }
+
+
+	// ===== Skill Cooldown HUD =====
+	// 현재 선택된 A/B 스킬의 아이콘을 반환한다.
+	UFUNCTION(BlueprintPure, Category = "UI|SkillCooldown")
+	UTexture2D* GetSelectedSkillIcon(ESkillSlot Slot) const;
+
+	// 현재 선택된 스킬의 최대 쿨타임을 반환한다.
+	UFUNCTION(BlueprintPure, Category = "UI|SkillCooldown")
+	float GetSelectedSkillMaxCooldown(ESkillSlot Slot) const;
+
+	// HUD 쿨타임 표시를 시작한다.
+	// 실제 스킬 사용 가능 판정이 아니라 화면 표시용이다.
+	UFUNCTION(BlueprintCallable, Category = "UI|SkillCooldown")
+	void StartSkillCooldownUI(ESkillSlot Slot, float MaxCooldown);
+
+	// 현재 남아 있는 HUD 쿨타임을 초 단위로 반환한다.
+	UFUNCTION(BlueprintPure, Category = "UI|SkillCooldown")
+	float GetSkillCooldownRemaining(ESkillSlot Slot) const;
+
+	// ProgressBar에 사용할 0~1 비율을 반환한다.
+	UFUNCTION(BlueprintPure, Category = "UI|SkillCooldown")
+	float GetSkillCooldownPercent(ESkillSlot Slot) const;
+
+	UFUNCTION(BlueprintPure, Category = "UI|SkillCooldown")
+	bool ShouldShowSkillCooldownUI(ESkillSlot Slot) const;
+
+	UFUNCTION(BlueprintCallable, Category = "UI|SkillCooldown")
+	void SetSkillCooldownUIVisible(ESkillSlot Slot, bool bVisible);
+
+	// 캐릭터 변경, 부활, 라운드 초기화 등에 사용한다.
+	UFUNCTION(BlueprintCallable, Category = "UI|SkillCooldown")
+	void ResetSkillCooldownUI();
 
 
 	// ===== Input callbacks =====
@@ -709,6 +745,21 @@ public:
 
 	UPROPERTY()
 	TObjectPtr<UUserWidget> PlayerHUDWidgetInstance = nullptr;
+
+	// ===== Skill Cooldown HUD Runtime =====
+	// 실제 스킬 쿨타임이 아니라 HUD 표시용 시간이다.
+
+	double Skill1UICooldownEndTime = 0.0;
+	double Skill2UICooldownEndTime = 0.0;
+	double UltUICooldownEndTime = 0.0;
+
+	float Skill1UICooldownMax = 0.0f;
+	float Skill2UICooldownMax = 0.0f;
+	float UltUICooldownMax = 0.0f;
+
+	bool bSkill1UICooldownVisible = true;
+	bool bSkill2UICooldownVisible = true;
+	bool bUltUICooldownVisible = true;
 
 	// 로컬 플레이어의 HUD를 생성한다.
 	void EnsurePlayerHUDWidget();
