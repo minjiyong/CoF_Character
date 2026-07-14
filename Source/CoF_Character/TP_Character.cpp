@@ -1170,10 +1170,21 @@ void ATP_Character::Input_Skill2Started(const FInputActionValue&)
 		SetSkillInputEnabled(false);
 		SetJumpInputEnabled(false);
 
-		if (!Kallari_Skill2A->TeleportToMarkAndAttack())
+		const bool bSecondUseSucceeded =
+			Kallari_Skill2A->TeleportToMarkAndAttack();
+
+		if (!bSecondUseSucceeded)
 		{
 			SetEveryInputEnabled(true);
+			return;
 		}
+
+		// 첫 번째 사용 시점부터 이미 흐르고 있던 쿨타임을 이제 표시
+		SetSkillCooldownUIVisible(
+			ESkillSlot::Skill2,
+			true
+		);
+
 		return;
 	}
 
@@ -1200,10 +1211,21 @@ void ATP_Character::Input_Skill2Started(const FInputActionValue&)
 		SetSkillInputEnabled(false);
 		SetJumpInputEnabled(false);
 
-		if (!Kallari_Skill2B->PlayExplosionMontage())
+		const bool bSecondUseSucceeded =
+			Kallari_Skill2B->PlayExplosionMontage();
+
+		if (!bSecondUseSucceeded)
 		{
 			SetEveryInputEnabled(true);
+			return;
 		}
+
+		// 첫 번째 사용 시점부터 이미 흐르고 있던 쿨타임을 이제 표시
+		SetSkillCooldownUIVisible(
+			ESkillSlot::Skill2,
+			true
+		);
+
 		return;
 	}
 
@@ -1314,8 +1336,24 @@ void ATP_Character::Input_Skill2Started(const FInputActionValue&)
 
 	// HUD 표시용 쿨타임 시작
 	StartSkillCooldownUI(ESkillSlot::Skill2, GetSelectedSkillMaxCooldown(ESkillSlot::Skill2));
-	// 재사용 전까지는 화면에 쿨타임을 표시하지 않음
-	SetSkillCooldownUIVisible(ESkillSlot::Skill2, false);
+	// Kallari Skill2 A/B는 두 번째 사용 전까지 쿨타임 UI를 숨긴다.
+	const bool bIsKallariSkill2A =
+		Skill2Selected == ESkillVariant::A
+		&& Skill2A_Implementation
+		== ESkill2AImplementation::KallariShurikenTeleport;
+
+	const bool bIsKallariSkill2B =
+		Skill2Selected == ESkillVariant::B
+		&& Skill2B_Implementation
+		== ESkill2BImplementation::KallariShurikenExplosion;
+
+	const bool bIsKallariSkill2 =
+		bIsKallariSkill2A || bIsKallariSkill2B;
+
+	SetSkillCooldownUIVisible(
+		ESkillSlot::Skill2,
+		!bIsKallariSkill2
+	);
 }
 
 // ===== Skill2_A (wrapper) =====
@@ -2305,6 +2343,10 @@ void ATP_Character::ResetSkillCooldownUI()
 	Skill1UICooldownMax = 0.0f;
 	Skill2UICooldownMax = 0.0f;
 	UltUICooldownMax = 0.0f;
+
+	bSkill1UICooldownVisible = true;
+	bSkill2UICooldownVisible = true;
+	bUltUICooldownVisible = true;
 }
 
 // Gideon Skill2A 부조화 구슬 디버프 인터페이스
