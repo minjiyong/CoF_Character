@@ -12,7 +12,7 @@
 
 #include "TP_Character.h"
 
-#include "DrawDebugHelpers.h"
+#include "Debug/CoFDebug.h"
 
 ACoF_CommonProjectile::ACoF_CommonProjectile()
 {
@@ -65,17 +65,9 @@ void ACoF_CommonProjectile::InitProjectile(
 
     SetLifeSpan(InLifeSeconds);
 
-#if !(UE_BUILD_SHIPPING)
-    if (UWorld* World = GetWorld())
-    {
-        DrawDebugSphere(World, GetActorLocation(), InRadius, 16, FColor::Green, false, 2.0f, 0, 1.5f);
-    }
+    FCoFDebug::DrawSphere(GetWorld(), GetActorLocation(), InRadius, 16, FColor::Green, false, 2.0f, 0, 1.5f);
 
-    if (GEngine)
-    {
-        //GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("[Projectile Init] Damage=%.1f Speed=%.1f Radius=%.1f"), InDamage, InInitialSpeed, InRadius));
-    }
-#endif
+    FCoFDebug::Print(FString::Printf(TEXT("[Projectile Init] " "Damage=%.1f Speed=%.1f Radius=%.1f"), InDamage, InInitialSpeed, InRadius), 2.0f, FColor::Green);
 }
 
 void ACoF_CommonProjectile::InitProjectileArc(
@@ -106,18 +98,11 @@ void ACoF_CommonProjectile::InitProjectileArc(
 
     SetLifeSpan(InLifeSeconds);
 
-#if !(UE_BUILD_SHIPPING)
-    if (UWorld* World = GetWorld())
-    {
-        DrawDebugSphere(World, GetActorLocation(), InRadius, 16, FColor::Cyan, false, 2.0f, 0, 1.5f);
-        DrawDebugLine(World, GetActorLocation(), GetActorLocation() + InLaunchVelocity.GetSafeNormal() * 250.f, FColor::Cyan, false, 2.0f, 0, 2.f);
-    }
+    FCoFDebug::DrawSphere(GetWorld(), GetActorLocation(), InRadius, 16, FColor::Cyan, false, 2.0f, 0, 1.5f);
 
-    if (GEngine)
-    {
-        //GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Cyan, FString::Printf(TEXT("[Projectile Arc Init] Damage=%.1f Speed=%.1f Radius=%.1f Gravity=%.2f"), InDamage, InLaunchVelocity.Size(), InRadius, InGravityScale));
-    }
-#endif
+    FCoFDebug::DrawLine(GetWorld(), GetActorLocation(), InLaunchVelocity.GetSafeNormal() * 250.f, FColor::Cyan, false, 2.0f, 0, 2.f);
+
+    FCoFDebug::Print(FString::Printf(TEXT("[Projectile Arc Init] ""Damage=%.1f Speed=%.1f ""Radius=%.1f Gravity=%.2f"), InDamage, InLaunchVelocity.Size(), InRadius, InGravityScale), 2.0f, FColor::Cyan);
 }
 
 void ACoF_CommonProjectile::BeginPlay()
@@ -171,18 +156,11 @@ void ACoF_CommonProjectile::HandleOverlap(
             HitNormal = -GetActorForwardVector();
         }
 
-#if !(UE_BUILD_SHIPPING)
-        if (UWorld* World = GetWorld())
-        {
-            DrawDebugSphere(World, HitPoint, Collision ? Collision->GetScaledSphereRadius() : 24.f, 16, FColor::Red, false, 2.0f, 0, 2.0f);
-            DrawDebugLine(World, HitPoint, HitPoint + HitNormal * 80.f, FColor::Yellow, false, 2.0f, 0, 2.0f);
-        }
+        FCoFDebug::DrawSphere(GetWorld(), HitPoint, Collision ? Collision->GetScaledSphereRadius() : 24.f, 16, FColor::Red, false, 2.0f, 0, 2.0f);
 
-        if (GEngine)
-        {
-            //GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, FString::Printf(TEXT("[Projectile Hit] Target=%s Damage=%.1f"), *GetNameSafe(OtherActor), Damage));
-        }
-#endif
+        FCoFDebug::DrawLine(GetWorld(), HitPoint, HitPoint + HitNormal * 80.f, FColor::Yellow, false, 2.0f, 0, 2.0f);
+
+        FCoFDebug::Print(FString::Printf(TEXT("[Projectile Hit] Target=%s Damage=%.1f"), *GetNameSafe(OtherActor), Damage), 2.0f, FColor::Red);
 
         // direct damage는 0보다 클 때만
         if (Damage > 0.f)

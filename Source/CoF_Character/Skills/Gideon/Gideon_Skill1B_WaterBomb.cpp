@@ -1,7 +1,7 @@
 #include "Skills/Gideon/Gideon_Skill1B_WaterBomb.h"
 
 #include "CombatComponent.h"
-#include "DrawDebugHelpers.h"
+#include "Debug/CoFDebug.h"
 #include "Engine/OverlapResult.h"
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
@@ -306,19 +306,7 @@ void UGideon_Skill1B_WaterBomb::ExplodeAtLocation(const FVector& ImpactLocation)
 	// ÀÌÆåÆ® »ý¼º
 	SpawnGideonSkill1BAOEWaterExplosionFX(C, ImpactLocation, C->Skill1B_Radius);
 
-#if !(UE_BUILD_SHIPPING)
-	DrawDebugSphere(
-		World,
-		ImpactLocation,
-		C->Skill1B_Radius,
-		24,
-		FColor::Blue,
-		false,
-		1.5f,
-		0,
-		2.f
-	);
-#endif
+	FCoFDebug::DrawSphere(World, ImpactLocation, C->Skill1B_Radius, 24, FColor::Blue, false, 1.5f, 0, 2.f);
 
 	TArray<FOverlapResult> Overlaps;
 

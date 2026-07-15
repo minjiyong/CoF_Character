@@ -1,7 +1,7 @@
 #include "Skills/Gideon/Gideon_UltB_WaterBombDrop.h"
 
 #include "CombatComponent.h"
-#include "DrawDebugHelpers.h"
+#include "Debug/CoFDebug.h"
 #include "Engine/World.h"
 #include "Projectiles/CoF_CommonProjectile.h"
 #include "TP_Character.h"
@@ -86,17 +86,12 @@ void UGideon_UltB_WaterBombDrop::DropStart()
 	TSubclassOf<ACoF_CommonProjectile> BombClass = C->UltB_WaterBombActorClass;
 	if (!BombClass)
 	{
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(
-				-1,
-				3.0f,
-				FColor::Red,
-				TEXT("[Gideon UltB] UltB_WaterBombActorClass is null. Check CharacterData cache and DA_Char02_Gideon.")
-			);
-		}
+		FCoFDebug::Print(TEXT("[Gideon UltB] ""UltB_WaterBombActorClass is null. ""Check CharacterData cache and ""DA_Char02_Gideon."), 3.0f, FColor::Red);
 
-		// 물폭탄 BP가 연결되지 않아도 스킬 판정이 완전히 증발하지 않도록 즉시 AOE 폭발 처리
+		/*
+		 * 물폭탄 BP가 연결되지 않아도
+		 * 스킬 판정이 완전히 증발하지 않도록 즉시 AOE 폭발 처리
+		 */
 		ExplodeAtLocation(ImpactLocation);
 		return;
 	}
@@ -143,8 +138,8 @@ void UGideon_UltB_WaterBombDrop::DropStart()
 		0.f
 	);
 
-	DrawDebugSphere(World, ImpactLocation, C->UltB_WaterBombRadius, 32, FColor::Cyan, false, 2.0f);
-	DrawDebugLine(World, SpawnLocation, ImpactLocation, FColor::Cyan, false, 2.0f, 0, 3.0f);
+	FCoFDebug::DrawSphere(World, ImpactLocation, C->UltB_WaterBombRadius, 32, FColor::Cyan, false, 2.0f);
+	FCoFDebug::DrawLine(World, SpawnLocation, ImpactLocation, FColor::Cyan, false, 2.0f, 0, 3.0f);
 }
 
 void UGideon_UltB_WaterBombDrop::ExplodeAtLocation(const FVector& ImpactLocation)
@@ -169,10 +164,9 @@ void UGideon_UltB_WaterBombDrop::ExplodeAtLocation(const FVector& ImpactLocation
 	C->CombatComp->BeginHitWindow_OneShot();
 	C->CombatComp->EndHitWindow();
 
-	if (UWorld* World = GetWorldFromOwner())
-	{
-		DrawDebugSphere(World, ImpactLocation, C->UltB_WaterBombRadius, 48, FColor::Red, false, 2.0f);
-	}
+
+	FCoFDebug::DrawSphere(GetWorldFromOwner(), ImpactLocation, C->UltB_WaterBombRadius, 48, FColor::Red, false, 2.0f);
+	
 }
 
 UWorld* UGideon_UltB_WaterBombDrop::GetWorldFromOwner() const

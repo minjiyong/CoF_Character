@@ -56,16 +56,8 @@
 #include "Skills/Gideon/Gideon_UltB_WaterBombDrop.h"
 #include "Skills/Gideon/Gideon_UltB_WaterBombActor.h"
 
-#include "DrawDebugHelpers.h"
+#include "Debug/CoFDebug.h"
 
-// Debug
-static void ScreenDbg(const FString& Msg, float Sec = 1.5f, FColor Color = FColor::Cyan)
-{
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, Sec, Color, Msg);
-	}
-}
 
 ATP_Character::ATP_Character()
 {
@@ -496,8 +488,15 @@ void ATP_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	PlayerInputComponent->BindKey(EKeys::Four, IE_Pressed, this, &ATP_Character::SelectSlot4);
 	PlayerInputComponent->BindKey(EKeys::Five, IE_Pressed, this, &ATP_Character::SelectSlot5);
 
-	// 피격 디버깅
-	PlayerInputComponent->BindKey(EKeys::F7, IE_Pressed, this, &ATP_Character::Debug_ForceHit);		// 지금은 F7키에 바인딩
+#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
+	// 전체 C++ 디버그 시각화 및 화면 메시지 토글
+	PlayerInputComponent->BindKey(
+		EKeys::F7,
+		IE_Pressed,
+		this,
+		&ATP_Character::ToggleDebugVisualization
+	);
+#endif
 }
 
 // IA 관련
@@ -611,7 +610,7 @@ void ATP_Character::Input_AttackStarted(const FInputActionValue& Value)
 	if (bComboWindowOpen) {
 		bAttackPressed = true;
 		bComboQueued = true;			// 예약됨 표시용,, 지금은 크게 안 중요함.
-		ScreenDbg(TEXT("Notify: attack queued"), 1.5f, FColor::Yellow);
+		FCoFDebug::Print(TEXT("Notify: attack queued"), 1.5f, FColor::Yellow);
 	}
 }
 
@@ -619,13 +618,13 @@ void ATP_Character::Input_AttackStarted(const FInputActionValue& Value)
 void ATP_Character::ComboWindowOpen()
 {
 	bComboWindowOpen = true;
-	ScreenDbg(TEXT("Notify: ComboWindowOpen"), 1.5f, FColor::Green);
+	FCoFDebug::Print(TEXT("Notify: ComboWindowOpen"), 1.5f, FColor::Green);
 }
 
 void ATP_Character::ComboWindowClose()
 {
 	bComboWindowOpen = false;
-	ScreenDbg(TEXT("Notify: ComboWindowClose"), 1.5f, FColor::Red);
+	FCoFDebug::Print(TEXT("Notify: ComboWindowClose"), 1.5f, FColor::Red);
 }
 
 // -------기본 공격(콤보) Notify-------
@@ -792,15 +791,11 @@ void ATP_Character::PrimaryAttack_ThrowProjectile()
 		PrimaryProjectileRadius
 	);
 
-#if !(UE_BUILD_SHIPPING)
-	DrawDebugSphere(World, SpawnLocation, PrimaryProjectileRadius, 16, FColor::Cyan, false, 1.5f, 0, 1.5f);
-	DrawDebugLine(World, SpawnLocation, SpawnLocation + SpawnRotation.Vector() * 200.f, FColor::Blue, false, 1.5f, 0, 1.5f);
+	FCoFDebug::DrawSphere(World, SpawnLocation, PrimaryProjectileRadius, 16, FColor::Cyan, false, 1.5f, 0, 1.5f);
 
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Cyan, FString::Printf(TEXT("[PrimaryProjectile] Damage=%.1f Speed=%.1f Radius=%.1f"), CombatComp->Damage, PrimaryProjectileSpeed, PrimaryProjectileRadius));
-	}
-#endif
+	FCoFDebug::DrawLine(World, SpawnLocation, SpawnLocation + SpawnRotation.Vector() * 200.f, FColor::Blue, false, 1.5f, 0, 1.5f);
+
+	FCoFDebug::Print(FString::Printf(TEXT("[PrimaryProjectile] ""Damage=%.1f Speed=%.1f Radius=%.1f"), CombatComp->Damage, PrimaryProjectileSpeed, PrimaryProjectileRadius), 1.5f, FColor::Cyan);
 }
 
 // --------- 우클릭 방패 들기 ---------
@@ -882,14 +877,9 @@ void ATP_Character::HitReactEnd()
 	SetEveryInputEnabled(true);
 }
 
-void ATP_Character::Debug_ForceHit()
+void ATP_Character::ToggleDebugVisualization()
 {
-	// 임의 데미지, 임의 히트포인트/노멀
-	const float DamageAmount = 10.f;
-	const FVector HitPoint = GetActorLocation() + GetActorForwardVector() * 50.f;
-	const FVector HitNormal = -GetActorForwardVector();
-
-	OnHitReact_Implementation(DamageAmount, HitPoint, HitNormal);
+	FCoFDebug::Toggle(GetWorld());
 }
 
 // -------- 스킬 1 ---------
@@ -938,7 +928,7 @@ void ATP_Character::Input_Skill1Started(const FInputActionValue&)
 
 		if (bInCooldown)
 		{
-			ScreenDbg(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
+			FCoFDebug::Print(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
 			return;
 		}
 	}
@@ -961,7 +951,7 @@ void ATP_Character::Input_Skill1Started(const FInputActionValue&)
 
 		if (bInCooldown)
 		{
-			ScreenDbg(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
+			FCoFDebug::Print(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
 			return;
 		}
 	}
@@ -1249,7 +1239,7 @@ void ATP_Character::Input_Skill2Started(const FInputActionValue&)
 
 		if (bInCooldown)
 		{
-			ScreenDbg(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
+			FCoFDebug::Print(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
 			return;
 		}
 	}
@@ -1272,7 +1262,7 @@ void ATP_Character::Input_Skill2Started(const FInputActionValue&)
 
 		if (bInCooldown)
 		{
-			ScreenDbg(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
+			FCoFDebug::Print(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
 			return;
 		}
 	}
@@ -1478,7 +1468,7 @@ void ATP_Character::Input_UltStarted(const FInputActionValue&)
 
 		if (bInCooldown)
 		{
-			ScreenDbg(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
+			FCoFDebug::Print(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
 			return;
 		}
 	}
@@ -1501,7 +1491,7 @@ void ATP_Character::Input_UltStarted(const FInputActionValue&)
 
 		if (bInCooldown)
 		{
-			ScreenDbg(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
+			FCoFDebug::Print(TEXT("Notify: in cooldown"), 1.5f, FColor::Red);
 			return;
 		}
 	}

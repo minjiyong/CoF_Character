@@ -32,8 +32,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat")
 	float Damage = 10.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat")
-	bool bDrawDebug = true;
 
 	// АјАн
 	void BeginHitWindow_OneShot();

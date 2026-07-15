@@ -1,5 +1,5 @@
 #include "CombatComponent.h"
-#include "DrawDebugHelpers.h"
+#include "Debug/CoFDebug.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/Character.h"
 #include "Camera/CameraComponent.h"
@@ -184,9 +184,9 @@ void UCombatComponent::ProcessHitQuery()
 			Params
 		);
 
-		if (bDrawDebug)
+		if (FCoFDebug::IsEnabled())
 		{
-			DrawDebugSphere(World, Center, Radius, 24, bAny ? FColor::Red : FColor::Green, false, 1.0f, 0, 2.f);
+			FCoFDebug::DrawSphere(World, Center, Radius, 24, bAny ? FColor::Red : FColor::Green, false, 1.0f, 0, 2.f);
 		}
 
 		if (bAny)
@@ -234,11 +234,11 @@ void UCombatComponent::ProcessHitQuery()
 			Params
 		);
 
-		if (bDrawDebug)
+		if (FCoFDebug::IsEnabled())
 		{
 			// 이동 경로 표시(선) + 현재 위치 구
-			DrawDebugLine(World, DashPrevLoc, CurrLoc, bAny ? FColor::Red : FColor::Green, false, 0.1f, 0, 2.f);
-			DrawDebugSphere(World, CurrLoc, DashRadius, 16, FColor::Yellow, false, 0.1f, 0, 1.f);
+			FCoFDebug::DrawLine(World, DashPrevLoc, CurrLoc, bAny ? FColor::Red : FColor::Green, false, 0.1f, 0, 2.f);
+			FCoFDebug::DrawSphere(World, CurrLoc, DashRadius, 16, FColor::Yellow, false, 0.1f, 0, 1.f);
 		}
 
 		if (bAny)
@@ -288,10 +288,10 @@ void UCombatComponent::ProcessHitQuery()
 			Params
 		);
 
-		if (bDrawDebug)
+		if (FCoFDebug::IsEnabled())
 		{
-			DrawDebugSphere(World, Center, Radius, 24, bAny ? FColor::Red : FColor::Green, false, 1.0f, 0, 2.f);
-			DrawDebugLine(World, OwnerLoc, Center, FColor::Cyan, false, 1.0f, 0, 2.f);
+			FCoFDebug::DrawSphere(World, Center, Radius, 24, bAny ? FColor::Red : FColor::Green, false, 1.0f, 0, 2.f);
+			FCoFDebug::DrawLine(World, OwnerLoc, Center, FColor::Cyan, false, 1.0f, 0, 2.f);
 
 			const int32 Segs = 16; // 더 높이면 더 부드러움
 			const float AngleStep = (PendingHalfAngleDeg * 2.f) / Segs;
@@ -306,16 +306,16 @@ void UCombatComponent::ProcessHitQuery()
 				const FVector Dir = Fwd.RotateAngleAxis(A, FVector::UpVector);
 				const FVector Curr = Center + Dir * Radius;
 
-				DrawDebugLine(World, Prev, Curr, FColor::Cyan, false, 1.0f, 0, 1.5f);
+				FCoFDebug::DrawLine(World, Prev, Curr, FColor::Cyan, false, 1.0f, 0, 1.5f);
 				Prev = Curr;
 			}
 
 			// 방사선(왼/오 경계 + 중앙)
 			const FVector DirL = Fwd.RotateAngleAxis(-PendingHalfAngleDeg, FVector::UpVector);
 			const FVector DirR = Fwd.RotateAngleAxis(PendingHalfAngleDeg, FVector::UpVector);
-			DrawDebugLine(World, Center, Center + DirL * Radius, FColor::Cyan, false, 1.0f, 0, 1.5f);
-			DrawDebugLine(World, Center, Center + DirR * Radius, FColor::Cyan, false, 1.0f, 0, 1.5f);
-			DrawDebugLine(World, Center, Center + Fwd * Radius, FColor::Blue, false, 1.0f, 0, 1.5f);
+			FCoFDebug::DrawLine(World, Center, Center + DirL * Radius, FColor::Cyan, false, 1.0f, 0, 1.5f);
+			FCoFDebug::DrawLine(World, Center, Center + DirR * Radius, FColor::Cyan, false, 1.0f, 0, 1.5f);
+			FCoFDebug::DrawLine(World, Center, Center + Fwd * Radius, FColor::Blue, false, 1.0f, 0, 1.5f);
 		}
 
 		if (bAny)
@@ -413,10 +413,10 @@ void UCombatComponent::ProcessHitQuery()
 
 		const double Now = World->GetTimeSeconds();
 
-		if (bDrawDebug)
+		if (FCoFDebug::IsEnabled())
 		{
-			DrawDebugLine(World, SpinPrevLoc, CurrLoc, bAny ? FColor::Red : FColor::Green, false, 0.05f, 0, 2.f);
-			DrawDebugSphere(World, CurrLoc, SpinRadius, 16, FColor::Yellow, false, 0.05f, 0, 1.f);
+			FCoFDebug::DrawLine(World, SpinPrevLoc, CurrLoc, bAny ? FColor::Red : FColor::Green, false, 0.05f, 0, 2.f);
+			FCoFDebug::DrawSphere(World, CurrLoc, SpinRadius, 16, FColor::Yellow, false, 0.05f, 0, 1.f);
 		}
 
 		if (bAny)
@@ -460,10 +460,7 @@ void UCombatComponent::ApplyHitToActor(AActor* Target, float InDamage, const FVe
 	{
 		IHitReactInterface::Execute_OnHitReact(Target, FinalDamage, HitPoint, HitNormal);
 
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, FString::Printf(TEXT("[FinalDamage] Raw=%.1f Final=%.1f"), InDamage, FinalDamage));
-		}
+		FCoFDebug::Print(FString::Printf(TEXT("[FinalDamage] Raw=%.1f Final=%.1f"), InDamage, FinalDamage), 2.0f, FColor::Yellow);
 	}
 }
 
@@ -520,13 +517,13 @@ bool UCombatComponent::DoLineTraceMultiWithRange(TArray<FHitResult>& OutHits, fl
 		Params
 	);
 
-	if (bDrawDebug)
+	if (FCoFDebug::IsEnabled())
 	{
-		DrawDebugLine(World, Start, End, bHit ? FColor::Red : FColor::Green, false, 1.5f, 0, 2.f);
+		FCoFDebug::DrawLine(World, Start, End, bHit ? FColor::Red : FColor::Green, false, 1.5f, 0, 2.f);
 
 		for (const FHitResult& Hit : OutHits)
 		{
-			DrawDebugPoint(World, Hit.ImpactPoint, 10.f, FColor::Red, false, 1.5f);
+			FCoFDebug::DrawPoint(World, Hit.ImpactPoint, 10.f, FColor::Red, false, 1.5f);
 		}
 	}
 
@@ -588,15 +585,15 @@ bool UCombatComponent::DoSphereSweepMultiWithRange(TArray<FHitResult>& OutHits, 
 		Params
 	);
 
-	if (bDrawDebug)
+	if (FCoFDebug::IsEnabled())
 	{
-		DrawDebugLine(World, Start, End, bHit ? FColor::Blue : FColor::Cyan, false, 1.5f, 0, 2.f);
-		DrawDebugSphere(World, Start, InRadius, 16, FColor::Blue, false, 1.5f, 0, 1.f);
-		DrawDebugSphere(World, End, InRadius, 16, FColor::Blue, false, 1.5f, 0, 1.f);
+		FCoFDebug::DrawLine(World, Start, End, bHit ? FColor::Blue : FColor::Cyan, false, 1.5f, 0, 2.f);
+		FCoFDebug::DrawSphere(World, Start, InRadius, 16, FColor::Blue, false, 1.5f, 0, 1.f);
+		FCoFDebug::DrawSphere(World, End, InRadius, 16, FColor::Blue, false, 1.5f, 0, 1.f);
 
 		for (const FHitResult& Hit : OutHits)
 		{
-			DrawDebugPoint(World, Hit.ImpactPoint, 10.f, FColor::Blue, false, 1.5f);
+			FCoFDebug::DrawPoint(World, Hit.ImpactPoint, 10.f, FColor::Blue, false, 1.5f);
 		}
 	}
 

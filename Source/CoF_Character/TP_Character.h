@@ -243,7 +243,8 @@ public:
 	// HitReactInterface 구현
 	virtual void OnHitReact_Implementation(float DamageAmount, const FVector& HitPoint, const FVector& HitNormal) override;
 
-	void Debug_ForceHit(); // (더미 없이 테스트용) 강제 피격
+	// F7: C++ 디버그 시각화 및 화면 메시지 전체 토글
+	void ToggleDebugVisualization();
 
 	// 피격 중 입력 잠금 / 무적 처리
 	bool bHitReacting = false;
