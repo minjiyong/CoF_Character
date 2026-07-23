@@ -7,3 +7,7 @@
 *.png filter=lfs diff=lfs merge=lfs -text
 *.tga filter=lfs diff=lfs merge=lfs -text
 *.psd filter=lfs diff=lfs merge=lfs -text
+
+Content/MIN/DA_Char01_Terra.uasset -filter -diff -merge -text
+Content/MIN/DA_Char02_Gideon.uasset -filter -diff -merge -text
+Content/MIN/DA_Char03_Kallari.uasset -filter -diff -merge -text

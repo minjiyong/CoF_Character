@@ -362,7 +362,9 @@ void ATP_Character::UpdateLockOnWidget()
 		return;
 	}
 
-	const FVector WorldPos = LockOnTarget->GetActorLocation();
+	const FVector WorldPos =
+		LockOnTarget->GetActorLocation()
+		+ FVector(0.f, 0.f, LockOnWidgetWorldOffsetZ);
 
 	FVector2D ScreenPos;
 	const bool bProjected =

@@ -731,7 +731,7 @@ public:
 	TSubclassOf<UUserWidget> LockOnWidgetClass = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "LockOn|UI")
-	float LockOnWidgetWorldOffsetZ = 120.f;
+	float LockOnWidgetWorldOffsetZ = 180.f;
 
 	UPROPERTY()
 	TObjectPtr<UUserWidget> LockOnWidgetInstance = nullptr;
